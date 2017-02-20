@@ -58,44 +58,44 @@ namespace Rainbow.DomainDriven.ConsoleApp
             //     Sex = 1
             // });
 
-            // try
-            // {
-            //     commandService.Handle(new CreateUserCommand()
-            //     {
-            //         Id = id,
-            //         Name = "nihao 1",
-            //         Sex = 1
-            //     });
-            // }
-            // catch (DomainException domainEx)
-            // {
-            //     Console.WriteLine($"领域业务异常-异常代码：{domainEx.Code} 异常内容：{domainEx.Message}");
-            // }
-            // catch (Exception ex)
-            // {
-            //     Console.WriteLine($"未知异常-异常内容：{ex.Message}");
-            // }
-
-            for (int i = 0; i < 3; i++)
+            try
             {
-                Task.Factory.StartNew((a) =>
+                commandService.Handle(new CreateUserCommand()
                 {
-                    try
-                    {
-                        commandService.Handle(new CreateUserCommand()
-                        {
-                            Id = Guid.NewGuid(),
-                            Name = $"nihao-{id.ToShort()}",
-                            Sex = 1
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"执行并非线程错误：{a} - 错误原因：{e.Message}");
-                    }
-
-                }, i);
+                    Id = id,
+                    Name = "nihao 1",
+                    Sex = 1
+                });
             }
+            catch (DomainException domainEx)
+            {
+                Console.WriteLine($"领域业务异常-异常代码：{domainEx.Code} 异常内容：{domainEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"未知异常-异常内容：{ex.Message}");
+            }
+
+            // for (int i = 0; i < 3; i++)
+            // {
+            //     Task.Factory.StartNew((a) =>
+            //     {
+            //         try
+            //         {
+            //             commandService.Handle(new CreateUserCommand()
+            //             {
+            //                 Id = Guid.NewGuid(),
+            //                 Name = $"nihao-{id.ToShort()}",
+            //                 Sex = 1
+            //             });
+            //         }
+            //         catch (Exception e)
+            //         {
+            //             Console.WriteLine($"执行并非线程错误：{a} - 错误原因：{e.Message}");
+            //         }
+
+            //     }, i);
+            // }
 
 
             Console.ReadLine();

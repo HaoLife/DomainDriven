@@ -24,6 +24,7 @@ namespace Rainbow.DomainDriven
         public void Initialize()
         {
             this._service.AddOptions();
+            this._service.AddLogging();
 
             this._service.Configure<DomainOptions>(a => a.Add(new DomainInitializeExtension()));
             this._service.Configure<DomainOptions>(a => a.Add(new LocalInitializeExtension()));

@@ -1,5 +1,5 @@
---temp-output:e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\obj\Debug\netcoreapp1.0\
---out:e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\bin\Debug\netcoreapp1.0\Rainbow.DomainDriven.ConsoleApp.dll
+--temp-output:e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\obj\Debug\netcoreapp1.0\
+--out:e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\bin\Debug\netcoreapp1.0\Rainbow.DomainDriven.ConsoleApp.dll
 --define:DEBUG
 --define:TRACE
 --define:NETCOREAPP1_0
@@ -31,6 +31,8 @@
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.FileProviders.Abstractions\1.0.0\lib\netstandard1.0\Microsoft.Extensions.FileProviders.Abstractions.dll
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.FileProviders.Physical\1.0.0\lib\netstandard1.3\Microsoft.Extensions.FileProviders.Physical.dll
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.FileSystemGlobbing\1.0.0\lib\netstandard1.3\Microsoft.Extensions.FileSystemGlobbing.dll
+--reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.Logging\1.0.0\lib\netstandard1.1\Microsoft.Extensions.Logging.dll
+--reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.Logging.Abstractions\1.0.0\lib\netstandard1.1\Microsoft.Extensions.Logging.Abstractions.dll
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.Options\1.0.0\lib\netstandard1.0\Microsoft.Extensions.Options.dll
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.Options.ConfigurationExtensions\1.0.0\lib\netstandard1.1\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 --reference:C:\Users\w4384\.nuget\packages\Microsoft.Extensions.Primitives\1.0.0\lib\netstandard1.0\Microsoft.Extensions.Primitives.dll
@@ -124,18 +126,19 @@
 --reference:C:\Users\w4384\.nuget\packages\System.Xml.ReaderWriter\4.3.0\ref\netstandard1.3\System.Xml.ReaderWriter.dll
 --reference:C:\Users\w4384\.nuget\packages\System.Xml.XDocument\4.3.0\ref\netstandard1.3\System.Xml.XDocument.dll
 --reference:C:\Users\w4384\.nuget\packages\System.Xml.XmlDocument\4.0.1\ref\netstandard1.3\System.Xml.XmlDocument.dll
---reference:e:\git\Rainbow\04 实现\Rainbow.DomainDriven\src\Rainbow.DomainDriven.Core\bin\Debug\netstandard1.6\Rainbow.DomainDriven.Core.dll
---reference:e:\git\Rainbow\04 实现\Rainbow.DomainDriven\src\Rainbow.DomainDriven.Mongo\bin\Debug\netstandard1.6\Rainbow.DomainDriven.Mongo.dll
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Program.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\SqliteOptions.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\CreateUserCommand.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\ModifyUserNameCommand.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\ModifyUserSexCommand.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\RemoveUserCommand.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\CommandHandler\UserHandler.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Domain\User.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\DomainService\UserService.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Event\User\CreatedEvent.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Event\User\ModifyNamedEvent.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\EventHandler\Stroe\UserHandler.cs
-e:\git\Rainbow\04 实现\Rainbow.DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Properties\AssemblyInfo.cs
+--reference:e:\git\haolife\DomainDriven\src\Rainbow.DomainDriven.Core\bin\Debug\netstandard1.6\Rainbow.DomainDriven.Core.dll
+--reference:e:\git\haolife\DomainDriven\src\Rainbow.DomainDriven.Mongo\bin\Debug\netstandard1.6\Rainbow.DomainDriven.Mongo.dll
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Program.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\SqliteOptions.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\CreateUserCommand.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\ModifyUserNameCommand.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\ModifyUserSexCommand.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Command\RemoveUserCommand.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\CommandHandler\UserHandler.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Domain\User.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\DomainService\UserService.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Event\User\CreatedEvent.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Event\User\ModifyNamedEvent.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\EventHandler\Cache\UserHandler.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\EventHandler\Stroe\UserHandler.cs
+e:\git\haolife\DomainDriven\samples\Rainbow.DomainDriven.ConsoleApp\Properties\AssemblyInfo.cs

@@ -1,0 +1,12 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+Rainbow.DomainDriven/.vs/
+Rainbow.DomainDriven/.vscode/
+Rainbow.DomainDriven/**/bin
+Rainbow.DomainDriven/**/obj
+Rainbow.DomainDriven/**/project.lock.json
+Rainbow.DomainDriven/**/wwwroot
+Rainbow.DomainDriven/**/Migrations
+Rainbow.DomainDriven/**/Logs

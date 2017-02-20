@@ -1,19 +1,32 @@
 using System;
-using Rainbow.DomainDriven.Event;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Rainbow.DomainDriven.Event
 {
     public class EventHandlerProxy<TEvent> : IEventHandlerProxy
         where TEvent : IEvent
     {
+        public class HandleParameter
+        {
+            public Type HandlerType { get; set; }
+            public IEvent Event { get; set; }
+        }
 
         private readonly IEventHandlerSelector _eventHandlerSelector;
         private readonly IEventHandlerActivator _eventHandlerActivator;
+        private readonly ILogger<EventHandlerProxy<TEvent>> _logger;
 
-        public EventHandlerProxy(IEventHandlerSelector eventHandlerSelector, IEventHandlerActivator eventHandlerActivator)
+        public EventHandlerProxy(
+            IEventHandlerSelector eventHandlerSelector,
+            IEventHandlerActivator eventHandlerActivator,
+            ILogger<EventHandlerProxy<TEvent>> logger)
         {
             this._eventHandlerSelector = eventHandlerSelector;
             this._eventHandlerActivator = eventHandlerActivator;
+            this._logger = logger;
         }
 
         public void HandlerInvoke(Type type, TEvent evt)
@@ -38,15 +51,29 @@ namespace Rainbow.DomainDriven.Event
             }
         }
 
-
+        public void HandlerInvoke(HandleParameter para)
+        {
+            try
+            {
+                HandlerInvoke(para.HandlerType, (TEvent)para.Event);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(1, ex, "执行事件过程中发生异常");
+            }
+        }
         public void Handle(DomainEventSource eventSource)
         {
             var handlerTypes = this._eventHandlerSelector.FindHandlerTypes<TEvent>();
-
-            foreach (var handelType in handlerTypes)
+            List<Task> tasks = new List<Task>();
+            //并行执行eventHandler，这部分不区分优先级
+            foreach (var handleType in handlerTypes)
             {
-                HandlerInvoke(handelType, (TEvent)eventSource.Event);
+                Task task = new Task(a => HandlerInvoke((HandleParameter)a), new HandleParameter() { HandlerType = handleType, Event = eventSource.Event });
+                task.Start();
+                tasks.Add(task);
             }
+            Task.WaitAll(tasks.ToArray());
         }
     }
 }
