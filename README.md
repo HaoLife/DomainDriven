@@ -44,7 +44,7 @@
     });
 
 
-### 这是一个默认模式的使用
+### 这是一个本地消息队列的使用
 
     IConfiguration configuration = new ConfigurationBuilder()
         .SetBasePath(Directory.GetCurrentDirectory())
