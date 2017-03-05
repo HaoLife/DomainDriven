@@ -8,6 +8,6 @@ namespace Rainbow.DomainDriven.Command
 {
     public interface ICommandService
     {
-        void Publish<TCommand>(DomainMessage<TCommand> cmd) where TCommand : class;
+        void Publish<TCommand>(DomainMessage cmd) where TCommand : class;
     }
 }

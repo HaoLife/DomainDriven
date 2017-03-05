@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rainbow.DomainDriven.Cache;
 
 namespace Rainbow.DomainDriven.Command
 {
@@ -17,7 +18,7 @@ namespace Rainbow.DomainDriven.Command
         private readonly IAggregateRootRepositoryContext _repositoryContext;
         private readonly IEventService _eventService;
         private readonly ICommandExecutorContextFactory _commandExecutorContextFactory;
-        
+
         public CommandExecutor(
             ICommandHandlerSelector commandHandlerSelector,
             ICommandHandlerActivator commandHandlerActivator,
@@ -32,7 +33,7 @@ namespace Rainbow.DomainDriven.Command
             this._eventService = eventService;
             this._commandExecutorContextFactory = commandExecutorContextFactory;
         }
-        public void Handle<TCommand>(DomainMessage<TCommand> cmd) where TCommand : class
+        public void Handle<TCommand>(DomainMessage cmd) where TCommand : class
         {
 
             ICommandExecutorContext context = this._commandExecutorContextFactory.Create();
@@ -46,7 +47,7 @@ namespace Rainbow.DomainDriven.Command
 
             try
             {
-                executor.Handler(context, cmd.Content);
+                executor.Handler(context, cmd.Content as TCommand);
                 this.HandleContext(context.TrackedAggregateRoots);
                 _repositoryContext.Commit();
                 var message = BuildEventMessage(cmd.Head, context.TrackedAggregateRoots);
@@ -63,7 +64,7 @@ namespace Rainbow.DomainDriven.Command
             }
         }
 
-        private DomainMessage<DomainEventStream> BuildEventMessage(MessageHead head, IEnumerable<IAggregateRoot> roots)
+        private DomainMessage BuildEventMessage(MessageHead head, IEnumerable<IAggregateRoot> roots)
         {
             var domainSources = roots
                 .SelectMany(p => p.UncommittedEvents.Select(a => new DomainEventSource(a, p.GetType().Name, p.Id)));
@@ -78,18 +79,8 @@ namespace Rainbow.DomainDriven.Command
             {
                 eventHead = new MessageHead(Guid.NewGuid().ToShort(), head.Priority, head.Consistency);
             }
-            return new DomainMessage<DomainEventStream>(eventHead, stream);
+            return new DomainMessage(eventHead, stream);
         }
-
-        // protected void Notice(MessageHead head, Exception ex = null)
-        // {
-        //     if (!(head.Consistency == ConsistencyLevel.Lose || head.Consistency == ConsistencyLevel.Finally)) return;
-        //     var reply = new ReplyMessage() { Exception = ex, IsSuccess = ex == null };
-
-        //     var replyHead = new MessageHead(head.ReplyKey, PriorityLevel.Normal, ConsistencyLevel.Lose);
-        //     this._replyMessageService.Publish(new DomainMessage<ReplyMessage>(replyHead, reply));
-
-        // }
 
         protected bool IsNotice(MessageHead head)
         {

@@ -1,16 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.ConsoleApp.Command;
-using Rainbow.DomainDriven.Message;
-using Rainbow.DomainDriven.Event;
-using System.Threading.Tasks;
 using System.Text;
 using Rainbow.DomainDriven.Domain;
 using System.Data;
@@ -33,15 +26,16 @@ namespace Rainbow.DomainDriven.ConsoleApp
             IServiceCollection serviceCollection = new ServiceCollection();
 
             serviceCollection
-                .UseDefaultDomain()
-                .UseDefaultService()
+                .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+                //.UseDefaultDomain()
+                //.UseDefaultService()
                 .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
                 .Build()
                 .Start();
 
             serviceCollection.Configure<SqliteOptions>(configuration.GetSection("Domain:Sqlite"));
             serviceCollection.AddTransient<IDbConnection>(a =>
-                    new SqliteConnection(a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory,"..\\..\\..\\")))
+                    new SqliteConnection(a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\")))
                 );
 
 
@@ -63,9 +57,14 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 commandService.Handle(new CreateUserCommand()
                 {
                     Id = id,
-                    Name = "nihao 1",
+                    Name = "nihao 1-1",
                     Sex = 1
                 });
+                // commandService.Handle(new ModifyUserNameCommand()
+                // {
+                //     UserId = new Guid("23157b6f-a318-a74c-8842-06c6634ab698"),
+                //     Name = "11"
+                // });
             }
             catch (DomainException domainEx)
             {

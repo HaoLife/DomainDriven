@@ -12,11 +12,11 @@ namespace Rainbow.DomainDriven.ConsoleApp.CommandExecutor
         ICommandHandler<ModifyUserSexCommand>,
         ICommandHandler<RemoveUserCommand>
     {
-        private readonly UserService _userService;
-        public UserHandler(UserService userService)
-        {
-            this._userService = userService;
-        }
+        // private readonly UserService _userService;
+        // public UserHandler(UserService userService)
+        // {
+        //     this._userService = userService;
+        // }
 
         public void Handler(ICommandContext context, RemoveUserCommand cmd)
         {
@@ -41,7 +41,7 @@ namespace Rainbow.DomainDriven.ConsoleApp.CommandExecutor
         public void Handler(ICommandContext context, CreateUserCommand cmd)
         {
             var user = new User(cmd.Id, cmd.Name, cmd.Sex);
-            _userService.RegisterUser(user);
+            //_userService.RegisterUser(user);
 
             context.Add(user);
         }

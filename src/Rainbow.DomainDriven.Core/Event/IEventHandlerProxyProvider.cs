@@ -4,6 +4,6 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEventHandlerProxyProvider
     {
-         IEventHandlerProxy GetEventHanderProxy(Type eventType);
+         IEventHandlerProxy GetEventHandlerProxy(Type eventType);
     }
 }

@@ -14,7 +14,7 @@ namespace Rainbow.DomainDriven.Domain
 
         public IEnumerable<IEvent> UncommittedEvents => _uncommittedEvents.ToArray();
 
-        public int Version { get; private set; }
+        public int Version { get; protected set; }
 
         public void Clear() => _uncommittedEvents.Clear();
 

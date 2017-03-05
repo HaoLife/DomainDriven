@@ -14,11 +14,11 @@ namespace Rainbow.DomainDriven.Event
             this._eventExecutor = eventExecutor;
         }
 
-        public void Publish(DomainMessage<DomainEventStream> evt)
+        public void Publish(DomainMessage evt)
         {
             if (string.IsNullOrEmpty(evt.Head.ReplyKey))
             {
-                Task.Factory.StartNew((message) => _eventExecutor.Handle(message as DomainMessage<DomainEventStream>), evt);
+                Task.Factory.StartNew((message) => _eventExecutor.Handle(message as DomainMessage), evt);
             }
             else
             {

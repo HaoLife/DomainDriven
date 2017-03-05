@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Rainbow.DomainDriven.Infrastructure;
 
 namespace Rainbow.DomainDriven
 {
@@ -7,14 +8,14 @@ namespace Rainbow.DomainDriven
 
         public static IDomainHostBuilder UseDefaultService(this IDomainHostBuilder builder)
         {
-            builder.Services.Configure<DomainOptions>(a => a.Add(new DomainServiceExtension()));
+            builder.ApplyServices(new DomainServiceInitializeExtension());
             return builder;
         }
 
 
-        public static IDomainHostBuilder AddOptionExtension(this IDomainHostBuilder builder, IDomainOptionsExtension optionExtension)
+        public static IDomainHostBuilder AddOptionExtension(this IDomainHostBuilder builder, IDomainInitializeExtension optionExtension)
         {
-            builder.Services.Configure<DomainOptions>(a => a.Add(optionExtension));
+            builder.ApplyServices(optionExtension);
             return builder;
         }
     }

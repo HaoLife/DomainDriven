@@ -1,34 +1,38 @@
-﻿using MongoDB.Driver;
-using Rainbow.DomainDriven.Repository;
+﻿using Rainbow.DomainDriven.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class MongoCommonQueryRepository : IAggregateRootCommonQueryRepository
     {
-        private readonly IMongoDatabase _mongoDatabase;
-        public MongoCommonQueryRepository(IMongoDatabase mongoDatabase)
+        private readonly IAggregateRootLockRepositoryProvider _aggregateRootRepositoryProvider;
+        public MongoCommonQueryRepository(IAggregateRootLockRepositoryProvider aggregateRootRepositoryProvider)
         {
-            this._mongoDatabase = mongoDatabase;
-        }
-
-        private IMongoCollection<TAggregateRoot> Set<TAggregateRoot>()
-        {
-            return this._mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
+            this._aggregateRootRepositoryProvider = aggregateRootRepositoryProvider;
         }
 
 
         IEnumerable<TAggregateRoot> IAggregateRootCommonQueryRepository.Get<TAggregateRoot>(params Guid[] keys)
         {
-            return this.Set<TAggregateRoot>().Find(a => keys.Contains(a.Id)).ToList();
+            return this.Get(typeof(TAggregateRoot), keys).Select(p => p as TAggregateRoot);
         }
 
         TAggregateRoot IAggregateRootCommonQueryRepository.Get<TAggregateRoot>(Guid id)
         {
-            return this.Set<TAggregateRoot>().Find(p => p.Id == id).FirstOrDefault();
+            return this.Get(typeof(TAggregateRoot), id) as TAggregateRoot;
+        }
+
+        public IAggregateRoot Get(Type aggregateRootType, Guid id)
+        {
+            return _aggregateRootRepositoryProvider.GetRepo(aggregateRootType).Get(id);
+        }
+
+        public IEnumerable<IAggregateRoot> Get(Type aggregateRootType, params Guid[] keys)
+        {
+            return _aggregateRootRepositoryProvider.GetRepo(aggregateRootType).Get(keys);
         }
     }
 }

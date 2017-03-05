@@ -1,10 +1,10 @@
-﻿using Rainbow.DomainDriven.ConsoleApp.Event.User;
-using Rainbow.DomainDriven.Domain;
+﻿using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rainbow.DomainDriven.ConsoleApp.Event.UserEvent;
 
 namespace Rainbow.DomainDriven.ConsoleApp.Domain
 {

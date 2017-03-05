@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Rainbow.DomainDriven.Core.Utilities;
+using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.Event
 {
@@ -12,7 +14,7 @@ namespace Rainbow.DomainDriven.Event
         public class HandleParameter
         {
             public Type HandlerType { get; set; }
-            public IEvent Event { get; set; }
+            public DomainEventSource EventSource { get; set; }
         }
 
         private readonly IEventHandlerSelector _eventHandlerSelector;
@@ -22,7 +24,8 @@ namespace Rainbow.DomainDriven.Event
         public EventHandlerProxy(
             IEventHandlerSelector eventHandlerSelector,
             IEventHandlerActivator eventHandlerActivator,
-            ILogger<EventHandlerProxy<TEvent>> logger)
+            ILogger<EventHandlerProxy<TEvent>> logger
+            )
         {
             this._eventHandlerSelector = eventHandlerSelector;
             this._eventHandlerActivator = eventHandlerActivator;
@@ -55,11 +58,15 @@ namespace Rainbow.DomainDriven.Event
         {
             try
             {
-                HandlerInvoke(para.HandlerType, (TEvent)para.Event);
+                HandlerInvoke(para.HandlerType, (TEvent)para.EventSource.Event);
+            }
+            catch (DomainException dex)
+            {
+                this._logger.LogInformation($"执行事件失败:{dex.Message} - aggr:{para.EventSource.AggregateRootTypeName} id:{para.EventSource.AggregateRootId} version:{para.EventSource.Event.Version}");
             }
             catch (Exception ex)
             {
-                this._logger.LogError(1, ex, "执行事件过程中发生异常");
+                this._logger.LogError(LogEvent.Frame, ex, "执行事件过程中发生异常");
             }
         }
         public void Handle(DomainEventSource eventSource)
@@ -69,7 +76,7 @@ namespace Rainbow.DomainDriven.Event
             //并行执行eventHandler，这部分不区分优先级
             foreach (var handleType in handlerTypes)
             {
-                Task task = new Task(a => HandlerInvoke((HandleParameter)a), new HandleParameter() { HandlerType = handleType, Event = eventSource.Event });
+                Task task = new Task(a => HandlerInvoke((HandleParameter)a), new HandleParameter() { HandlerType = handleType, EventSource = eventSource });
                 task.Start();
                 tasks.Add(task);
             }

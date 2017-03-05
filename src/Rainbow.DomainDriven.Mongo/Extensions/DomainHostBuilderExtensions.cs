@@ -1,17 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Rainbow.DomainDriven.Mongo;
 using Rainbow.DomainDriven;
-using MongoDB.Driver;
-using Rainbow.DomainDriven.Repository;
-using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Repository;
 using Rainbow.DomainDriven.Mongo.Repository;
+using Rainbow.DomainDriven.Mongo.Internal;
+using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.Mongo.Infrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -23,16 +19,23 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddMemoryCache();
 
             builder.Services
-                .Configure<DomainOptions>(a => a.Add(new MongoInitializeExtension()))
                 .Configure<MongoOptions>(configuration);
 
             builder.Services.TryAdd(new ServiceCollection()
                 .AddTransient(p => p.CreateMongoDatabase(p.GetService<IOptions<MongoOptions>>()))
                 .AddSingleton<IAggregateRootRepositoryContext, MongoLockAggregateRootRepositoryContext>()
                 .AddSingleton<IAggregateRootCommonQueryRepository, MongoCommonQueryRepository>()
-                .AddSingleton(typeof(IAggregateRootQueryRepository<>), typeof(AggregateRootRepository<>))
+                .AddSingleton<IAggregateRootLockRepositoryProvider, AggregateRootLockRepositoryProvider>()
+                .AddSingleton(typeof(AggregateRootLockRepository<>))
+                .AddSingleton<IAggregateRootBatchRepositoryProvider, AggregateRootBatchRepositoryProvider>()
+                .AddSingleton(typeof(AggregateRootBatchRepository<>))
+                .AddSingleton(typeof(IAggregateRootQueryRepository<>), typeof(AggregateRootQueryRepository<>))
+                .AddSingleton<IAggregateRootRepositoryProvider, AggregateRootRepositoryProvider>()
+                .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
+                .AddTransient<IAggregateRootOperation, AggregateRootOperation>()
                 );
 
+            builder.ApplyServices(new MongoInitializeExtension());
             return builder;
 
         }

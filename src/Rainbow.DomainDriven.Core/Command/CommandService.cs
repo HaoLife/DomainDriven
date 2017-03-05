@@ -22,15 +22,15 @@ namespace Rainbow.DomainDriven.Command
         }
 
 
-        public void Publish<TCommand>(DomainMessage<TCommand> cmd) where TCommand : class
+        public void Publish<TCommand>(DomainMessage cmd) where TCommand : class
         {
             if (string.IsNullOrEmpty(cmd.Head.ReplyKey))
             {
-                Task.Factory.StartNew((message) => _commandExecutor.Handle(message as DomainMessage<TCommand>), cmd);
+                Task.Factory.StartNew((message) => _commandExecutor.Handle<TCommand>(message as DomainMessage), cmd);
             }
             else
             {
-                _commandExecutor.Handle(cmd);
+                _commandExecutor.Handle<TCommand>(cmd);
             }
         }
 

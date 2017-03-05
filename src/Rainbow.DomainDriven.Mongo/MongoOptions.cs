@@ -9,5 +9,8 @@ namespace Rainbow.DomainDriven.Mongo
     {
         public string ConnectionString { get; set; }
         public string Database { get; set; }
+
+        public string EventSourceConnectionString { get; set; }
+        public string EventSourceDatabase { get; set; }
     }
 }

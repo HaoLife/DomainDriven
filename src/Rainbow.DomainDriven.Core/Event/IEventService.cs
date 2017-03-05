@@ -8,6 +8,6 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEventService
     {
-        void Publish(DomainMessage<DomainEventStream> evt);
+        void Publish(DomainMessage evt);
     }
 }

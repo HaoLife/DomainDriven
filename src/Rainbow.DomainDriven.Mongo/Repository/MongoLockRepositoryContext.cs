@@ -6,8 +6,6 @@ using Rainbow.DomainDriven.Domain;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
 using Rainbow.DomainDriven.Mongo.Internal;
-using System.Net;
-using System.Net.Sockets;
 using Rainbow.DomainDriven.Cache;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
@@ -15,31 +13,18 @@ namespace Rainbow.DomainDriven.Mongo.Repository
     public class MongoLockAggregateRootRepositoryContext :
         IAggregateRootRepositoryContext
     {
-        private readonly IAggregateRootRepositoryProvider _aggregateRootRepositoryProvider;
+        private readonly IAggregateRootLockRepositoryProvider _aggregateRootLockRepositoryProvider;
         private readonly IAggregateRootIndexCache _aggregateRootIndexCache;
-        private string _IpAddress;
-
-        private ConcurrentDictionary<Type, ConcurrentDictionary<Guid, RepositoryData<IAggregateRoot>>> _batchCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, RepositoryData<IAggregateRoot>>>();
+        private readonly IAggregateRootOperation _aggregateRootOperation;
 
         public MongoLockAggregateRootRepositoryContext(
-            IAggregateRootRepositoryProvider aggregateRootRepositoryProvider,
-            IAggregateRootIndexCache aggregateRootIndexCache)
+            IAggregateRootLockRepositoryProvider aggregateRootLockRepositoryProvider,
+            IAggregateRootIndexCache aggregateRootIndexCache,
+            IAggregateRootOperation aggregateRootOperation)
         {
-            this._aggregateRootRepositoryProvider = aggregateRootRepositoryProvider;
+            this._aggregateRootLockRepositoryProvider = aggregateRootLockRepositoryProvider;
             this._aggregateRootIndexCache = aggregateRootIndexCache;
-            this.Init();
-        }
-
-        private void Init()
-        {
-            var task = Dns.GetHostAddressesAsync(Environment.MachineName);
-            task.Wait();
-            var ip = task.Result.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
-            this._IpAddress = string.Empty;
-            if (ip != null)
-            {
-                this._IpAddress = ip.ToString();
-            }
+            this._aggregateRootOperation = aggregateRootOperation;
         }
 
         public void Add(IEnumerable<IAggregateRoot> aggregates)
@@ -52,15 +37,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         public void Add(IAggregateRoot aggregate)
         {
-            if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-            var cache = _batchCache.GetOrAdd(aggregate.GetType(), new ConcurrentDictionary<Guid, RepositoryData<IAggregateRoot>>());
-
-            if (cache.ContainsKey(aggregate.Id))
-            {
-                throw new Exception($"重复加入实体:{aggregate.GetType().Name} id:{aggregate.Id}");
-            }
-
-            cache.TryAdd(aggregate.Id, new RepositoryData<IAggregateRoot>() { State = StoreType.Add, Entity = aggregate });
+            this._aggregateRootOperation.Add(aggregate);
         }
 
 
@@ -74,22 +51,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         public void Remove(IAggregateRoot aggregate)
         {
-            if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-            RepositoryData<IAggregateRoot> repoData;
-            var cache = _batchCache.GetOrAdd(aggregate.GetType(), new ConcurrentDictionary<Guid, RepositoryData<IAggregateRoot>>());
-
-            if (!cache.TryGetValue(aggregate.Id, out repoData))
-            {
-                repoData = new RepositoryData<IAggregateRoot>();
-                repoData.Entity = aggregate;
-                repoData.State = StoreType.Remove;
-                cache.TryAdd(aggregate.Id, repoData);
-            }
-            if (repoData.State == StoreType.Remove)
-            {
-                throw new Exception($"更新已删除的实体:{aggregate.GetType().Name} id:{aggregate.Id}");
-            }
-            repoData.State = StoreType.Remove;
+            this._aggregateRootOperation.Remove(aggregate);
         }
 
         public void Update(IEnumerable<IAggregateRoot> aggregates)
@@ -102,79 +64,71 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         public void Update(IAggregateRoot aggregate)
         {
-            if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-            RepositoryData<IAggregateRoot> repoData;
-            var cache = _batchCache.GetOrAdd(aggregate.GetType(), new ConcurrentDictionary<Guid, RepositoryData<IAggregateRoot>>());
-
-            if (!cache.TryGetValue(aggregate.Id, out repoData))
-            {
-                repoData = new RepositoryData<IAggregateRoot>();
-                repoData.Entity = aggregate;
-                repoData.State = StoreType.Update;
-                cache.TryAdd(aggregate.Id, repoData);
-            }
-            if (repoData.State == StoreType.Remove)
-            {
-                throw new Exception($"更新已经删除的实体:{aggregate.GetType().Name} id:{aggregate.Id}");
-            }
-
-            if (repoData.State == StoreType.Add)
-            {
-                return;
-            }
-            repoData.State = StoreType.Update;
+            this._aggregateRootOperation.Update(aggregate);
         }
 
 
-        private void Lock(RowLock rowLock)
+        private void Lock(long expire)
         {
-            foreach (var item in _batchCache)
+            try
             {
-                var lockRoots = item.Value.Where(a => a.Value.State != StoreType.Add).Select(p => p.Value.Entity);
-                if (!lockRoots.Any()) break;
+                var types = this._aggregateRootOperation.GetAllTypes();
+                foreach (var item in types)
+                {
+                    var lockRoots = this._aggregateRootOperation.GetUpdated(item)
+                        .Concat(this._aggregateRootOperation.GetRemoved(item));
+                    if (!lockRoots.Any()) continue;
 
-                var repo = _aggregateRootRepositoryProvider.GetAggregateRootRepository(item.Key);
-                repo.Lock(rowLock, lockRoots);
+                    var repo = _aggregateRootLockRepositoryProvider.GetRepo(item);
+                    repo.Lock(lockRoots, expire);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                this.UnLock();
+                throw ex;
             }
         }
         private void UnLock()
         {
-            foreach (var item in _batchCache)
+            var types = this._aggregateRootOperation.GetAllTypes();
+            foreach (var item in types)
             {
-                var lockRoots = item.Value.Where(a => a.Value.State != StoreType.Add).Select(p => p.Value.Entity);
-                if (!lockRoots.Any()) break;
+                var lockRoots = this._aggregateRootOperation.GetUpdated(item)
+                    .Concat(this._aggregateRootOperation.GetRemoved(item));
 
-                var repo = _aggregateRootRepositoryProvider.GetAggregateRootRepository(item.Key);
+                var repo = _aggregateRootLockRepositoryProvider.GetRepo(item);
                 repo.UnLock(lockRoots);
+
             }
         }
 
         private void RollBackAdd()
         {
-            foreach (var item in _batchCache)
+            var unRepo = new ConcurrentDictionary<Type, IAggregateRootLockRepository>();
+
+            var types = this._aggregateRootOperation.GetAllTypes();
+            foreach (var item in types)
             {
-                var adds = item.Value.Values.Where(a => a.State == StoreType.Add).ToList();
-                if (!adds.Any()) break;
+                var adds = this._aggregateRootOperation.GetAdded(item);
+                if (!adds.Any()) continue;
+                var repo = unRepo.GetOrAdd(item, _aggregateRootLockRepositoryProvider.GetRepo(item));
+                repo.Remove(adds);
 
-                var repo = _aggregateRootRepositoryProvider.GetAggregateRootRepository(item.Key);
-                foreach (var obj in adds)
-                {
-                    repo.Remove(obj.Entity);
-                }
             }
-
         }
         private void RemoveIndex()
         {
-            
-            foreach (var item in _batchCache)
+            var types = this._aggregateRootOperation.GetAllTypes();
+            foreach (var item in types)
             {
-                var adds = item.Value.Values.Where(a => a.State == StoreType.Add).ToList();
-                if (!adds.Any()) break;
+                var adds = this._aggregateRootOperation.GetAdded(item);
+                if (!adds.Any()) continue;
 
                 foreach (var obj in adds)
                 {
-                    this._aggregateRootIndexCache.Remove(obj.Entity);
+                    this._aggregateRootIndexCache.Remove(obj);
                 }
             }
         }
@@ -184,58 +138,34 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             this.UnLock();
             this.RemoveIndex();
             this.RollBackAdd();
-
-            _batchCache.Clear();
+            this._aggregateRootOperation.Clear();
         }
 
         public void Commit()
         {
             //1.锁住变更对象
-            //2.先创建对象
-            //3.更新对象
-            //4.解锁
-
-            var rowLock = new RowLock(_IpAddress, DateTime.Now.AddSeconds(10).Ticks);
+            //2.执行操作
+            //3.解锁
+            var expire = DateTime.Now.AddSeconds(10).Ticks;
             //锁住领域对象
-            this.Lock(rowLock);
-
-            //先创建对象
-            foreach (var item in _batchCache)
+            this.Lock(expire);
+            var unRepo = new ConcurrentDictionary<Type, IAggregateRootRepository>();
+            var types = this._aggregateRootOperation.GetAllTypes();
+            foreach (var item in types)
             {
-                var adds = item.Value.Values.Where(a => a.State == StoreType.Add).ToList();
-                if (!adds.Any()) break;
-
-                var repo = _aggregateRootRepositoryProvider.GetAggregateRootRepository(item.Key);
-                foreach (var obj in adds)
-                {
-                    repo.Add(obj.Entity);
-                }
+                var repo = unRepo.GetOrAdd(item, _aggregateRootLockRepositoryProvider.GetRepo(item));
+                repo.Add(this._aggregateRootOperation.GetAdded(item));
             }
 
-            //更新领域对象
-            foreach (var item in _batchCache)
+            foreach (var item in types)
             {
-                var changes = item.Value.Values.Where(a => a.State == StoreType.Update || a.State == StoreType.Remove).ToList();
-                if (!changes.Any()) break;
-
-                var repo = _aggregateRootRepositoryProvider.GetAggregateRootRepository(item.Key);
-                foreach (var a in changes)
-                {
-                    switch (a.State)
-                    {
-                        case StoreType.Update:
-                            repo.Update(a.Entity);
-                            break;
-                        case StoreType.Remove:
-                            repo.Remove(a.Entity);
-                            break;
-                    }
-                }
+                var repo = unRepo.GetOrAdd(item, _aggregateRootLockRepositoryProvider.GetRepo(item));
+                repo.Update(this._aggregateRootOperation.GetUpdated(item));
+                repo.Remove(this._aggregateRootOperation.GetRemoved(item));
             }
             this.UnLock();
             this.RemoveIndex();
-            _batchCache.Clear();
-
+            this._aggregateRootOperation.Clear();
         }
 
     }

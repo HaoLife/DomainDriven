@@ -1,6 +1,6 @@
 using System;
 using Rainbow.DomainDriven.ConsoleApp.Domain;
-using Rainbow.DomainDriven.ConsoleApp.Event.User;
+using Rainbow.DomainDriven.ConsoleApp.Event.UserEvent;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Repository;
 using Dapper;

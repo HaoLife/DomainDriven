@@ -16,17 +16,26 @@ namespace Rainbow.DomainDriven.Cache
 
         void IAggregateRootIndexCache.Add<TAggregateRoot>(TAggregateRoot root, string key)
         {
-            if (this._cacheIndex.ContainsKey(key))
-                throw new DomainException(DomainCode.IndexCacheExists.GetHashCode(), $"领域对象{typeof(TAggregateRoot).Name}已经包含key:{key}");
-
-            if (!this._cacheIndex.TryAdd(key, true))
-                throw new DomainException(DomainCode.IndexCacheExists.GetHashCode(), $"领域对象{typeof(TAggregateRoot).Name}已经包含key:{key}");
-
-            _cacheKey.TryAdd(root.Id, key);
-
+            this.Add(root as IAggregateRoot , key);
         }
 
         void IAggregateRootIndexCache.Remove<TAggregateRoot>(TAggregateRoot root)
+        {
+            this.Remove(root as IAggregateRoot);
+        }
+
+        public void Add(IAggregateRoot root, string key)
+        {
+            if (this._cacheIndex.ContainsKey(key))
+                throw new DomainException(DomainCode.IndexCacheExists.GetHashCode(), $"领域对象{root.GetType().Name}已经包含key:{key}");
+
+            if (!this._cacheIndex.TryAdd(key, true))
+                throw new DomainException(DomainCode.IndexCacheExists.GetHashCode(), $"领域对象{root.GetType().Name}已经包含key:{key}");
+
+            _cacheKey.TryAdd(root.Id, key);
+        }
+
+        public void Remove(IAggregateRoot root)
         {
             string key;
             bool isIndex;

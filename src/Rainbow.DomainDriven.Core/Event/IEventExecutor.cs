@@ -5,6 +5,6 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEventExecutor
     {
-        void Handle(DomainMessage<DomainEventStream> message);
+        void Handle(DomainMessage message);
     }
 }

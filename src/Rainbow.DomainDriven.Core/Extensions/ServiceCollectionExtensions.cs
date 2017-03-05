@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Rainbow.DomainDriven.Command;
-using Rainbow.DomainDriven;
+﻿using Rainbow.DomainDriven;
+using Rainbow.DomainDriven.Infrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -14,6 +9,9 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var builder = new DomainHostBuilder(service);
             builder.Initialize();
+            builder.ApplyServices(new SelectorInitializeExtension());
+            builder.ApplyServices(new EventHandlerInitializeExtension());
+            builder.ApplyServices(new DomainTypeSearchExtension());
             return builder;
         }
     }

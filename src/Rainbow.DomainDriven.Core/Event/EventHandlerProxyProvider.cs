@@ -17,13 +17,13 @@ namespace Rainbow.DomainDriven.Event
             this._serviceProvider = serviceProvider;
         }
 
-        public IEventHandlerProxy GetEventHanderProxy(Type eventType)
+        public IEventHandlerProxy GetEventHandlerProxy(Type eventType)
         {
             var genericType = typeof(EventHandlerProxy<>).MakeGenericType(eventType);
             var proxy = this._serviceProvider.GetService(genericType);
             if (proxy != null) return proxy as IEventHandlerProxy;
 
-            throw new NotImplementedException($"没有找到类型：{eventType.Name}");
+            throw new Exception($"没有找到类型：{eventType.Name}");
         }
     }
 }

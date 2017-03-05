@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Event
 {
-    public class DomainEvent : IEvent
+    public abstract class DomainEvent : IEvent
     {
         public DomainEvent()
         {
