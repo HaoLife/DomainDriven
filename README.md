@@ -43,3 +43,36 @@
         Sex = 1
     });
 
+
+### 这是一个默认模式的使用
+
+    IConfiguration configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .Build();
+    
+    IServiceCollection serviceCollection = new ServiceCollection();
+    
+    serviceCollection
+        .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+        .UseDefaultService()
+        .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
+        .Build()
+        .Start();
+
+    var provider = serviceCollection.BuildServiceProvider();
+    var commandService = provider.GetRequiredService<ICommandService>();
+    commandService.Handle(new CreateUserCommand()
+    {
+        Id = Guid.NewGuid(),
+        Name = $"nihao-{id.ToShort()}",
+        Sex = 1
+    });
+
+
+    appsettings.json
+
+    "Local": {
+        "CommandQueueSize": 1048576,
+        "EventQueueSize": 1048576
+    },
