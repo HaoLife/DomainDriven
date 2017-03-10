@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>Rainbow.DomainDriven.ConsoleApp</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>Rainbow.DomainDriven.ConsoleApp</PackageId>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj" />
+    <ProjectReference Include="..\..\src\Rainbow.DomainDriven.Mongo\Rainbow.DomainDriven.Mongo.csproj" />
+    <ProjectReference Include="..\..\src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.0.2" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.0.1" />
+    <PackageReference Include="Dapper" Version="1.50.*" />
+    <PackageReference Include="Microsoft.Data.SQLite" Version="1.1.*" />
+  </ItemGroup>
+
+</Project>

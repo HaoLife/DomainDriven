@@ -1,24 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3EE6B986-C6F3-4965-BCCD-F2EDCF4BE465}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B43F14B2-C28A-4F12-8042-F74FDA27E33C}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.xproj", "{9A4E9F88-5281-43E7-B41A-80D8A877BD83}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{39B08101-9037-47EF-BCB0-F5558FEB9F80}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rainbow.DomainDriven.ConsoleApp", "samples\Rainbow.DomainDriven.ConsoleApp\Rainbow.DomainDriven.ConsoleApp.xproj", "{A230F532-9A96-4A38-A35A-28D15585F7D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj", "{9A4E9F88-5281-43E7-B41A-80D8A877BD83}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rainbow.DomainDriven.Mongo", "src\Rainbow.DomainDriven.Mongo\Rainbow.DomainDriven.Mongo.xproj", "{D94F6982-AD11-42F5-9777-C064F00F31E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.ConsoleApp", "samples\Rainbow.DomainDriven.ConsoleApp\Rainbow.DomainDriven.ConsoleApp.csproj", "{A230F532-9A96-4A38-A35A-28D15585F7D6}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rainbow.DomainDriven.RingQueue", "src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.xproj", "{CB790871-5FC4-4FA7-A5E4-B197959EDBCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Mongo", "src\Rainbow.DomainDriven.Mongo\Rainbow.DomainDriven.Mongo.csproj", "{D94F6982-AD11-42F5-9777-C064F00F31E9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.RingQueue", "src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.csproj", "{CB790871-5FC4-4FA7-A5E4-B197959EDBCB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
