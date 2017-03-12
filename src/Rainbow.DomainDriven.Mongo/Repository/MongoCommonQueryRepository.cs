@@ -8,8 +8,8 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class MongoCommonQueryRepository : IAggregateRootCommonQueryRepository
     {
-        private readonly IAggregateRootLockRepositoryProvider _aggregateRootRepositoryProvider;
-        public MongoCommonQueryRepository(IAggregateRootLockRepositoryProvider aggregateRootRepositoryProvider)
+        private readonly IAggregateRootRepositoryProvider _aggregateRootRepositoryProvider;
+        public MongoCommonQueryRepository(IAggregateRootRepositoryProvider aggregateRootRepositoryProvider)
         {
             this._aggregateRootRepositoryProvider = aggregateRootRepositoryProvider;
         }

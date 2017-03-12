@@ -49,6 +49,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
             if (aggregate == null)
             {
+                if (this._aggregateRootCache.Invalid<TAggregateRoot>(id))
+                    throw new NullReferenceException("没有找到该对象");
                 aggregate = this._aggregateRootCache.Get<TAggregateRoot>(id);
             }
 

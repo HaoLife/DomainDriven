@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3EE6B986-C6F3-4965-BCCD-F2EDCF4BE465}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B43F14B2-C28A-4F12-8042-F74FDA27E33C}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{39B08101-9037-47EF-BCB0-F5558FEB9F80}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj", "{9A4E9F88-5281-43E7-B41A-80D8A877BD83}"

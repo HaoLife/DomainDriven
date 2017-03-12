@@ -5,15 +5,19 @@
     "command": "msbuild",
     "args": [
         // Ask msbuild to generate full paths for file names.
-        "/property:GenerateFullPaths=true"
+        //"/property:GenerateFullPaths=true"
+        "Rainbow.DomainDriven.sln"
     ],
     "taskSelector": "/t:",
-    "showOutput": "silent",
+    //"showOutput": "silent",
+    "showOutput": "always",
+    "echoCommand": true,
     "tasks": [
         {
             "taskName": "build",
             // Show the output window only if unrecognized errors occur.
-            "showOutput": "silent",
+            //"showOutput": "silent",
+            "showOutput": "always",
             // Use the standard MS compiler pattern to detect errors, warnings and infos
             "problemMatcher": "$msCompile"
         }

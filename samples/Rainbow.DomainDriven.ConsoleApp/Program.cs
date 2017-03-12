@@ -9,6 +9,8 @@ using Rainbow.DomainDriven.Domain;
 using System.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
+using Rainbow.DomainDriven.ConsoleApp.Config;
+
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
@@ -29,6 +31,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
                 //.UseDefaultDomain()
                 //.UseDefaultService()
+                .UseCommandMapping<CommandMappingProvider>()
                 .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
                 .Build()
                 .Start();
@@ -54,17 +57,17 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             try
             {
-                commandService.Handle(new CreateUserCommand()
-                {
-                    Id = id,
-                    Name = "nihao 1-1",
-                    Sex = 1
-                });
-                // commandService.Handle(new ModifyUserNameCommand()
+                // commandService.Handle(new CreateUserCommand()
                 // {
-                //     UserId = new Guid("23157b6f-a318-a74c-8842-06c6634ab698"),
-                //     Name = "11"
+                //     Id = id,
+                //     Name = "nihao 1-1",
+                //     Sex = 1
                 // });
+                commandService.Handle(new ModifyUserNameCommand()
+                {
+                    UserId = new Guid("ae32a058-ebc3-9b4a-8d8b-d3182b702dd1"),
+                    Name = "11"
+                });
             }
             catch (DomainException domainEx)
             {
@@ -96,7 +99,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
             //     }, i);
             // }
 
-
+            Console.WriteLine("end");
             Console.ReadLine();
 
         }

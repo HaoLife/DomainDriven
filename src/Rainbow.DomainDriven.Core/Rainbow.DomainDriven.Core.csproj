@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <DebugType>portable</DebugType>
-    <AssemblyName>Rainbow.DomainDriven.Core</AssemblyName>
+    <AssemblyName>Rainbow.DomainDriven</AssemblyName>
     <PackageId>Rainbow.DomainDriven.Core</PackageId>
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
