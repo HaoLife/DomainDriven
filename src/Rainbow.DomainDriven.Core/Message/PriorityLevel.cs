@@ -7,7 +7,7 @@ namespace Rainbow.DomainDriven.Message
 {
     public enum PriorityLevel
     {
-        Urgent,
+        Quick,
         Normal,
         Slow,
 

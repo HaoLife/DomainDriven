@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Core.Utilities;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;
 using Rainbow.DomainDriven.RingQueue.Message;
+using Rainbow.DomainDriven.Cache;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -22,15 +23,18 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private readonly IDomainTypeSearch _domainTypeSearch;
         private readonly ILogger<SnapshotHandler> _logger;
         private readonly IMessageListening _messageListening;
+        private readonly IAggregateRootCache _aggregateRootCache;
 
         private ConcurrentDictionary<Type, IAggregateRootBatchRepository> _unRepo;
         private List<DomainMessage> _data;
+        private List<IAggregateRoot> _usedAggregates;
 
         public SnapshotHandler(
             IReplayEventProxyProvider replayEventProxyProvider
             , IAggregateRootBatchRepositoryProvider aggregateRootBatchRepositoryProvider
             , IDomainTypeSearch domainTypeSearch
             , IMessageListening messageListening
+            , IAggregateRootCache aggregateRootCache
             , ILogger<SnapshotHandler> logger
             )
         {
@@ -38,9 +42,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             this._aggregateRootBatchRepositoryProvider = aggregateRootBatchRepositoryProvider;
             this._domainTypeSearch = domainTypeSearch;
             this._messageListening = messageListening;
+            this._aggregateRootCache = aggregateRootCache;
             this._logger = logger;
             this._unRepo = new ConcurrentDictionary<Type, IAggregateRootBatchRepository>();
             this._data = new List<DomainMessage>();
+            this._usedAggregates = new List<IAggregateRoot>();
         }
         public void Handle(DomainMessage message, long sequence, bool isEnd)
         {
@@ -85,6 +91,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                     proxy.Handle(root, item.Event);
                     repo.Update(root);
                 }
+                this._usedAggregates.Add(root);
             }
         }
 
@@ -94,6 +101,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             {
                 item.Commit();
             }
+            foreach (var item in this._usedAggregates)
+                this._aggregateRootCache.RemoveWhere(item);
+            this._usedAggregates.Clear();
         }
 
 

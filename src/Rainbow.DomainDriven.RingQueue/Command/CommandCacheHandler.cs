@@ -42,10 +42,17 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
             foreach (var item in this._data)
             {
+                var caches = item.Value.Where(a => _aggregateRootCache.Exists(item.Key, a)).ToArray();
+                var count = this._aggregateRootCache.Use(item.Key, caches);
+                if (count != caches.Length)
+                {
+                    caches = item.Value.Where(a => _aggregateRootCache.Exists(item.Key, a)).ToArray();
+                }
                 var reads = item.Value.Where(a => !_aggregateRootCache.Exists(item.Key, a)).ToArray();
                 var aggregateRoots = this._aggregateRootCommonQueryRepository.Get(item.Key, reads);
                 foreach (var aggr in aggregateRoots)
                     this._aggregateRootCache.Set(aggr);
+                this._aggregateRootCache.Use(aggregateRoots);
 
                 var keys = aggregateRoots.Select(a => a.Id).ToArray();
                 var invalids = reads.Where(a => !keys.Contains(a)).ToList();

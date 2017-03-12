@@ -24,7 +24,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private readonly IRollbackService _rollbackService;
         private readonly IAggregateRootCache _aggregateRootCache;
         private readonly IAggregateRootIndexCache _aggregateRootIndexCache;
-        private readonly IMessageListening _messageListening;
 
         public RingQueueCommandExecutor(
              ICommandHandlerSelector commandHandlerSelector
@@ -34,7 +33,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             , IRollbackService rollbackService
             , IAggregateRootCache aggregateRootCache
             , IAggregateRootIndexCache aggregateRootIndexCache
-            , IMessageListening messageListening
             )
         {
             this._commandExecutorSelector = commandHandlerSelector;
@@ -45,7 +43,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._rollbackService = rollbackService;
             this._aggregateRootCache = aggregateRootCache;
             this._aggregateRootIndexCache = aggregateRootIndexCache;
-            this._messageListening = messageListening;
         }
         public void Handle<TCommand>(DomainMessage cmd) where TCommand : class
         {
@@ -65,15 +62,13 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             }
             catch (Exception ex)
             {
-                var redoRoots = _rollbackService.Redo(_commandExecutorContext.TrackedAggregateRoots);
-                foreach (var root in redoRoots)
+                if (_commandExecutorContext.TrackedAggregateRoots.Any())
                 {
-                    _aggregateRootCache.Set(root);
-                }
-                if (!string.IsNullOrEmpty(cmd.Head.ReplyKey))
-                {
-                    var message = new NoticeMessage() { IsSuccess = false, Exception = ex };
-                    this._messageListening.Notice(cmd.Head.ReplyKey, message);
+                    var redoRoots = _rollbackService.Redo(_commandExecutorContext.TrackedAggregateRoots);
+                    foreach (var root in redoRoots)
+                    {
+                        _aggregateRootCache.Set(root);
+                    }
                 }
                 throw ex;
             }

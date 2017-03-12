@@ -10,7 +10,7 @@ using System.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using Rainbow.DomainDriven.ConsoleApp.Config;
-
+using Microsoft.Extensions.Logging;
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
@@ -28,7 +28,8 @@ namespace Rainbow.DomainDriven.ConsoleApp
             IServiceCollection serviceCollection = new ServiceCollection();
 
             serviceCollection
-                .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+                //.UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+                .UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
                 //.UseDefaultDomain()
                 //.UseDefaultService()
                 .UseCommandMapping<CommandMappingProvider>()
@@ -43,6 +44,11 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
 
             var provider = serviceCollection.BuildServiceProvider();
+
+            var loggerFactory = provider.GetService<ILoggerFactory>();
+            loggerFactory.AddDebug();
+            loggerFactory.AddConsole(configuration.GetSection("Logging"));
+
             var commandService = provider.GetRequiredService<ICommandService>();
             //commandService.Handle(new CreateUserCommand() { Id = Guid.NewGuid(), Name = "nihao 1", Sex = 1 });
 
@@ -65,7 +71,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 // });
                 commandService.Handle(new ModifyUserNameCommand()
                 {
-                    UserId = new Guid("ae32a058-ebc3-9b4a-8d8b-d3182b702dd1"),
+                    UserId = new Guid("be5a5e77-c11c-40d3-a24d-b0b165de621e"),
                     Name = "11"
                 });
             }

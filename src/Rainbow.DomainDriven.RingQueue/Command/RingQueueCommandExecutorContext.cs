@@ -26,6 +26,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         public void Clear()
         {
+            this._aggregateRootCache.Used(this._unNoticeRoots);
             this._unNoticeRoots.ForEach(p => p.Clear());
             this._unNoticeRoots.Clear();
         }

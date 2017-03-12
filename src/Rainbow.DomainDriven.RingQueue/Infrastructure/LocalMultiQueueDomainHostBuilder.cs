@@ -5,11 +5,11 @@ using Rainbow.DomainDriven.RingQueue.Command;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
-    public class LocalQueueDomainHostBuilder : IDomainHostBuilder
+    public class LocalMultiQueueDomainHostBuilder: IDomainHostBuilder
     {
         private readonly IServiceCollection _service;
 
-        public LocalQueueDomainHostBuilder(IServiceCollection service)
+        public LocalMultiQueueDomainHostBuilder(IServiceCollection service)
         {
             this._service = service;
         }
@@ -19,14 +19,14 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             this.AddCore();
 
             this.Services
-                .AddSingleton<ICommandService, RingQueueCommandService>();
+                .AddSingleton<ICommandService, RingMultiQueueEventService>();
         }
 
         public IServiceCollection Services => _service;
 
         public IDomainHost Build()
         {
-            return new LocalQueueDamianHost(_service);
+            return new LocalMultiQueueDomainHost(_service);
         }
 
         public void ApplyServices(IDomainInitializeExtension ext)

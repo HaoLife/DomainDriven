@@ -11,13 +11,19 @@ namespace Rainbow.DomainDriven.Cache
         TAggregateRoot Get<TAggregateRoot>(Guid id) where TAggregateRoot : class, IAggregateRoot;
         TAggregateRoot Set<TAggregateRoot>(TAggregateRoot aggregate) where TAggregateRoot : class, IAggregateRoot;
         TAggregateRoot Remove<TAggregateRoot>(Guid id) where TAggregateRoot : class, IAggregateRoot;
+        TAggregateRoot RemoveWhere<TAggregateRoot>(Guid id, int version) where TAggregateRoot : class, IAggregateRoot;
         bool Exists<TAggregateRoot>(Guid id) where TAggregateRoot : class, IAggregateRoot;
 
+        int Used(IEnumerable<IAggregateRoot> aggregates);
+        int Use(IEnumerable<IAggregateRoot> aggregates);
+        int Use(Type aggregateType, IEnumerable<Guid> ids);
 
-        IAggregateRoot Get(IAggregateRoot aggregate, Guid id);
+
+        IAggregateRoot Get(Type aggregateType, Guid id);
         IAggregateRoot Set(IAggregateRoot aggregate);
         IAggregateRoot Remove(IAggregateRoot aggregate);
-        IAggregateRoot Remove(Type aggregateType, Guid id);
+        IAggregateRoot RemoveWhere(IAggregateRoot aggregate);
+        IAggregateRoot RemoveWhere(Type aggregateType, Guid id, int version);
         bool Exists(Type aggregateType, Guid id);
         bool Exists(IAggregateRoot aggregate);
 

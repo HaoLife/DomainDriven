@@ -62,7 +62,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             {
                 var query = filter.And(
                         filter.Eq(p => p.Id, item.Id),
-                        filter.Eq(p => p.Version, item.Version)
+                        filter.Eq(p => p.Version, item.Version - 1)
                     );
                 list.Add(new ReplaceOneModel<TAggregateRoot>(query, item as TAggregateRoot));
             }
@@ -75,7 +75,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             {
                 var query = filter.And(
                         filter.Eq(p => p.Id, item.Id),
-                        filter.Eq(p => p.Version, item.Version)
+                        filter.Eq(p => p.Version, item.Version - 1)
                     );
                 list.Add(new DeleteOneModel<TAggregateRoot>(query));
             }

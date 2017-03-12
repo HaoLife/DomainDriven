@@ -7,6 +7,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
     public interface IMessageProcess
     {
         IRingQueue<DomainMessage> GetQueue(string queueName);
+        IEnumerable<IRingQueue<DomainMessage>> GetQueues(string queueName);
         Dictionary<string, IQueueConsumer> GetConsumers(string queueName);
         IQueueConsumer GetConsumer(string queueName, string consumer);
 

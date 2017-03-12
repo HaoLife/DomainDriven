@@ -15,12 +15,12 @@ namespace Rainbow.DomainDriven.Command
         }
 
 
-        public static void SendUrgent<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void SendQuick<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
         {
             service.Publish<TCommand>(new DomainMessage()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), PriorityLevel.Urgent, ConsistencyLevel.Lose)
+                Head = new MessageHead(Guid.NewGuid().ToShort(), PriorityLevel.Quick, ConsistencyLevel.Lose)
             });
         }
 
@@ -45,12 +45,12 @@ namespace Rainbow.DomainDriven.Command
         }
 
 
-        public static void HandleUrgent<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void HandleQuick<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
         {
             service.Publish<TCommand>(new DomainMessage()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), Guid.NewGuid().ToShort(), PriorityLevel.Urgent, ConsistencyLevel.Finally)
+                Head = new MessageHead(Guid.NewGuid().ToShort(), Guid.NewGuid().ToShort(), PriorityLevel.Quick, ConsistencyLevel.Finally)
             });
         }
 

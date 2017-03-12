@@ -51,5 +51,14 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
                 Task.Factory.StartNew(a => ((IQueueConsumer)a).Run(), item);
             }
         }
+
+        public IEnumerable<IRingQueue<DomainMessage>> GetQueues(string queueName)
+        {
+            foreach (var item in this._queue)
+            {
+                if (item.Key.Contains(queueName)) 
+                    yield return item.Value;
+            }
+        }
     }
 }

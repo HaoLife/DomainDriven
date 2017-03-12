@@ -9,11 +9,13 @@ namespace Rainbow.DomainDriven.Cache
     {
         private readonly ConcurrentDictionary<string, IAggregateRoot> _cache;
         private readonly HashSet<string> _cacheInvalid;
+        private readonly HashSet<string> _cacheUsed;
 
         public AggregateRootCache()
         {
             this._cache = new ConcurrentDictionary<string, IAggregateRoot>();
             this._cacheInvalid = new HashSet<string>();
+            this._cacheUsed = new HashSet<string>();
         }
 
         private string CacheKey(Type aggregateType, Guid id)
@@ -35,24 +37,29 @@ namespace Rainbow.DomainDriven.Cache
             return this._cache.ContainsKey(this.CacheKey(aggregate.GetType(), aggregate.Id));
         }
 
-        public IAggregateRoot Get(IAggregateRoot aggregate, Guid id)
+        public IAggregateRoot Get(Type aggregateType, Guid id)
         {
             IAggregateRoot model;
-            this._cache.TryGetValue(this.CacheKey(aggregate.GetType(), id), out model);
+            var key = this.CacheKey(aggregateType, id);
+            if (this._cache.TryGetValue(key, out model))
+            {
+                this._cacheUsed.Add(key);
+            }
             return model;
         }
 
         public IAggregateRoot Remove(IAggregateRoot aggregate)
         {
-            IAggregateRoot model;
-            this._cache.TryRemove(this.CacheKey(aggregate.GetType(), aggregate.Id), out model);
-            return model;
+            return this.Remove(aggregate.GetType(), aggregate.Id);
         }
 
         public IAggregateRoot Remove(Type aggregateType, Guid id)
         {
             IAggregateRoot model;
-            this._cache.TryRemove(this.CacheKey(aggregateType, id), out model);
+            var key = this.CacheKey(aggregateType, id);
+            if (this._cacheUsed.Contains(key)) return null;
+
+            this._cache.TryRemove(key, out model);
             return model;
         }
 
@@ -70,16 +77,12 @@ namespace Rainbow.DomainDriven.Cache
 
         TAggregateRoot IAggregateRootCache.Get<TAggregateRoot>(Guid id)
         {
-            IAggregateRoot model;
-            this._cache.TryGetValue(this.CacheKey<TAggregateRoot>(id), out model);
-            return model as TAggregateRoot;
+            return this.Get(typeof(TAggregateRoot), id) as TAggregateRoot;
         }
 
         TAggregateRoot IAggregateRootCache.Remove<TAggregateRoot>(Guid id)
         {
-            IAggregateRoot model;
-            this._cache.TryRemove(this.CacheKey<TAggregateRoot>(id), out model);
-            return model as TAggregateRoot;
+            return this.Remove(typeof(TAggregateRoot), id) as TAggregateRoot;
         }
 
         TAggregateRoot IAggregateRootCache.Set<TAggregateRoot>(TAggregateRoot aggregate)
@@ -107,5 +110,61 @@ namespace Rainbow.DomainDriven.Cache
         {
             this._cacheInvalid.Remove(this.CacheKey(aggregateType, id));
         }
+
+        public int Used(IEnumerable<IAggregateRoot> aggregates)
+        {
+            int count = 0;
+            foreach (var item in aggregates)
+            {
+                var key = this.CacheKey(item.GetType(), item.Id);
+                if (this._cacheUsed.Remove(key)) count++;
+            }
+            return count;
+        }
+
+        public int Use(IEnumerable<IAggregateRoot> aggregates)
+        {
+            int count = 0;
+            foreach (var item in aggregates)
+            {
+                var key = this.CacheKey(item.GetType(), item.Id);
+                if (this._cacheUsed.Add(key)) count++;
+            }
+            return count;
+        }
+
+        public int Use(Type aggregateType, IEnumerable<Guid> ids)
+        {
+            int count = 0;
+            foreach (var item in ids)
+            {
+                var key = this.CacheKey(aggregateType, item);
+                if (this._cacheUsed.Add(key)) count++;
+            }
+            return count;
+        }
+
+        TAggregateRoot IAggregateRootCache.RemoveWhere<TAggregateRoot>(Guid id, int version)
+        {
+            return this.RemoveWhere(typeof(TAggregateRoot), id, version) as TAggregateRoot;
+        }
+
+        public IAggregateRoot RemoveWhere(IAggregateRoot aggregate)
+        {
+            return this.RemoveWhere(aggregate.GetType(), aggregate.Id, aggregate.Version);
+        }
+
+        public IAggregateRoot RemoveWhere(Type aggregateType, Guid id, int version)
+        {
+            IAggregateRoot model;
+            var key = this.CacheKey(aggregateType, id);
+            if (this._cacheUsed.Contains(key)) return null;
+            if (!this._cache.TryGetValue(key, out model)) return null;
+            if (model.Version != version) return null;
+
+            this._cache.TryRemove(key, out model);
+            return model;
+        }
+
     }
 }

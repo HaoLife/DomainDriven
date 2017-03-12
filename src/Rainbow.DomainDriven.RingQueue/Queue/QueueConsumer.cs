@@ -33,15 +33,22 @@ namespace Rainbow.DomainDriven.RingQueue.Queue
 
             while (true)
             {
-                var nextSequence = _sequence.Value + 1L;
-                var availableSequence = _sequenceBarrier.WaitFor(nextSequence);
-                while (nextSequence <= availableSequence)
+                try
                 {
-                    var evt = _messageQueue[nextSequence];
-                    _messageHandler.Handle(evt.Value, nextSequence, nextSequence == availableSequence);
-                    nextSequence++;
+                    var nextSequence = _sequence.Value + 1L;
+                    var availableSequence = _sequenceBarrier.WaitFor(nextSequence);
+                    while (nextSequence <= availableSequence)
+                    {
+                        var evt = _messageQueue[nextSequence];
+                        _messageHandler.Handle(evt.Value, nextSequence, nextSequence == availableSequence);
+                        nextSequence++;
+                    }
+                    _sequence.SetValue(availableSequence);
                 }
-                _sequence.SetValue(availableSequence);
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
         }
     }

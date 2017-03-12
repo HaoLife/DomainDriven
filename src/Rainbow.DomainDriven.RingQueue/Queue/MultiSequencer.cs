@@ -23,7 +23,6 @@ namespace Rainbow.DomainDriven.RingQueue.Queue
         //序列闸门，用来限制可进行生产的序列
         private List<ISequence> _gatingSequences;
 
-
         public MultiSequencer(int size)
         {
             this._availableBuffer = new int[size];
