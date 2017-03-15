@@ -16,7 +16,7 @@
 ### 参考资料
 1.   领域驱动设计 [enode](https://github.com/tangxuehua/enode)
 2.   环形队列 [Disruptor](https://github.com/disruptor-net/Disruptor-net)
-3.   一个工作时涉及的领域驱动设计框架 by 李先生(上海区链网络科技有限公司)
+3.   领域驱动设计 FCFramework
 
 
 
@@ -89,6 +89,7 @@
 >         .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
 >         .UseDefaultService()
 >         .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
+>         .UseEventSourcing()   //事件回溯
 >         .Build()
 >         .Start();
 >     
