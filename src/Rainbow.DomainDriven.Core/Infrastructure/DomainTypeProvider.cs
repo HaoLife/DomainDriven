@@ -7,11 +7,18 @@ using Rainbow.DomainDriven.Event;
 
 namespace Rainbow.DomainDriven.Infrastructure
 {
-    public class DomainTypeSearch : IDomainTypeSearch
+    public class DomainTypeProvider : IDomainTypeProvider
     {
         private readonly Dictionary<string, Type> _cacheType;
         private readonly List<Func<Type, bool>> _checks;
-        public DomainTypeSearch()
+
+        public IEnumerable<Type> Events => _cacheType.Values.Where(a => IsEvent(a));
+
+        public IEnumerable<Type> AggregateRoots =>_cacheType.Values.Where(a => IsAggregateRoot(a));
+
+        public IEnumerable<Type> Commands => _cacheType.Values.Where(a => IsCommand(a));
+
+        public DomainTypeProvider()
         {
             this._cacheType = new Dictionary<string, Type>();
             this._checks = new List<Func<Type, bool>>()

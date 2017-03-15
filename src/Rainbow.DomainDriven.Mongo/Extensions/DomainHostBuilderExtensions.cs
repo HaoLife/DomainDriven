@@ -32,6 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddSingleton(typeof(IAggregateRootQueryRepository<>), typeof(AggregateRootQueryRepository<>))
                 .AddSingleton<IAggregateRootRepositoryProvider, AggregateRootRepositoryProvider>()
                 .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
+                .AddSingleton<IEventSourcingRepository, MongoEventSourcingRepository>()
                 .AddTransient<IAggregateRootOperation, AggregateRootOperation>()
                 );
 

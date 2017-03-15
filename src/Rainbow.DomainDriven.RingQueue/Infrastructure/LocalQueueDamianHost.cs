@@ -33,6 +33,10 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 
             var messageProcess = builder.Build();
             messageProcess.Start();
+
+            var eventSourcingProcess = provider.GetService<IEventSourcingProcess>();
+            if (eventSourcingProcess != null)
+                eventSourcingProcess.Run();
         }
 
         private void BuildCommandService(

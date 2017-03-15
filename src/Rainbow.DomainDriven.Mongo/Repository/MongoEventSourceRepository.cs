@@ -15,7 +15,6 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             var client = new MongoClient(options.Value.EventSourceConnectionString);
             var database = client.GetDatabase(options.Value.EventSourceDatabase);
             this._database = database;
-
         }
         public void AddRange(IEnumerable<DomainEventSource> events)
         {

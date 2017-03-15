@@ -20,9 +20,17 @@ namespace Rainbow.DomainDriven.Message
             this.Priority = priority;
             this.Consistency = consistency;
         }
+
+        public MessageHead(string key, bool isSourcing)
+        {
+            this.Key = key;
+            this.IsSourcing = isSourcing;
+        }
+
         public string Key { get; set; }
         public string ReplyKey { get; set; }
         public PriorityLevel Priority { get; set; }
         public ConsistencyLevel Consistency { get; set; }
+        public bool IsSourcing { get; set; }
     }
 }

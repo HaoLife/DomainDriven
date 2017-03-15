@@ -1,6 +1,7 @@
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.RingQueue.Command;
+using Rainbow.DomainDriven.RingQueue.Infrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -13,7 +14,14 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services
                 .AddSingleton<ICommandMappingProvider, TCommandMappingProvider>()
                 .AddSingleton<CommandCacheHandler>();
-            
+
+            return builder;
+        }
+
+        public static IDomainHostBuilder UseEventSourcing(this IDomainHostBuilder builder)
+        {
+            builder.Services
+                .AddSingleton<IEventSourcingProcess, EventSourcingProcess>();
             return builder;
         }
 

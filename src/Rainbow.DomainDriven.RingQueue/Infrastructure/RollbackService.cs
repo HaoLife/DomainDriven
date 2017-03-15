@@ -7,6 +7,7 @@ using Rainbow.DomainDriven.Repository;
 using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.RingQueue.Message;
+using Rainbow.DomainDriven.RingQueue.Utilities;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
@@ -25,9 +26,9 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             )
         {
             var process = messageProcessBuilder.Build();
-            this._messageQueue = process.GetQueue("event");
+            this._messageQueue = process.GetQueue(QueueName.EventQueue);
             this._sequenceBarrier = this._messageQueue.NewBarrier();
-            this._sequence = process.GetConsumer("event", "store")?.Sequence;
+            this._sequence = process.GetConsumer(QueueName.EventQueue, QueueName.EventStoreConsumer)?.Sequence;
             this._aggregateRootCommonQueryRepository = aggregateRootCommonQueryRepository;
             this._replayEventProxyProvider = replayEventProxyProvider;
         }

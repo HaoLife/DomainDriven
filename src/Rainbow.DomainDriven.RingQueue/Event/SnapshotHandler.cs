@@ -20,7 +20,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
     {
         private readonly IReplayEventProxyProvider _replayEventProxyProvider;
         private readonly IAggregateRootBatchRepositoryProvider _aggregateRootBatchRepositoryProvider;
-        private readonly IDomainTypeSearch _domainTypeSearch;
+        private readonly IDomainTypeProvider _domainTypeSearch;
         private readonly ILogger<SnapshotHandler> _logger;
         private readonly IMessageListening _messageListening;
         private readonly IAggregateRootCache _aggregateRootCache;
@@ -32,7 +32,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         public SnapshotHandler(
             IReplayEventProxyProvider replayEventProxyProvider
             , IAggregateRootBatchRepositoryProvider aggregateRootBatchRepositoryProvider
-            , IDomainTypeSearch domainTypeSearch
+            , IDomainTypeProvider domainTypeSearch
             , IMessageListening messageListening
             , IAggregateRootCache aggregateRootCache
             , ILogger<SnapshotHandler> logger
@@ -57,17 +57,27 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
                 this._data.Add(message);
                 this.HandleEventStream(stream);
+            }
+            catch (Exception ex)
+            {
+                this._data.Remove(message);
+                Notice(message, false, ex);
+                this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error by message:");
+            }
 
-                if (!isEnd) return;
+            if (!isEnd) return;
+
+            try
+            {
                 this.Commit();
                 Notice(true);
+                this._unRepo.Clear();
             }
             catch (Exception ex)
             {
                 this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error");
                 Notice(false, ex);
             }
-            this._unRepo.Clear();
 
         }
         public void HandleEventStream(DomainEventStream stream)
@@ -99,7 +109,14 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         {
             foreach (var item in _unRepo.Values)
             {
-                item.Commit();
+                try
+                {
+                    item.Commit();
+                }
+                catch (Exception ex)
+                {
+                    this._logger.LogError(LogEvent.Frame, ex, $"execute command:{nameof(SnapshotHandler)} error by commit ");
+                }
             }
             foreach (var item in this._usedAggregates)
                 this._aggregateRootCache.RemoveWhere(item);
@@ -115,7 +132,14 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 if (item.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
                     this._messageListening.Notice(item.Head.ReplyKey, message);
             }
-
+        }
+        private void Notice(DomainMessage domainMessage, bool isSuccess, Exception ex = null)
+        {
+            if (domainMessage.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(domainMessage.Head.ReplyKey))
+            {
+                var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
+                this._messageListening.Notice(domainMessage.Head.ReplyKey, message);
+            }
         }
     }
 }

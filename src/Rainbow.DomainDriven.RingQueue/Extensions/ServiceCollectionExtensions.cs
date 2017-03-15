@@ -15,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Initialize();
             builder.ApplyServices(new SelectorInitializeExtension());
             builder.ApplyServices(new EventHandlerInitializeExtension());
-            builder.ApplyServices(new DomainTypeSearchExtension());
+            builder.ApplyServices(new DomainTypeProviderExtension());
             return builder;
         }
 
@@ -28,7 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Initialize();
             builder.ApplyServices(new SelectorInitializeExtension());
             builder.ApplyServices(new EventHandlerInitializeExtension());
-            builder.ApplyServices(new DomainTypeSearchExtension());
+            builder.ApplyServices(new DomainTypeProviderExtension());
             return builder;
         }
     }

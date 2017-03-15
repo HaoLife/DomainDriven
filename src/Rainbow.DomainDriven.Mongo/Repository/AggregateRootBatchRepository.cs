@@ -16,6 +16,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
         private readonly IMongoCollection<TAggregateRoot> _mongoCollection;
         private readonly IAggregateRootOperation _aggregateRootOperation;
         private readonly List<WriteModel<TAggregateRoot>> _unCommit;
+        private BulkWriteOptions _options = new BulkWriteOptions() { IsOrdered = false};
         public AggregateRootBatchRepository(
             IMongoDatabase mongoDatabase,
             IAggregateRootOperation aggregateRootOperation)
@@ -44,11 +45,12 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             this.BuildAdded(list, this._aggregateRootOperation.GetAdded(typeof(TAggregateRoot)));
             this.BuildUpdated(list, this._aggregateRootOperation.GetUpdated(typeof(TAggregateRoot)));
             this.BuildRemoved(list, this._aggregateRootOperation.GetRemoved(typeof(TAggregateRoot)));
-            this._mongoCollection.BulkWrite(list);
+            this._mongoCollection.BulkWrite(list, _options);
         }
 
         public void BuildAdded(List<WriteModel<TAggregateRoot>> list, IEnumerable<IAggregateRoot> roots)
         {
+            var filter = Builders<TAggregateRoot>.Filter;
             foreach (var item in roots)
             {
                 list.Add(new InsertOneModel<TAggregateRoot>(item as TAggregateRoot));

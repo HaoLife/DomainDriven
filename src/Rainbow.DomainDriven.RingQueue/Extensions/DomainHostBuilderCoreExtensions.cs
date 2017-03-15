@@ -13,10 +13,10 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class DomainHostBuilderCoreExtensions
     {
-        
+
         internal static IDomainHostBuilder AddCore(this IDomainHostBuilder builder)
         {
-            
+
             builder.Services.AddOptions()
                 .AddLogging();
 

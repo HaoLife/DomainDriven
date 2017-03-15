@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyModel;
 
 namespace Rainbow.DomainDriven.Infrastructure
 {
-    public class DomainTypeSearchExtension : IDomainInitializeExtension
+    public class DomainTypeProviderExtension : IDomainInitializeExtension
     {
         public void ApplyServices(IServiceCollection services)
         {
@@ -16,11 +16,11 @@ namespace Rainbow.DomainDriven.Infrastructure
                 .SelectMany(p => p.GetDefaultAssemblyNames(dependencyContext))
                 .Select(Assembly.Load);
 
-            var domainTypeSearch = new DomainTypeSearch();
+            var domainTypeSearch = new DomainTypeProvider();
             domainTypeSearch.Initialize(assemblys);
 
             
-            services.AddSingleton<IDomainTypeSearch>(domainTypeSearch);
+            services.AddSingleton<IDomainTypeProvider>(domainTypeSearch);
         }
     }
 }

@@ -32,8 +32,12 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public void Handle(DomainMessage message, long sequence, bool isEnd)
         {
+            //如果是回溯的消息，则不执行保存
+            if (message.Head.IsSourcing) return;
+
             this._data.Add(message);
             if (!isEnd) return;
+            if (!this._data.Any()) return;
 
             var eventSources = this._data.Select(a => a.Content as DomainEventStream)
                 .Where(a => a != null)

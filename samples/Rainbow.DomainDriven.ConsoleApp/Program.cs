@@ -34,6 +34,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 //.UseDefaultService()
                 .UseCommandMapping<CommandMappingProvider>()
                 .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
+                .UseEventSourcing()
                 .Build()
                 .Start();
 
@@ -53,7 +54,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
             //commandService.Handle(new CreateUserCommand() { Id = Guid.NewGuid(), Name = "nihao 1", Sex = 1 });
 
 
-            Guid id = Guid.NewGuid();
+            Guid id = new Guid("4c704243-55a7-408b-87c8-519193969c8b");
             // commandService.Send(new CreateUserCommand()
             // {
             //     Id = id,
@@ -65,15 +66,15 @@ namespace Rainbow.DomainDriven.ConsoleApp
             {
                 // commandService.Handle(new CreateUserCommand()
                 // {
-                //     Id = id,
+                //     Id = Guid.NewGuid(),
                 //     Name = "nihao 1-1",
                 //     Sex = 1
                 // });
-                commandService.Handle(new ModifyUserNameCommand()
-                {
-                    UserId = new Guid("be5a5e77-c11c-40d3-a24d-b0b165de621e"),
-                    Name = "11"
-                });
+                // commandService.Handle(new ModifyUserNameCommand()
+                // {
+                //     UserId = id,
+                //     Name = "11"
+                // });
             }
             catch (DomainException domainEx)
             {
