@@ -4,14 +4,14 @@ using System.Linq;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.Repository;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.RingQueue.Utilities;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public class EventSourcingProcess : IEventSourcingProcess
     {
-        private readonly IQueueProducer<DomainMessage> _messageProducer;
+        private readonly IRingBufferProducer<DomainMessage> _messageProducer;
         private readonly IEventSourcingRepository _eventSourcingRepository;
         public EventSourcingProcess(
             IMessageProcessBuilder messageProcessBuilder
@@ -20,7 +20,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         {
             var process = messageProcessBuilder.Build();
             var queue = process.GetQueue(QueueName.EventQueue);
-            this._messageProducer = new QueueProducer<DomainMessage>(queue);
+            this._messageProducer = new RingBufferProducer<DomainMessage>(queue);
             this._eventSourcingRepository = eventSourcingRepository;
         }
         public void Run()

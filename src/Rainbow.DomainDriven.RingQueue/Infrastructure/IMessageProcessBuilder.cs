@@ -1,13 +1,13 @@
 using Rainbow.DomainDriven.Message;
-using Rainbow.DomainDriven.RingQueue.Queue;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public interface IMessageProcessBuilder
     {
-        void AddQueue(string queueName, IRingQueue<DomainMessage> queue);
+        void AddQueue(string queueName, IRingBuffer<DomainMessage> queue);
 
-        void AddConsumer(string queueName, string consumerName, IQueueConsumer messageConsumer);
+        void AddConsumer(string queueName, string consumerName, IRingBufferConsumer messageConsumer);
         IMessageProcess Build();
     }
 }

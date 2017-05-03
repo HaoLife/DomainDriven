@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-CI00000" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj" />
   </ItemGroup>
 

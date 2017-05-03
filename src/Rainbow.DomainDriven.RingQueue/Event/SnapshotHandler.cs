@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.Repository;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Infrastructure;
 using Microsoft.Extensions.Logging;
@@ -13,10 +12,11 @@ using Rainbow.DomainDriven.Core.Utilities;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;
 using Rainbow.DomainDriven.RingQueue.Message;
 using Rainbow.DomainDriven.Cache;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
-    public class SnapshotHandler : IQueueHandler<DomainMessage>
+    public class SnapshotHandler : IMessageHandler<DomainMessage>
     {
         private readonly IReplayEventProxyProvider _replayEventProxyProvider;
         private readonly IAggregateRootBatchRepositoryProvider _aggregateRootBatchRepositoryProvider;
@@ -25,9 +25,6 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private readonly IMessageListening _messageListening;
         private readonly IAggregateRootCache _aggregateRootCache;
 
-        private ConcurrentDictionary<Type, IAggregateRootBatchRepository> _unRepo;
-        private List<DomainMessage> _data;
-        private List<IAggregateRoot> _usedAggregates;
 
         public SnapshotHandler(
             IReplayEventProxyProvider replayEventProxyProvider
@@ -44,49 +41,14 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             this._messageListening = messageListening;
             this._aggregateRootCache = aggregateRootCache;
             this._logger = logger;
-            this._unRepo = new ConcurrentDictionary<Type, IAggregateRootBatchRepository>();
-            this._data = new List<DomainMessage>();
-            this._usedAggregates = new List<IAggregateRoot>();
         }
-        public void Handle(DomainMessage message, long sequence, bool isEnd)
-        {
-            try
-            {
-                var stream = message.Content as DomainEventStream;
-                if (stream == null) return;
-
-                this._data.Add(message);
-                this.HandleEventStream(stream);
-            }
-            catch (Exception ex)
-            {
-                this._data.Remove(message);
-                Notice(message, false, ex);
-                this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error by message:");
-            }
-
-            if (!isEnd) return;
-
-            try
-            {
-                this.Commit();
-                Notice(true);
-                this._unRepo.Clear();
-            }
-            catch (Exception ex)
-            {
-                this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error");
-                Notice(false, ex);
-            }
-
-        }
-        public void HandleEventStream(DomainEventStream stream)
+        public void HandleEventStream(List<IAggregateRoot> usedAggregates, ConcurrentDictionary<Type, IAggregateRootBatchRepository> unRepo, DomainEventStream stream)
         {
             foreach (var item in stream.EventSources)
             {
                 var type = this._domainTypeSearch.GetType(item.AggregateRootTypeName);
                 IAggregateRoot root;
-                var repo = _unRepo.GetOrAdd(type, t => _aggregateRootBatchRepositoryProvider.GetRepo(t));
+                var repo = unRepo.GetOrAdd(type, t => _aggregateRootBatchRepositoryProvider.GetRepo(t));
                 if (item.Event.Version <= 1)
                 {
                     root = Activator.CreateInstance(type) as IAggregateRoot;
@@ -101,13 +63,13 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                     proxy.Handle(root, item.Event);
                     repo.Update(root);
                 }
-                this._usedAggregates.Add(root);
+                usedAggregates.Add(root);
             }
         }
 
-        public void Commit()
+        public void Commit(List<IAggregateRoot> usedAggregates, ConcurrentDictionary<Type, IAggregateRootBatchRepository> unRepo)
         {
-            foreach (var item in _unRepo.Values)
+            foreach (var item in unRepo.Values)
             {
                 try
                 {
@@ -118,16 +80,15 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                     this._logger.LogError(LogEvent.Frame, ex, $"execute command:{nameof(SnapshotHandler)} error by commit ");
                 }
             }
-            foreach (var item in this._usedAggregates)
+            foreach (var item in usedAggregates)
                 this._aggregateRootCache.RemoveWhere(item);
-            this._usedAggregates.Clear();
         }
 
 
-        private void Notice(bool isSuccess, Exception ex = null)
+        private void Notice(List<DomainMessage> data, bool isSuccess, Exception ex = null)
         {
             var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
-            foreach (var item in this._data)
+            foreach (var item in data)
             {
                 if (item.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
                     this._messageListening.Notice(item.Head.ReplyKey, message);
@@ -139,6 +100,42 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             {
                 var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
                 this._messageListening.Notice(domainMessage.Head.ReplyKey, message);
+            }
+        }
+
+        public void Handle(DomainMessage[] messages)
+        {
+            var data = messages.ToList();
+            ConcurrentDictionary<Type, IAggregateRootBatchRepository> unRepo = new ConcurrentDictionary<Type, IAggregateRootBatchRepository>();
+            List<IAggregateRoot> usedAggregates = new List<IAggregateRoot>();
+            foreach (var message in messages)
+            {
+                try
+                {
+                    var stream = message.Content as DomainEventStream;
+                    if (stream == null) return;
+
+                    this.HandleEventStream(usedAggregates, unRepo, stream);
+                }
+                catch (Exception ex)
+                {
+                    data.Remove(message);
+                    Notice(message, false, ex);
+                    this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error by message:");
+                }
+
+                try
+                {
+                    this.Commit(usedAggregates, unRepo);
+                    Notice(data, true);
+                    unRepo.Clear();
+                    usedAggregates.Clear();
+                }
+                catch (Exception ex)
+                {
+                    this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(SnapshotHandler)} error");
+                    Notice(data, false, ex);
+                }
             }
         }
     }

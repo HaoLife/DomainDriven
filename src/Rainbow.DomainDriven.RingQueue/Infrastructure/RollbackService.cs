@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.Repository;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.RingQueue.Message;
 using Rainbow.DomainDriven.RingQueue.Utilities;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public class RollbackService : IRollbackService
     {
-        private readonly IRingQueue<DomainMessage> _messageQueue;
+        private readonly IRingBuffer<DomainMessage> _messageQueue;
         private readonly ISequenceBarrier _sequenceBarrier;
         private readonly Sequence _sequence;
         private readonly IAggregateRootCommonQueryRepository _aggregateRootCommonQueryRepository;

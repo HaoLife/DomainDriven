@@ -5,20 +5,20 @@ using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.Repository;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using System.Linq;
 using Rainbow.DomainDriven.Cache;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    public class CommandCacheHandler : IQueueHandler<DomainMessage>
+    public class CommandCacheHandler : IMessageHandler<DomainMessage>
     {
         private readonly CommandMappingOptions _commandMappingOptions;
 
         private readonly IAggregateRootCommonQueryRepository _aggregateRootCommonQueryRepository;
         private readonly IAggregateRootCache _aggregateRootCache;
         private readonly ILogger<CommandCacheHandler> _logger;
-        private ConcurrentDictionary<Type, List<Guid>> _data;
+
         public CommandCacheHandler(
             ICommandMappingProvider commandMappingProvider,
             IAggregateRootCommonQueryRepository aggregateRootCommonQueryRepository,
@@ -31,16 +31,28 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._logger = logger;
             this._commandMappingOptions = new CommandMappingOptions();
             commandMappingProvider.OnConfiguring(this._commandMappingOptions);
-            this._data = new ConcurrentDictionary<Type, List<Guid>>();
         }
-        public void Handle(DomainMessage message, long sequence, bool isEnd)
-        {
-            var mapValue = this._commandMappingOptions.FindMap(message.Content);
-            foreach (var item in mapValue)
-                this._data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
-            if (!isEnd) return;
 
-            foreach (var item in this._data)
+
+        public List<Guid> AddValue(List<Guid> source, Guid key)
+        {
+            source.Add(key);
+            return source;
+        }
+
+        public void Handle(DomainMessage[] messages)
+        {
+            ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
+
+            foreach(var message in messages)
+            {
+                var mapValue = this._commandMappingOptions.FindMap(message.Content);
+                foreach (var item in mapValue)
+                    data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
+            }
+            
+
+            foreach (var item in data)
             {
                 var caches = item.Value.Where(a => _aggregateRootCache.Exists(item.Key, a)).ToArray();
                 var count = this._aggregateRootCache.Use(item.Key, caches);
@@ -59,13 +71,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 foreach (var invalid in invalids)
                     this._aggregateRootCache.SetInvalid(item.Key, invalid);
             }
-
-        }
-
-        public List<Guid> AddValue(List<Guid> source, Guid key)
-        {
-            source.Add(key);
-            return source;
         }
     }
 }

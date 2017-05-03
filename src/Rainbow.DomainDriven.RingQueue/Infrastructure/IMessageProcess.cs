@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using Rainbow.DomainDriven.Message;
-using Rainbow.DomainDriven.RingQueue.Queue;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public interface IMessageProcess
     {
-        IRingQueue<DomainMessage> GetQueue(string queueName);
-        IEnumerable<IRingQueue<DomainMessage>> GetQueues(string queueName);
-        Dictionary<string, IQueueConsumer> GetConsumers(string queueName);
-        IQueueConsumer GetConsumer(string queueName, string consumer);
+        IRingBuffer<DomainMessage> GetQueue(string queueName);
+        IEnumerable<IRingBuffer<DomainMessage>> GetQueues(string queueName);
+        Dictionary<string, IRingBufferConsumer> GetConsumers(string queueName);
+        IRingBufferConsumer GetConsumer(string queueName, string consumer);
 
         void Start();
     }

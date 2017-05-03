@@ -7,9 +7,9 @@ using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.RingQueue.Command;
 using Rainbow.DomainDriven.RingQueue.Event;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.RingQueue.Utilities;
 using System.Linq;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
@@ -53,7 +53,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
                 option.CommandQueueSize >> 1
                 };
 
-            RingQueue<DomainMessage>[] queues = new RingQueue<DomainMessage>[3];
+            RingBuffer<DomainMessage>[] queues = new RingBuffer<DomainMessage>[3];
             ISequenceBarrier[] barriers = new ISequenceBarrier[3];
             Sequence[] seqs = new Sequence[3];
 
@@ -61,8 +61,9 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             for (int i = 0; i < sizes.Length; i++)
             {
                 var multiQueueName = $"{queueName}:{i}";
-                MultiSequencer sequencer = new MultiSequencer(sizes[i]);
-                RingQueue<DomainMessage> queue = new RingQueue<DomainMessage>(sequencer);
+                IWaitStrategy wait = new SpinWaitStrategy();
+                MultiSequencer sequencer = new MultiSequencer(sizes[i], wait);
+                RingBuffer<DomainMessage> queue = new RingBuffer<DomainMessage>(sequencer);
                 messageProcessBuilder.AddQueue(multiQueueName, queue);
                 queues[i] = queue;
                 barriers[i] = queue.NewBarrier();
@@ -72,7 +73,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             if (isCache)
             {
                 var cacheHandler = provider.GetService<CommandCacheHandler>();
-                MultiQueueConsumer<DomainMessage> cacheConsumer = new MultiQueueConsumer<DomainMessage>(
+                MultiRingBufferConsumer<DomainMessage> cacheConsumer = new MultiRingBufferConsumer<DomainMessage>(
                     queues,
                     barriers.ToArray(),
                     cacheHandler);
@@ -88,7 +89,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 
 
             var executorHandler = provider.GetRequiredService<CommandExecutorHandler>();
-            MultiQueueConsumer<DomainMessage> executorConsumer = new MultiQueueConsumer<DomainMessage>(
+            MultiRingBufferConsumer<DomainMessage> executorConsumer = new MultiRingBufferConsumer<DomainMessage>(
                 queues,
                 barriers.ToArray(),
                 executorHandler);
@@ -110,16 +111,17 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         {
             var queueName = QueueName.EventQueue;
 
-            MultiSequencer sequencer = new MultiSequencer(option.EventQueueSize);
+            IWaitStrategy wait = new SpinWaitStrategy();
+            MultiSequencer sequencer = new MultiSequencer(option.EventQueueSize, wait);
 
-            RingQueue<DomainMessage> queue = new RingQueue<DomainMessage>(sequencer);
+            RingBuffer<DomainMessage> queue = new RingBuffer<DomainMessage>(sequencer);
             messageProcessBuilder.AddQueue(queueName, queue);
 
             var barrier = queue.NewBarrier();
 
             var storeHandler = provider.GetService<EventStoreHandler>();
 
-            IQueueConsumer storeConsumer = new QueueConsumer<DomainMessage>(
+            IRingBufferConsumer storeConsumer = new RingBufferConsumer<DomainMessage>(
                 queue,
                 barrier,
                 storeHandler);
@@ -128,7 +130,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 
 
             var snapshotHandler = provider.GetRequiredService<SnapshotHandler>();
-            IQueueConsumer snapshotConsumer = new QueueConsumer<DomainMessage>(
+            IRingBufferConsumer snapshotConsumer = new RingBufferConsumer<DomainMessage>(
                 queue,
                 barrier,
                 snapshotHandler);
@@ -136,7 +138,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             barrier = queue.NewBarrier(snapshotConsumer.Sequence);
 
             var executorHandler = provider.GetRequiredService<EventExecutorHandler>();
-            IQueueConsumer executorConsumer = new QueueConsumer<DomainMessage>(
+            IRingBufferConsumer executorConsumer = new RingBufferConsumer<DomainMessage>(
                 queue,
                 barrier,
                 executorHandler);

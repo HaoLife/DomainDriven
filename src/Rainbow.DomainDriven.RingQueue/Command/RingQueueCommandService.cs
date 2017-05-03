@@ -2,14 +2,14 @@ using System;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;
-using Rainbow.DomainDriven.RingQueue.Queue;
 using Rainbow.DomainDriven.RingQueue.Utilities;
+using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
     public class RingQueueCommandService : ICommandService
     {
-        private readonly IQueueProducer<DomainMessage> _messageProducer;
+        private readonly IRingBufferProducer<DomainMessage> _messageProducer;
         private readonly IMessageListening _messageListening;
         public RingQueueCommandService(
             IMessageProcessBuilder messageProcessBuilder,
@@ -19,7 +19,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._messageListening = messageListening;
             var process = messageProcessBuilder.Build();
             var queue = process.GetQueue(QueueName.CommandQueue);
-            this._messageProducer = new QueueProducer<DomainMessage>(queue);
+            this._messageProducer = new RingBufferProducer<DomainMessage>(queue);
         }
 
         public void Publish<TCommand>(DomainMessage cmd) where TCommand : class
