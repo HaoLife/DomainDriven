@@ -9,9 +9,7 @@ namespace Rainbow.DomainDriven.Repository
         void Add(IAggregateRoot root);
         void Update(IAggregateRoot root);
         void Remove(IAggregateRoot root);
-        void Add(IEnumerable<IAggregateRoot> roots);
-        void Update(IEnumerable<IAggregateRoot> roots);
-        void Remove(IEnumerable<IAggregateRoot> roots);
+        
         IAggregateRoot Get(Guid id);
         IEnumerable<IAggregateRoot> Get(params Guid[] keys);
     }

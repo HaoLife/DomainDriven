@@ -1,18 +1,14 @@
 namespace Rainbow.DomainDriven.Message
 {
-    public class DomainMessage
+    public class DomainMessage<TMessage>
     {
-        public DomainMessage()
-        {
-
-        }
-        public DomainMessage(MessageHead head, object content)
+        public DomainMessage() { }
+        public DomainMessage(MessageHead head, TMessage content)
         {
             this.Head = head;
             this.Content = content;
         }
-
         public MessageHead Head { get; set; }
-        public object Content { get; set; }
+        public TMessage Content { get; set; }
     }
 }

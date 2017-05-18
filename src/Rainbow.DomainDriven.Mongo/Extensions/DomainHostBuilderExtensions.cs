@@ -8,6 +8,7 @@ using Rainbow.DomainDriven.Mongo.Repository;
 using Rainbow.DomainDriven.Mongo.Internal;
 using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.Mongo.Infrastructure;
+using Rainbow.DomainDriven.Host;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -24,12 +25,12 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAdd(new ServiceCollection()
                 .AddTransient(p => p.CreateMongoDatabase(p.GetService<IOptions<MongoOptions>>()))
                 .AddSingleton<IAggregateRootRepositoryContext, MongoLockAggregateRootRepositoryContext>()
-                .AddSingleton<IAggregateRootCommonQueryRepository, MongoCommonQueryRepository>()
-                .AddSingleton<IAggregateRootLockRepositoryProvider, AggregateRootLockRepositoryProvider>()
+                .AddSingleton<IAggregateRootQuery, MongoCommonQueryRepository>()
+                .AddSingleton<IAggregateRootLockRetoryProvider, AggregateRootLockRepositoryProvider>()
                 .AddSingleton(typeof(AggregateRootLockRepository<>))
                 .AddSingleton<IAggregateRootBatchRepositoryProvider, AggregateRootBatchRepositoryProvider>()
                 .AddSingleton(typeof(AggregateRootBatchRepository<>))
-                .AddSingleton(typeof(IAggregateRootQueryRepository<>), typeof(AggregateRootQueryRepository<>))
+                .AddSingleton(typeof(IAggregateRootQueryable<>), typeof(AggregateRootQueryRepository<>))
                 .AddSingleton<IAggregateRootRepositoryProvider, AggregateRootRepositoryProvider>()
                 .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
                 .AddSingleton<IEventSourcingRepository, MongoEventSourcingRepository>()

@@ -10,12 +10,12 @@ namespace Rainbow.DomainDriven.RingQueue.Command
     public class RingQueueCommandExecutorContext : ICommandExecutorContext
     {
         private readonly List<IAggregateRoot> _unNoticeRoots;
-        private readonly IAggregateRootCommonQueryRepository _commonRepository;
+        private readonly IAggregateRootQuery _commonRepository;
         private readonly IAggregateRootCache _aggregateRootCache;
         public IEnumerable<IAggregateRoot> TrackedAggregateRoots => this._unNoticeRoots;
 
         public RingQueueCommandExecutorContext(
-            IAggregateRootCommonQueryRepository commonRepository
+            IAggregateRootQuery commonRepository
             , IAggregateRootCache aggregateRootCache
             )
         {

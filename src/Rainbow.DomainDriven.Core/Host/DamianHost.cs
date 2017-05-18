@@ -2,7 +2,7 @@
 using System;
 using Microsoft.Extensions.Options;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.Host
 {
     public class DamianHost : IDomainHost
     {

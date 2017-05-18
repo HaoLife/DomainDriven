@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Linq;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Event;
+using Rainbow.DomainDriven.Command;
 
 namespace Rainbow.DomainDriven.Infrastructure
 {
@@ -38,7 +39,9 @@ namespace Rainbow.DomainDriven.Infrastructure
 
         protected virtual bool IsCommand(Type type)
         {
-            return type.Name.EndsWith("Command");
+            if (!typeof(ICommand).IsAssignableFrom(type)) return false;
+            var typeinfo = type.GetTypeInfo();
+            return typeinfo.IsClass && !typeinfo.IsAbstract;
         }
 
         protected virtual bool IsAggregateRoot(Type type)

@@ -8,9 +8,9 @@ namespace Rainbow.DomainDriven.ConsoleApp.DomainService
 {
     public class UserService : IDomainService
     {
-        private readonly IAggregateRootQueryRepository<User> _queryRepo;
+        private readonly IAggregateRootQueryable<User> _queryRepo;
         private readonly IAggregateRootIndexCache _indexCache;
-        public UserService(IAggregateRootQueryRepository<User> queryRepo, IAggregateRootIndexCache indexCache)
+        public UserService(IAggregateRootQueryable<User> queryRepo, IAggregateRootIndexCache indexCache)
         {
             this._queryRepo = queryRepo;
             this._indexCache = indexCache;

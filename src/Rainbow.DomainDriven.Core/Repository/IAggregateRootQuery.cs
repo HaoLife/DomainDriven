@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Repository
 {
-    public interface IAggregateRootCommonQueryRepository
+    public interface IAggregateRootQuery
     {
         TAggregateRoot Get<TAggregateRoot>(Guid id) where TAggregateRoot : class, IAggregateRoot;
         IEnumerable<TAggregateRoot> Get<TAggregateRoot>(params Guid[] keys) where TAggregateRoot : class, IAggregateRoot;

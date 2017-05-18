@@ -20,7 +20,7 @@ namespace Rainbow.DomainDriven.Command
             this._serviceProvider = serviceProvider;
         }
 
-        public ICommandHandler<TCommand> Create<TCommand>(Type type) where TCommand : class
+        public ICommandHandler<TCommand> Create<TCommand>(Type type) where TCommand : ICommand
         {
             var createFactory = _typeActivatorCache.GetOrAdd(type, _createFactory);
             return (ICommandHandler<TCommand>)createFactory(_serviceProvider, arguments: null);

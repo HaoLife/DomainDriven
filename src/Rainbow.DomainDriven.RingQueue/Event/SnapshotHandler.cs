@@ -42,7 +42,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             this._aggregateRootCache = aggregateRootCache;
             this._logger = logger;
         }
-        public void HandleEventStream(List<IAggregateRoot> usedAggregates, ConcurrentDictionary<Type, IAggregateRootBatchRepository> unRepo, DomainEventStream stream)
+        public void HandleEventStream(List<IAggregateRoot> usedAggregates, ConcurrentDictionary<Type, IAggregateRootBatchRepository> unRepo, EventStream stream)
         {
             foreach (var item in stream.EventSources)
             {
@@ -90,13 +90,13 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
             foreach (var item in data)
             {
-                if (item.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
+                if (item.Head.Consistency == Consistency.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
                     this._messageListening.Notice(item.Head.ReplyKey, message);
             }
         }
         private void Notice(DomainMessage domainMessage, bool isSuccess, Exception ex = null)
         {
-            if (domainMessage.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(domainMessage.Head.ReplyKey))
+            if (domainMessage.Head.Consistency == Consistency.Finally && !string.IsNullOrEmpty(domainMessage.Head.ReplyKey))
             {
                 var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
                 this._messageListening.Notice(domainMessage.Head.ReplyKey, message);
@@ -112,7 +112,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             {
                 try
                 {
-                    var stream = message.Content as DomainEventStream;
+                    var stream = message.Content as EventStream;
                     if (stream == null) return;
 
                     this.HandleEventStream(usedAggregates, unRepo, stream);

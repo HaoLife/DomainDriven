@@ -40,7 +40,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
                 try
                 {
-                    var stream = message.Content as DomainEventStream;
+                    var stream = message.Content as EventStream;
                     this._eventSourcingRepository.Save(stream.EventSources.Last());
                 }
                 catch (Exception ex)

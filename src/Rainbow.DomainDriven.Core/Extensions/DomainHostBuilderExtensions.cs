@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.DomainExtensions;
+using Rainbow.DomainDriven.Host;
 
 namespace Rainbow.DomainDriven
 {

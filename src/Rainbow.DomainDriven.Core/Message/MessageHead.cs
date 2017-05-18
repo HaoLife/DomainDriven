@@ -2,35 +2,16 @@ namespace Rainbow.DomainDriven.Message
 {
     public class MessageHead
     {
-        public MessageHead()
+        public MessageHead() { }
+        public MessageHead(Priority priority, Consistency consistency) : this(string.Empty, priority, consistency) { }
+        public MessageHead(string replyTo, Priority priority, Consistency consistency)
         {
-
-        }
-
-        public MessageHead(string key, PriorityLevel priority, ConsistencyLevel consistency)
-            : this(key, string.Empty, priority, consistency)
-        {
-
-        }
-
-        public MessageHead(string key, string replyKey, PriorityLevel priority, ConsistencyLevel consistency)
-        {
-            this.Key = key;
-            this.ReplyKey = replyKey;
+            this.ReplyTo = replyTo;
             this.Priority = priority;
             this.Consistency = consistency;
         }
-
-        public MessageHead(string key, bool isSourcing)
-        {
-            this.Key = key;
-            this.IsSourcing = isSourcing;
-        }
-
-        public string Key { get; set; }
-        public string ReplyKey { get; set; }
-        public PriorityLevel Priority { get; set; }
-        public ConsistencyLevel Consistency { get; set; }
-        public bool IsSourcing { get; set; }
+        public string ReplyTo { get; set; }
+        public Priority Priority { get; set; }
+        public Consistency Consistency { get; set; }
     }
 }

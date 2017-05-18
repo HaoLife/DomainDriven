@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Event;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.DomainExtensions
 {
     public class SelectorInitializeExtension : IDomainInitializeExtension
     {

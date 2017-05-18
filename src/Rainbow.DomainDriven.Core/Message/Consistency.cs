@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Message
 {
-    public enum ConsistencyLevel
+    /// <summary>
+    /// 一致性
+    /// </summary>
+    public enum Consistency
     {
         Lose = 0,
         Finally,

@@ -16,12 +16,12 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         private readonly IRingBuffer<DomainMessage> _messageQueue;
         private readonly ISequenceBarrier _sequenceBarrier;
         private readonly Sequence _sequence;
-        private readonly IAggregateRootCommonQueryRepository _aggregateRootCommonQueryRepository;
+        private readonly IAggregateRootQuery _aggregateRootCommonQueryRepository;
         private readonly IReplayEventProxyProvider _replayEventProxyProvider;
 
         public RollbackService(
             IMessageProcessBuilder messageProcessBuilder
-            , IAggregateRootCommonQueryRepository aggregateRootCommonQueryRepository
+            , IAggregateRootQuery aggregateRootCommonQueryRepository
             , IReplayEventProxyProvider replayEventProxyProvider
             )
         {
@@ -37,14 +37,14 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         {
             List<IAggregateRoot> currents = new List<IAggregateRoot>();
             if (!roots.Any()) return currents;
-            Dictionary<string, List<DomainEventSource>> eventSources = new Dictionary<string, List<DomainEventSource>>();
+            Dictionary<string, List<EventSource>> eventSources = new Dictionary<string, List<EventSource>>();
 
             var nextSequence = _sequence.Value + 1L;
             var availableSequence = _sequenceBarrier.WaitFor(nextSequence);
             while (nextSequence <= availableSequence)
             {
                 var evt = _messageQueue[nextSequence];
-                var stream = evt.Value.Content as DomainEventStream;
+                var stream = evt.Value.Content as EventStream;
                 nextSequence++;
                 if (stream == null) continue;
                 foreach (var item in stream.EventSources)
@@ -52,7 +52,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
                     var aggr = roots.First(a => a.Id == item.AggregateRootId && a.GetType().Name == item.AggregateRootTypeName);
                     if (aggr != null)
                     {
-                        if (!eventSources.ContainsKey(item.AggregateRootTypeName)) eventSources.Add(item.AggregateRootTypeName, new List<DomainEventSource>());
+                        if (!eventSources.ContainsKey(item.AggregateRootTypeName)) eventSources.Add(item.AggregateRootTypeName, new List<EventSource>());
                         eventSources[item.AggregateRootTypeName].Add(item);
                     }
                 }

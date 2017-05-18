@@ -7,6 +7,6 @@ namespace Rainbow.DomainDriven.Command
 {
     public interface ICommandHandlerSelector
     {
-        Type FindExecutorType<TCommand>() where TCommand : class;
+        Type FindHandlerType<TCommand>() where TCommand : ICommand;
     }
 }

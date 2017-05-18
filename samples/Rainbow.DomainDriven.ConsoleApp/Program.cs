@@ -29,12 +29,12 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             serviceCollection
                 //.UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
-                .UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
-                //.UseDefaultDomain()
+                //.UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
+                .UseDefaultDomain()
                 //.UseDefaultService()
-                .UseCommandMapping<CommandMappingProvider>()
+                //.UseCommandMapping<CommandMappingProvider>()
                 .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
-                .UseEventSourcing()
+                //.UseEventSourcing()
                 .Build()
                 .Start();
 

@@ -19,7 +19,7 @@ namespace Rainbow.DomainDriven.Command
             this.RegisterHandler(assemblys.SelectMany(p => p.GetTypes()));
         }
 
-        public virtual Type FindExecutorType<TCommand>() where TCommand : class
+        public virtual Type FindHandlerType<TCommand>() where TCommand : ICommand
         {
             var HandlerType = default(Type);
             this._cacheCommandExecutor.TryGetValue(typeof(TCommand), out HandlerType);

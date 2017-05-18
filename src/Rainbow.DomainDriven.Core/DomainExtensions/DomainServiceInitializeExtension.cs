@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Rainbow.DomainDriven.Domain;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.DomainExtensions
 {
     public class DomainServiceInitializeExtension : IDomainInitializeExtension
     {

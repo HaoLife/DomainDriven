@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Core.Utilities;
@@ -8,23 +11,17 @@ using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.Event
 {
-    public class EventHandlerProxy<TEvent> : IEventHandlerProxy
-        where TEvent : IEvent
+    public class EventHandlerProxy : IEventHandlerProxy
     {
-        public class HandleParameter
-        {
-            public Type HandlerType { get; set; }
-            public DomainEventSource EventSource { get; set; }
-        }
-
         private readonly IEventHandlerSelector _eventHandlerSelector;
         private readonly IEventHandlerActivator _eventHandlerActivator;
-        private readonly ILogger<EventHandlerProxy<TEvent>> _logger;
+        private readonly ILogger _logger;
+        private ConcurrentDictionary<Type, Delegate> _cacheInvokes = new ConcurrentDictionary<Type, Delegate>();
 
         public EventHandlerProxy(
             IEventHandlerSelector eventHandlerSelector,
             IEventHandlerActivator eventHandlerActivator,
-            ILogger<EventHandlerProxy<TEvent>> logger
+            ILogger<EventHandlerProxy> logger
             )
         {
             this._eventHandlerSelector = eventHandlerSelector;
@@ -32,55 +29,58 @@ namespace Rainbow.DomainDriven.Event
             this._logger = logger;
         }
 
-        public void HandlerInvoke(Type type, TEvent evt)
+        public void Handle(IEvent evt)
         {
-            IEventHandler<TEvent> handler;
+            var func = _cacheInvokes.GetOrAdd(evt.GetType(), GetDelegate);
             try
             {
-                handler = this._eventHandlerActivator.Create<TEvent>(type);
+                func.DynamicInvoke(evt);
             }
-            catch (Exception ex)
+            catch (TargetInvocationException ex)
             {
-                throw new Exception("事件执行器创建异常", ex);
-            }
-
-            try
-            {
-                handler.Handle(evt);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("执行事件错误", ex);
+                this._logger.LogError(LogEvent.Frame, ex.InnerException, "执行事件过程中发生异常");
             }
         }
 
-        public void HandlerInvoke(HandleParameter para)
+
+        private Delegate GetDelegate(Type type)
         {
-            try
-            {
-                HandlerInvoke(para.HandlerType, (TEvent)para.EventSource.Event);
-            }
-            catch (DomainException dex)
-            {
-                this._logger.LogInformation($"执行事件失败:{dex.Message} - aggr:{para.EventSource.AggregateRootTypeName} id:{para.EventSource.AggregateRootId} version:{para.EventSource.Event.Version}");
-            }
-            catch (Exception ex)
-            {
-                this._logger.LogError(LogEvent.Frame, ex, "执行事件过程中发生异常");
-            }
+            var eventTypeExp = Expression.Parameter(type);
+            var instance = Expression.Constant(this);
+            var methodType = this.GetType().GetMethod(nameof(HandleInvoke),
+                BindingFlags.Instance | BindingFlags.NonPublic)
+                .MakeGenericMethod(type);
+            var callExp = Expression.Call(instance, methodType, eventTypeExp);
+            return Expression.Lambda(callExp, eventTypeExp).Compile();
         }
-        public void Handle(DomainEventSource eventSource)
+
+
+
+        protected virtual void HandleInvoke<TEvent>(TEvent evt) where TEvent : IEvent
         {
             var handlerTypes = this._eventHandlerSelector.FindHandlerTypes<TEvent>();
-            List<Task> tasks = new List<Task>();
-            //并行执行eventHandler，这部分不区分优先级
+
             foreach (var handleType in handlerTypes)
             {
-                Task task = new Task(a => HandlerInvoke((HandleParameter)a), new HandleParameter() { HandlerType = handleType, EventSource = eventSource });
-                task.Start();
-                tasks.Add(task);
+                IEventHandler<TEvent> handler = null;
+                try
+                {
+                    handler = this._eventHandlerActivator.Create<TEvent>(handleType);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("事件执行器创建异常", ex);
+                }
+
+                try
+                {
+                    handler.Handle(evt);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("执行事件异常", ex);
+                }
             }
-            Task.WaitAll(tasks.ToArray());
         }
     }
 }

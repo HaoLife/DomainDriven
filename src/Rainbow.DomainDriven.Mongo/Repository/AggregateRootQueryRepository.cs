@@ -10,7 +10,7 @@ using Rainbow.DomainDriven.Repository;
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class AggregateRootQueryRepository<TAggregateRoot> : 
-        IAggregateRootQueryRepository<TAggregateRoot>
+        IAggregateRootQueryable<TAggregateRoot>
         where TAggregateRoot : IAggregateRoot
     {
         private readonly IQueryable<TAggregateRoot> _mongoCollectionQueryable;

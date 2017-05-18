@@ -34,7 +34,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         {
             var data = messages.Where(a => !a.Head.IsSourcing).ToArray();
 
-            var eventSources = data.Select(a => a.Content as DomainEventStream)
+            var eventSources = data.Select(a => a.Content as EventStream)
                 .Where(a => a != null)
                 .SelectMany(a => a.EventSources);
             try
@@ -55,7 +55,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var message = new NoticeMessage() { IsSuccess = isSuccess, Exception = ex };
             foreach (var item in data)
             {
-                if (item.Head.Consistency == ConsistencyLevel.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
+                if (item.Head.Consistency == Consistency.Finally && !string.IsNullOrEmpty(item.Head.ReplyKey))
                     this._messageListening.Notice(item.Head.ReplyKey, message);
             }
 

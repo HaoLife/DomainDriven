@@ -11,17 +11,16 @@ using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    public class CommandCacheHandler : IMessageHandler<DomainMessage>
+    public class CommandCacheHandler : IMessageHandler<DomainMessage<ICommand>>
     {
-        private readonly CommandMappingOptions _commandMappingOptions;
-
-        private readonly IAggregateRootCommonQueryRepository _aggregateRootCommonQueryRepository;
+        private readonly CommandMapper _commandMapper;
+        private readonly IAggregateRootQuery _aggregateRootCommonQueryRepository;
         private readonly IAggregateRootCache _aggregateRootCache;
         private readonly ILogger<CommandCacheHandler> _logger;
 
         public CommandCacheHandler(
             ICommandMappingProvider commandMappingProvider,
-            IAggregateRootCommonQueryRepository aggregateRootCommonQueryRepository,
+            IAggregateRootQuery aggregateRootCommonQueryRepository,
             IAggregateRootCache aggregateRootCache,
             ILogger<CommandCacheHandler> logger
         )
@@ -29,8 +28,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._aggregateRootCommonQueryRepository = aggregateRootCommonQueryRepository;
             this._aggregateRootCache = aggregateRootCache;
             this._logger = logger;
-            this._commandMappingOptions = new CommandMappingOptions();
-            commandMappingProvider.OnConfiguring(this._commandMappingOptions);
+            this._commandMapper = new CommandMapper();
+            commandMappingProvider.OnConfiguring(this._commandMapper);
         }
 
 
@@ -40,17 +39,17 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             return source;
         }
 
-        public void Handle(DomainMessage[] messages)
+        public void Handle(DomainMessage<ICommand>[] messages)
         {
             ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
 
-            foreach(var message in messages)
+            foreach (var message in messages)
             {
-                var mapValue = this._commandMappingOptions.FindMap(message.Content);
+                var mapValue = this._commandMapper.FindMap(message.Content);
                 foreach (var item in mapValue)
                     data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
             }
-            
+
 
             foreach (var item in data)
             {
@@ -72,5 +71,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                     this._aggregateRootCache.SetInvalid(item.Key, invalid);
             }
         }
+
     }
 }

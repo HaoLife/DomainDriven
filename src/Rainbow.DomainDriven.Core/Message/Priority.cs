@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Message
 {
-    public enum PriorityLevel
+    /// <summary>
+    /// 优先级
+    /// </summary>
+    public enum Priority
     {
         Quick,
         Normal,

@@ -1,28 +1,23 @@
 using System;
+using System.Collections.Generic;
 using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Event
 {
     public class EventExecutor : IEventExecutor
     {
-        private readonly IEventHandlerProxyProvider _eventHandlerProxyProvider;
+        private readonly IEventHandlerProxy _eventHandlerProxy;
 
-        public EventExecutor(IEventHandlerProxyProvider eventHandlerProxyProvider)
+        public EventExecutor(IEventHandlerProxy eventHandlerProxy)
         {
-            this._eventHandlerProxyProvider = eventHandlerProxyProvider;
+            this._eventHandlerProxy = eventHandlerProxy;
         }
-
-        public void Handle(DomainMessage message)
+        
+        public void Handle(DomainMessage<EventStream> message)
         {
-            //这里不做并发处理，因为事件的生成有可能有优先级的如都是User模型中的事件，一个创建，一个修改
-            //不能变成修改先执行了，否则会出现逻辑上的错误
-            DomainEventStream stream = message.Content as DomainEventStream;
-            if (stream == null) throw new Exception("类型转换错误DomainMessage.Content不是DomainEventStream");
-
-            foreach (var item in stream.EventSources)
+            foreach(var item in message.Content.Sources)
             {
-                var proxy = this._eventHandlerProxyProvider.GetEventHandlerProxy(item.Event.GetType());
-                proxy.Handle(item);
+                this._eventHandlerProxy.Handle(item.Event);
             }
         }
     }

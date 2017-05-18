@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Event
 {
     public interface IEventService
     {
-        void Publish(DomainMessage evt);
+        void Publish(DomainMessage<EventStream> message);
     }
 }

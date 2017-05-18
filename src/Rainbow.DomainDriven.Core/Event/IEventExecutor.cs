@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Message;
 
@@ -5,6 +6,6 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEventExecutor
     {
-        void Handle(DomainMessage message);
+        void Handle(DomainMessage<EventStream> message);
     }
 }

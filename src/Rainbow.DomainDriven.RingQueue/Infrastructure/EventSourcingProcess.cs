@@ -26,7 +26,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         public void Run()
         {
             var current = _eventSourcingRepository.Current();
-            List<DomainEventSource> sourcings = _eventSourcingRepository.Take(current, 1000);
+            List<EventSource> sourcings = _eventSourcingRepository.Take(current, 1000);
 
             while (sourcings.Count > 0)
             {
@@ -45,9 +45,9 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         {
             return new MessageHead(Guid.NewGuid().ToShort(), true);
         }
-        private DomainEventStream CreateStream(DomainEventSource es)
+        private EventStream CreateStream(EventSource es)
         {
-            return new DomainEventStream() { EventSources = new List<DomainEventSource>() { es } };
+            return new EventStream() { EventSources = new List<EventSource>() { es } };
         }
     }
 }

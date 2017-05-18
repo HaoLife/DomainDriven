@@ -7,9 +7,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rainbow.DomainDriven.Cache;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Domain;
+using Rainbow.DomainDriven.DomainExtensions;
 using Rainbow.DomainDriven.Event;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.Host
 {
     public class DomainHostBuilder : IDomainHostBuilder
     {
@@ -18,27 +19,26 @@ namespace Rainbow.DomainDriven.Infrastructure
         public DomainHostBuilder(IServiceCollection service)
         {
             this._service = service;
+            Initialize();
         }
 
-        public void Initialize()
+        private void Initialize()
         {
             this._service.AddOptions();
             this._service.AddLogging();
-            
+
             this._service.TryAdd(new ServiceCollection()
                 .AddSingleton<ICommandService, CommandService>()
                 .AddSingleton<ICommandExecutor, CommandExecutor>()
                 .AddSingleton<ICommandExecutorContextFactory, CommandExecutorContextFactory>()
                 .AddSingleton<ICommandHandlerActivator, CommandHandlerActivator>()
                 .AddSingleton<IEventHandlerActivator, EventHandlerActivator>()
-                .AddSingleton<IEventService, EventService>()
                 .AddSingleton<IEventExecutor, EventExecutor>()
-                .AddSingleton<IAggregateRootIndexCache, AggregateRootIndexCache>()
+                .AddSingleton<IEventHandlerProxy, EventHandlerProxy>()
                 .AddTransient<ICommandExecutorContext, CommandExecutorContext>()
-                .AddTransient<IEventHandlerProxyProvider, EventHandlerProxyProvider>()
-                .AddSingleton(typeof(ReplayEventProxy<>))
-                .AddSingleton<IReplayEventProxyProvider, ReplayEventProxyProvider>()
             );
+            this.ApplyServices(new SelectorInitializeExtension());
+            this.ApplyServices(new DomainTypeProviderExtension());
         }
 
         public IServiceCollection Services => _service;

@@ -5,9 +5,9 @@ namespace Rainbow.DomainDriven.Repository
 {
     public interface IEventSourcingRepository
     {
-        void Save(DomainEventSource current);
-        DomainEventSource Current();
+        void Save(EventSource current);
+        EventSource Current();
 
-        List<DomainEventSource> Take(DomainEventSource current, int size);
+        List<EventSource> Take(EventSource current, int size);
     }
 }

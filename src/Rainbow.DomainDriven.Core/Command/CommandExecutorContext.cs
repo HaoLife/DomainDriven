@@ -11,11 +11,11 @@ namespace Rainbow.DomainDriven.Command
     public sealed class CommandExecutorContext : ICommandExecutorContext
     {
         private readonly List<IAggregateRoot> _unNoticeRoots;
-        private readonly IAggregateRootCommonQueryRepository _commonRepository;
+        private readonly IAggregateRootQuery _commonRepository;
         public IEnumerable<IAggregateRoot> TrackedAggregateRoots => this._unNoticeRoots;
 
         public CommandExecutorContext(
-            IAggregateRootCommonQueryRepository commonRepository
+            IAggregateRootQuery commonRepository
             )
         {
             this._commonRepository = commonRepository;

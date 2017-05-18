@@ -47,7 +47,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         public void Handle<TCommand>(DomainMessage cmd) where TCommand : class
         {
 
-            var executorType = this._commandExecutorSelector.FindExecutorType<TCommand>();
+            var executorType = this._commandExecutorSelector.FindHandlerType<TCommand>();
 
             if (executorType == null) throw new NullReferenceException($"没有找到 {typeof(TCommand).Name} 的执行器类型");
 
@@ -81,8 +81,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private DomainMessage BuildEventMessage(MessageHead head, IEnumerable<IAggregateRoot> roots)
         {
             var domainSources = roots
-                .SelectMany(p => p.UncommittedEvents.Select(a => new DomainEventSource(a, p.GetType().Name, p.Id)));
-            var stream = new DomainEventStream() { EventSources = domainSources.ToList() };
+                .SelectMany(p => p.UncommittedEvents.Select(a => new EventSource(a, p.GetType().Name, p.Id)));
+            var stream = new EventStream() { EventSources = domainSources.ToList() };
 
             MessageHead eventHead = null;
             if (!IsNotice(head))
@@ -98,7 +98,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         protected bool IsNotice(MessageHead head)
         {
-            return head.Consistency == ConsistencyLevel.Lose;
+            return head.Consistency == Consistency.Lose;
         }
 
 

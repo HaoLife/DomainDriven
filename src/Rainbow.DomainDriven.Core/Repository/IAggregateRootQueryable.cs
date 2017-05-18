@@ -3,7 +3,7 @@ using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.Repository
 {
-    public interface IAggregateRootQueryRepository<TAggregateRoot> : IQueryable<TAggregateRoot>
+    public interface IAggregateRootQueryable<TAggregateRoot> : IQueryable<TAggregateRoot>
         where TAggregateRoot : IAggregateRoot
     {
     }

@@ -2,6 +2,6 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEventHandlerProxy
     {
-         void Handle(DomainEventSource eventSource);
+         void Handle(IEvent evt);
     }
 }

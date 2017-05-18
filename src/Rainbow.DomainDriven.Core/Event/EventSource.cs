@@ -3,11 +3,11 @@ using Rainbow.DomainDriven.Event;
 
 namespace Rainbow.DomainDriven.Event
 {
-    public class DomainEventSource
+    public class EventSource
     {
 
-        public DomainEventSource() { }
-        public DomainEventSource(IEvent evt, string aggrTypeName, Guid aggrId)
+        public EventSource() { }
+        public EventSource(IEvent evt, string aggrTypeName, Guid aggrId)
         {
             this.Id = Guid.NewGuid();
             this.Event = evt;

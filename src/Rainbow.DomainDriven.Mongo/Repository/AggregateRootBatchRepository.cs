@@ -9,13 +9,11 @@ using Rainbow.DomainDriven.Mongo.Internal;
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class AggregateRootBatchRepository<TAggregateRoot>
-        : IAggregateRootBatchRepository
         where TAggregateRoot : class, IAggregateRoot
     {
 
         private readonly IMongoCollection<TAggregateRoot> _mongoCollection;
         private readonly IAggregateRootOperation _aggregateRootOperation;
-        private readonly List<WriteModel<TAggregateRoot>> _unCommit;
         private BulkWriteOptions _options = new BulkWriteOptions() { IsOrdered = false};
         public AggregateRootBatchRepository(
             IMongoDatabase mongoDatabase,
@@ -23,7 +21,6 @@ namespace Rainbow.DomainDriven.Mongo.Repository
         {
             this._mongoCollection = mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
             this._aggregateRootOperation = aggregateRootOperation;
-            this._unCommit = new List<WriteModel<TAggregateRoot>>();
         }
         public void Add(IEnumerable<IAggregateRoot> roots)
         {
@@ -46,6 +43,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             this.BuildUpdated(list, this._aggregateRootOperation.GetUpdated(typeof(TAggregateRoot)));
             this.BuildRemoved(list, this._aggregateRootOperation.GetRemoved(typeof(TAggregateRoot)));
             this._mongoCollection.BulkWrite(list, _options);
+            this._aggregateRootOperation.Clear();
         }
 
         public void BuildAdded(List<WriteModel<TAggregateRoot>> list, IEnumerable<IAggregateRoot> roots)

@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Event
 {
-    public interface IEventHandler<in TEvent>
+    public interface IEventHandler<in TEvent> 
+        where TEvent : IEvent
     {
         void Handle(TEvent evt);
-        
-        //Task HandleAsync(TEvent evt);
     }
 }

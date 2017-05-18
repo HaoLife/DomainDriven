@@ -6,10 +6,6 @@ using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Command
 {
-    //职责:
-    //1.根据事件级别进行分别处理
-    //
-
     public class CommandService : ICommandService
     {
         private readonly ICommandExecutor _commandExecutor;
@@ -21,16 +17,17 @@ namespace Rainbow.DomainDriven.Command
             this._commandExecutor = commandExecutor;
         }
 
-
-        public void Publish<TCommand>(DomainMessage cmd) where TCommand : class
+        public void Publish(DomainMessage<ICommand> message)
         {
-            if (string.IsNullOrEmpty(cmd.Head.ReplyKey))
+            switch (message.Head.Consistency)
             {
-                Task.Factory.StartNew((message) => _commandExecutor.Handle<TCommand>(message as DomainMessage), cmd);
-            }
-            else
-            {
-                _commandExecutor.Handle<TCommand>(cmd);
+                case Consistency.Lose:
+                    Task.Factory.StartNew(item => this._commandExecutor.Handle(item as DomainMessage<ICommand>), message);
+                    break;
+                case Consistency.Finally:
+                case Consistency.Strong:
+                    this._commandExecutor.Handle(message);
+                    break;
             }
         }
 

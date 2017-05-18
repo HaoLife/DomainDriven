@@ -1,66 +1,66 @@
-﻿using Rainbow.DomainDriven.Message;
-using System;
+using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Command
 {
     public static class CommandServiceExtensions
     {
-        public static void Send<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+
+        public static void Send(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), PriorityLevel.Normal, ConsistencyLevel.Lose)
+                Head = new MessageHead(Priority.Normal, Consistency.Lose)
             });
         }
 
 
-        public static void SendQuick<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void SendQuick(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), PriorityLevel.Quick, ConsistencyLevel.Lose)
+                Head = new MessageHead(Priority.Quick, Consistency.Lose)
             });
         }
 
 
-        public static void SendSlow<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void SendSlow(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), PriorityLevel.Slow, ConsistencyLevel.Lose)
+                Head = new MessageHead(Priority.Slow, Consistency.Lose)
             });
         }
 
 
-        public static void Handle<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void Handle(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), Guid.NewGuid().ToShort(), PriorityLevel.Normal, ConsistencyLevel.Finally)
+                Head = new MessageHead(Priority.Normal, Consistency.Finally)
             });
         }
 
 
-        public static void HandleQuick<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void HandleQuick(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), Guid.NewGuid().ToShort(), PriorityLevel.Quick, ConsistencyLevel.Finally)
+                Head = new MessageHead(Priority.Quick, Consistency.Finally)
             });
         }
 
 
-        public static void HandleSlow<TCommand>(this ICommandService service, TCommand cmd) where TCommand : class
+        public static void HandleSlow(this ICommandService service, ICommand cmd)
         {
-            service.Publish<TCommand>(new DomainMessage()
+            service.Publish(new DomainMessage<ICommand>()
             {
                 Content = cmd,
-                Head = new MessageHead(Guid.NewGuid().ToShort(), Guid.NewGuid().ToShort(), PriorityLevel.Slow, ConsistencyLevel.Finally)
+                Head = new MessageHead(Priority.Slow, Consistency.Finally)
             });
         }
     }
