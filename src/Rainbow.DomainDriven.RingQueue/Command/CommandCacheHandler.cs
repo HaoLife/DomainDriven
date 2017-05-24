@@ -14,13 +14,13 @@ namespace Rainbow.DomainDriven.RingQueue.Command
     public class CommandCacheHandler : IMessageHandler<DomainMessage<ICommand>>
     {
         private readonly CommandMapper _commandMapper;
-        private readonly IAggregateRootQuery _aggregateRootCommonQueryRepository;
+        private readonly IAggregateRootCommonQuery _aggregateRootCommonQueryRepository;
         private readonly IAggregateRootCache _aggregateRootCache;
         private readonly ILogger<CommandCacheHandler> _logger;
 
         public CommandCacheHandler(
             ICommandMappingProvider commandMappingProvider,
-            IAggregateRootQuery aggregateRootCommonQueryRepository,
+            IAggregateRootCommonQuery aggregateRootCommonQueryRepository,
             IAggregateRootCache aggregateRootCache,
             ILogger<CommandCacheHandler> logger
         )

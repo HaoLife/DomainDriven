@@ -5,56 +5,23 @@ using Rainbow.DomainDriven.Core.Utilities;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Message;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;
-using Rainbow.DomainDriven.RingQueue.Message;
 using Rainbow.MessageQueue.Ring;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    public class CommandExecutorHandler : IMessageHandler<DomainMessage>
+    public class CommandExecutorHandler : IMessageHandler<DomainMessage<ICommand>>
     {
-        private readonly ICommandExecutorProxyProvider _commandExecutorProxyProvider;
-        private readonly ILogger<CommandExecutorHandler> _logger;
-        private readonly IMessageListening _messageListening;
+        private readonly ICommandExecutor _commandExecutor;
         public CommandExecutorHandler(
-            ICommandExecutorProxyProvider commandExecutorProxyProvider
-            , IMessageListening messageListening
-            , ILogger<CommandExecutorHandler> logger
+            ICommandExecutor commandExecutor
             )
         {
-            this._commandExecutorProxyProvider = commandExecutorProxyProvider;
-            this._messageListening = messageListening;
-            this._logger = logger;
+            this._commandExecutor = commandExecutor;
         }
 
-        private void Notice(DomainMessage message, Exception ex)
+        public void Handle(DomainMessage<ICommand>[] messages)
         {
-            if (!string.IsNullOrEmpty(message.Head.ReplyKey))
-            {
-                var noticeMessage = new NoticeMessage() { IsSuccess = false, Exception = ex };
-                this._messageListening.Notice(message.Head.ReplyKey, noticeMessage);
-            }
-        }
-
-        public void Handle(DomainMessage[] messages)
-        {
-            foreach (var message in messages)
-            {
-                try
-                {
-                    var executor = _commandExecutorProxyProvider.GetCommandExecutorProxy(message.Content.GetType());
-                    executor.Handle(message);
-                }
-                catch (DomainException dex)
-                {
-                    this._logger.LogInformation(dex.Message);
-                    this.Notice(message, dex);
-                }
-                catch (Exception ex)
-                {
-                    this._logger.LogError(LogEvent.Frame, ex, $"execute name:{nameof(CommandExecutorHandler)} error");
-                    this.Notice(message, ex);
-                }
-            }
+            this._commandExecutor.Handle(messages);
         }
     }
 }

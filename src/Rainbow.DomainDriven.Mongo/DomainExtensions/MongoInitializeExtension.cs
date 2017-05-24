@@ -8,8 +8,9 @@ using Rainbow.DomainDriven.Mongo.Repository;
 using Rainbow.DomainDriven.Infrastructure;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson.Serialization;
+using Rainbow.DomainDriven.DomainExtensions;
 
-namespace Rainbow.DomainDriven.Mongo.Infrastructure
+namespace Rainbow.DomainDriven.Mongo.DomainExtensions
 {
     public class MongoInitializeExtension : IDomainInitializeExtension
     {

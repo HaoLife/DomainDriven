@@ -1,4 +1,5 @@
 using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.RingQueue.Command;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;

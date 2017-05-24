@@ -9,55 +9,69 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public class MessageProcess : IMessageProcess
     {
-        private readonly Dictionary<string, IRingBuffer<DomainMessage>> _queue;
-        private readonly Dictionary<string, Dictionary<string, IRingBufferConsumer>> _messageConsumer;
+        private readonly IEnumerable<KeyValuePair<string, object>> _queues;
+        private readonly IEnumerable<KeyValuePair<string, IRingBufferConsumer>> _messageConsumers;
         public MessageProcess(
-            Dictionary<string, IRingBuffer<DomainMessage>> queue
-            , Dictionary<string, Dictionary<string, IRingBufferConsumer>> messageConsumer
+            IEnumerable<KeyValuePair<string, object>> queues
+            , IEnumerable<KeyValuePair<string, IRingBufferConsumer>> messageConsumers
             )
         {
-            this._queue = queue;
-            this._messageConsumer = messageConsumer;
+            this._queues = queues;
+            this._messageConsumers = messageConsumers;
         }
 
-        public Dictionary<string, IRingBufferConsumer> GetConsumers(string queueName)
+        public IRingBuffer<TMessage> GetQueue<TMessage>(string queueName)
         {
-            Dictionary<string, IRingBufferConsumer> value;
-            if (!this._messageConsumer.TryGetValue(queueName, out value))
-                new Dictionary<string, IRingBufferConsumer>();
-            return value;
+            return this.GetQueues<TMessage>(queueName).First();
         }
 
-        public IRingBufferConsumer GetConsumer(string queueName, string consumer)
+        public IEnumerable<IRingBuffer<TMessage>> GetQueues<TMessage>(string queueName)
         {
-            var values = this.GetConsumers(queueName);
-            IRingBufferConsumer value;
-            values.TryGetValue(consumer, out value);
-            return value;
+            foreach (var item in this._queues)
+            {
+                if (item.Key.Contains(queueName) && item.Value is IRingBuffer<TMessage>)
+                    yield return item.Value as IRingBuffer<TMessage>;
+            }
         }
 
-        public IRingBuffer<DomainMessage> GetQueue(string queueName)
+        IEnumerable<KeyValuePair<string, IRingBufferConsumer>> IMessageProcess.GetConsumers(string queueName)
         {
-            IRingBuffer<DomainMessage> value;
-            this._queue.TryGetValue(queueName, out value);
-            return value;
+            foreach (var item in this._messageConsumers)
+            {
+                if (item.Key.StartsWith(queueName))
+                    yield return item;
+            }
         }
+
+        public IRingBufferConsumer GetConsumer(string queueName, string consumerName)
+        {
+            var name = $"{queueName}:{consumerName}";
+            foreach (var item in this._messageConsumers)
+            {
+                if (item.Key.StartsWith(name))
+                {
+                    return item.Value;
+                }
+            }
+            throw new NullReferenceException("没找到该对象");
+        }
+
 
         public void Start()
         {
-            var each = this._messageConsumer.Values.SelectMany(a => a.Values);
+            var each = this._messageConsumers.Select(a => a.Value);
             foreach (var item in each)
             {
                 Task.Factory.StartNew(a => ((IRingBufferConsumer)a).Run(), item);
             }
         }
 
-        public IEnumerable<IRingBuffer<DomainMessage>> GetQueues(string queueName)
+        public void Halt()
         {
-            foreach (var item in this._queue)
+            var each = this._messageConsumers.Select(a => a.Value);
+            foreach (var item in each)
             {
-                if (item.Key.Contains(queueName)) 
-                    yield return item.Value;
+                Task.Factory.StartNew(a => ((IRingBufferConsumer)a).Halt(), item, TaskCreationOptions.LongRunning);
             }
         }
     }

@@ -5,9 +5,9 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public interface IMessageProcessBuilder
     {
-        void AddQueue(string queueName, IRingBuffer<DomainMessage> queue);
-
-        void AddConsumer(string queueName, string consumerName, IRingBufferConsumer messageConsumer);
+        void AddQueue<TMessage>(string queueName, IRingBuffer<TMessage> queue);
+        void AddConsumer(string queueName,string consumerName,IRingBufferConsumer messageConsumer);
         IMessageProcess Build();
+
     }
 }

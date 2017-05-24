@@ -2,40 +2,40 @@ using System;
 using System.Collections.Generic;
 using Rainbow.DomainDriven.Message;
 using Rainbow.MessageQueue.Ring;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public class MessageProcessBuilder : IMessageProcessBuilder
     {
-        private readonly Dictionary<string, IRingBuffer<DomainMessage>> _queue;
-        //todo: modify by haozi 这种可以优化，可以采用.net core IConfiguration 的方法进行优化
-        private readonly Dictionary<string, Dictionary<string, IRingBufferConsumer>> _messageConsumer;
+        private readonly List<KeyValuePair<string, object>> _queues;
+        private readonly Dictionary<string, IRingBufferConsumer> _messageConsumers;
 
         public MessageProcessBuilder()
         {
-            this._queue = new Dictionary<string, IRingBuffer<DomainMessage>>();
-            this._messageConsumer = new Dictionary<string, Dictionary<string, IRingBufferConsumer>>();
+            this._queues = new List<KeyValuePair<string, object>>();
+            this._messageConsumers = new Dictionary<string, IRingBufferConsumer>();
         }
 
         public void AddConsumer(string queueName, string consumerName, IRingBufferConsumer messageConsumer)
         {
-            Dictionary<string, IRingBufferConsumer> value;
-            if (!this._messageConsumer.TryGetValue(queueName, out value))
+            var name = $"{queueName}:{consumerName}";
+            if (this._messageConsumers.ContainsKey(queueName))
             {
-                value = new Dictionary<string, IRingBufferConsumer>();
-                this._messageConsumer.Add(queueName, value);
+                throw new Exception("已经存在该对象不能重复进行添加");
             }
-            value.Add(consumerName, messageConsumer);
+            this._messageConsumers.Add(name, messageConsumer);
         }
 
-        public void AddQueue(string queueName, IRingBuffer<DomainMessage> queue)
+        public void AddQueue<TMessage>(string queueName, IRingBuffer<TMessage> queue)
         {
-            this._queue.Add(queueName, queue);
+            var kv = new KeyValuePair<string, object>(queueName, queue);
+            this._queues.Add(kv);
         }
 
         public IMessageProcess Build()
         {
-            return new MessageProcess(this._queue, this._messageConsumer);
+            return new MessageProcess(this._queues, this._messageConsumers);
         }
     }
 }

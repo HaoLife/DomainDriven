@@ -11,7 +11,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public class EventSourcingProcess : IEventSourcingProcess
     {
-        private readonly IRingBufferProducer<DomainMessage> _messageProducer;
+        private readonly IRingBufferProducer<DomainMessage<EventStream>> _messageProducer;
         private readonly IEventSourcingRepository _eventSourcingRepository;
         public EventSourcingProcess(
             IMessageProcessBuilder messageProcessBuilder
@@ -19,8 +19,8 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             )
         {
             var process = messageProcessBuilder.Build();
-            var queue = process.GetQueue(QueueName.EventQueue);
-            this._messageProducer = new RingBufferProducer<DomainMessage>(queue);
+            var queue = process.GetQueue<DomainMessage<EventStream>>(QueueName.EventQueue);
+            this._messageProducer = new RingBufferProducer<DomainMessage<EventStream>>(queue);
             this._eventSourcingRepository = eventSourcingRepository;
         }
         public void Run()
@@ -32,7 +32,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             {
                 var messages = sourcings
                     .OrderBy(a => a.Event.UTCTimestamp)
-                    .Select(a => new DomainMessage(CreateHead(), CreateStream(a)));
+                    .Select(a => new DomainMessage<EventStream>(CreateHead(), CreateStream(a)));
                 foreach (var item in messages)
                     _messageProducer.Send(item);
 
@@ -43,11 +43,11 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 
         private MessageHead CreateHead()
         {
-            return new MessageHead(Guid.NewGuid().ToShort(), true);
+            return new MessageHead() { Priority = Priority.Normal, Consistency = Consistency.Lose };
         }
         private EventStream CreateStream(EventSource es)
         {
-            return new EventStream() { EventSources = new List<EventSource>() { es } };
+            return new EventStream() { Sources = new List<EventSource>() { es } };
         }
     }
 }

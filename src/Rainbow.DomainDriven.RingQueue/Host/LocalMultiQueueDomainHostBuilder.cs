@@ -1,9 +1,11 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
-using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.DomainExtensions;
+using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.RingQueue.Command;
 
-namespace Rainbow.DomainDriven.RingQueue.Infrastructure
+namespace Rainbow.DomainDriven.RingQueue.Host
 {
     public class LocalMultiQueueDomainHostBuilder: IDomainHostBuilder
     {
@@ -19,7 +21,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             this.AddCore();
 
             this.Services
-                .AddSingleton<ICommandService, RingMultiQueueEventService>();
+                .AddSingleton<ICommandService, RingMultiQueueCommandService>();
         }
 
         public IServiceCollection Services => _service;
@@ -33,5 +35,6 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         {
             ext.ApplyServices(this._service);
         }
+
     }
 }

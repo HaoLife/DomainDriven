@@ -1,9 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
-using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.DomainExtensions;
+using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.RingQueue.Command;
 
-namespace Rainbow.DomainDriven.RingQueue.Infrastructure
+namespace Rainbow.DomainDriven.RingQueue.Host
 {
     public class LocalQueueDomainHostBuilder : IDomainHostBuilder
     {

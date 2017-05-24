@@ -6,5 +6,6 @@ namespace Rainbow.DomainDriven.Message
     {
         public Exception Exception { get; set; }
         public bool IsSuccess { get; set; }
+        public string ReplyKey { get; set; }
     }
 }

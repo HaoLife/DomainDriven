@@ -9,7 +9,7 @@ namespace Rainbow.DomainDriven.ConsoleApp.Config
     {
         public void OnConfiguring(ICommandMapper mapper)
         {
-            mapper.Map<ModifyUserNameCommand>(k => k.UserId, typeof(User));
+            mapper.Map<ModifyUserNameCommand, User>(k => k.UserId);
         }
     }
 }

@@ -44,6 +44,7 @@ namespace Rainbow.DomainDriven.Command
                     this._aggregateRootRepositoryContext.Update(item);
                 }
             }
+            this._aggregateRootRepositoryContext.Commit();
         }
 
 
@@ -57,34 +58,32 @@ namespace Rainbow.DomainDriven.Command
             return new DomainMessage<EventStream>(eventHead, stream);
         }
 
-        public void Handle(DomainMessage<ICommand> message)
-        {
-            this.Handle(message, true);
-        }
 
-        public virtual void Handle(DomainMessage<ICommand> message, bool isEnd)
+        public void Handle(params DomainMessage<ICommand>[] messages)
         {
-
             ICommandExecutorContext context = this._commandExecutorContextFactory.Create();
 
-            try
+            foreach (var message in messages)
             {
-                this._commandHandlerProxy.Handle(context, message.Content);
-                this.Store(context.TrackedAggregateRoots);
-                this._aggregateRootRepositoryContext.Commit();
-                var evtMessage = BuildEventMessage(message.Head, context.TrackedAggregateRoots);
-                Task.Factory.StartNew(item => this._eventExecutor.Handle(item as  DomainMessage<EventStream>), evtMessage);
+                try
+                {
+                    this._commandHandlerProxy.Handle(context, message.Content);
+                    this.Store(context.TrackedAggregateRoots);
+                    var evtMessage = BuildEventMessage(message.Head, context.TrackedAggregateRoots);
+                    Task.Factory.StartNew(item => this._eventExecutor.Handle(item as DomainMessage<EventStream>), evtMessage);
 
+                }
+                catch (Exception ex)
+                {
+                    _aggregateRootRepositoryContext.RollBack();
+                    throw ex;
+                }
+                finally
+                {
+                    context.Clear();
+                }
             }
-            catch (Exception ex)
-            {
-                _aggregateRootRepositoryContext.RollBack();
-                throw ex;
-            }
-            finally
-            {
-                context.Clear();
-            }
+
         }
     }
 }

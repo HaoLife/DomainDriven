@@ -10,46 +10,16 @@ using Rainbow.DomainDriven.Repository;
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
 
-    public class AggregateRootRepository<TAggregateRoot>
-        : IAggregateRootRepository
+    public class MongoAggregateRootRepository<TAggregateRoot>
+        : IAggregateRootRepository<TAggregateRoot>
         where TAggregateRoot : class, IAggregateRoot
     {
 
         private readonly IMongoCollection<TAggregateRoot> _mongoCollection;
-        
-        public AggregateRootRepository(IMongoDatabase mongoDatabase)
+
+        public MongoAggregateRootRepository(IMongoDatabase mongoDatabase)
         {
             this._mongoCollection = mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
-        }
-
-        public void Add(IAggregateRoot root)
-        {
-            this._mongoCollection.InsertOne(root as TAggregateRoot);
-        }
-
-        public void Update(IAggregateRoot root)
-        {
-            var filters = Builders<TAggregateRoot>.Filter;
-            var query = filters.Eq(p => p.Id, root.Id);
-            this._mongoCollection.ReplaceOne(query, root as TAggregateRoot);
-        }
-
-        public void Remove(IAggregateRoot root)
-        {
-            var filters = Builders<TAggregateRoot>.Filter;
-            var query = filters.Eq(p => p.Id, root.Id);
-            this._mongoCollection.DeleteOne(query);
-        }
-
-        public IAggregateRoot Get(Guid id)
-        {
-            return this._mongoCollection.Find(a => a.Id == id).FirstOrDefault();
-
-        }
-
-        public IEnumerable<IAggregateRoot> Get(params Guid[] keys)
-        {
-            return this._mongoCollection.Find(a => keys.Contains(a.Id)).ToList();
         }
 
         public void Add(IEnumerable<IAggregateRoot> roots)
@@ -85,6 +55,40 @@ namespace Rainbow.DomainDriven.Mongo.Repository
                 list.Add(new DeleteOneModel<TAggregateRoot>(query));
             }
             this._mongoCollection.BulkWrite(list);
+        }
+
+        public void Add(TAggregateRoot root)
+        {
+            this._mongoCollection.InsertOne(root);
+        }
+
+        public void Update(TAggregateRoot root)
+        {
+            var filters = Builders<TAggregateRoot>.Filter;
+            var query = filters.Eq(p => p.Id, root.Id);
+            this._mongoCollection.ReplaceOne(query, root);
+        }
+
+        public void Remove(TAggregateRoot root)
+        {
+            var filters = Builders<TAggregateRoot>.Filter;
+            var query = filters.Eq(p => p.Id, root.Id);
+            this._mongoCollection.DeleteOne(query);
+        }
+
+        TAggregateRoot IAggregateRootRepository<TAggregateRoot>.Get(Guid id)
+        {
+            return this._mongoCollection.Find(a => a.Id == id).FirstOrDefault();
+        }
+
+        IEnumerable<TAggregateRoot> IAggregateRootRepository<TAggregateRoot>.Get(params Guid[] keys)
+        {
+            return this._mongoCollection.Find(a => keys.Contains(a.Id)).ToList();
+        }
+
+        public bool Exsits(Guid id)
+        {
+            return this._mongoCollection.Find(a => a.Id == id).Any();
         }
     }
 }

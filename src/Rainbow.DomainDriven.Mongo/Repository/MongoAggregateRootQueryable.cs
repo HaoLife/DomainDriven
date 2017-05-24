@@ -9,12 +9,12 @@ using Rainbow.DomainDriven.Repository;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
-    public class AggregateRootQueryRepository<TAggregateRoot> : 
+    public class MongoAggregateRootQueryable<TAggregateRoot> : 
         IAggregateRootQueryable<TAggregateRoot>
         where TAggregateRoot : IAggregateRoot
     {
         private readonly IQueryable<TAggregateRoot> _mongoCollectionQueryable;
-        public AggregateRootQueryRepository(IMongoDatabase mongoDatabase)
+        public MongoAggregateRootQueryable(IMongoDatabase mongoDatabase)
         {
             this._mongoCollectionQueryable = mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name).AsQueryable();
         }

@@ -33,7 +33,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 .UseDefaultDomain()
                 //.UseDefaultService()
                 //.UseCommandMapping<CommandMappingProvider>()
-                .UseTranMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
+                .UseMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
                 //.UseEventSourcing()
                 .Build()
                 .Start();

@@ -7,14 +7,14 @@ using Rainbow.DomainDriven.Repository;
 using Rainbow.DomainDriven.Mongo.Repository;
 using Rainbow.DomainDriven.Mongo.Internal;
 using Rainbow.DomainDriven.Infrastructure;
-using Rainbow.DomainDriven.Mongo.Infrastructure;
 using Rainbow.DomainDriven.Host;
+using Rainbow.DomainDriven.Mongo.DomainExtensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class DomainHostBuilderExtensions
     {
-        public static IDomainHostBuilder UseTranMongoAggregateRootRepository(this IDomainHostBuilder builder, IConfiguration configuration)
+        public static IDomainHostBuilder UseMongoAggregateRootRepository(this IDomainHostBuilder builder, IConfiguration configuration)
         {
             builder.Services.AddOptions()
                 .AddMemoryCache();
@@ -24,14 +24,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAdd(new ServiceCollection()
                 .AddTransient(p => p.CreateMongoDatabase(p.GetService<IOptions<MongoOptions>>()))
-                .AddSingleton<IAggregateRootRepositoryContext, MongoLockAggregateRootRepositoryContext>()
-                .AddSingleton<IAggregateRootQuery, MongoCommonQueryRepository>()
-                .AddSingleton<IAggregateRootLockRetoryProvider, AggregateRootLockRepositoryProvider>()
-                .AddSingleton(typeof(AggregateRootLockRepository<>))
-                .AddSingleton<IAggregateRootBatchRepositoryProvider, AggregateRootBatchRepositoryProvider>()
-                .AddSingleton(typeof(AggregateRootBatchRepository<>))
-                .AddSingleton(typeof(IAggregateRootQueryable<>), typeof(AggregateRootQueryRepository<>))
-                .AddSingleton<IAggregateRootRepositoryProvider, AggregateRootRepositoryProvider>()
+                .AddTransient<IAggregateRootRepositoryContext, MongoAggregateRootRepositoryContext>()
+                .AddSingleton<IAggregateRootCommonQuery, MongoAggregateRootCommonQuery>()
+                .AddSingleton(typeof(IAggregateRootQueryable<>), typeof(MongoAggregateRootQueryable<>))
                 .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
                 .AddSingleton<IEventSourcingRepository, MongoEventSourcingRepository>()
                 .AddTransient<IAggregateRootOperation, AggregateRootOperation>()

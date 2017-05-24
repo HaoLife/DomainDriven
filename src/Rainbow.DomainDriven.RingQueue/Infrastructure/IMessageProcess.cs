@@ -6,11 +6,12 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
 {
     public interface IMessageProcess
     {
-        IRingBuffer<DomainMessage> GetQueue(string queueName);
-        IEnumerable<IRingBuffer<DomainMessage>> GetQueues(string queueName);
-        Dictionary<string, IRingBufferConsumer> GetConsumers(string queueName);
-        IRingBufferConsumer GetConsumer(string queueName, string consumer);
+        IRingBuffer<TMessage> GetQueue<TMessage>(string queueName);
+        IEnumerable<IRingBuffer<TMessage>> GetQueues<TMessage>(string queueName);
+        IEnumerable<KeyValuePair<string, IRingBufferConsumer>> GetConsumers(string queueName);
+        IRingBufferConsumer GetConsumer(string queueName, string consumerName);
 
         void Start();
+        void Halt();
     }
 }

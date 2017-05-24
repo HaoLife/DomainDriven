@@ -4,6 +4,7 @@ using Rainbow.DomainDriven.Cache;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Event;
+using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.RingQueue.Command;
 using Rainbow.DomainDriven.RingQueue.Event;
@@ -22,31 +23,23 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<IMessageProcessBuilder>(new MessageProcessBuilder())
-                .AddSingleton<ICommandExecutorProxyProvider, CommandExecutorProxyProvider>()
-                .AddSingleton(typeof(CommandExecutorProxy<>))
                 .AddSingleton<ICommandExecutor, RingQueueCommandExecutor>()
                 .AddTransient<ICommandExecutorContext, RingQueueCommandExecutorContext>()
                 .AddSingleton<ICommandExecutorContextFactory, CommandExecutorContextFactory>()
                 .AddSingleton<ICommandHandlerActivator, CommandHandlerActivator>()
                 .AddSingleton<IAggregateRootCache, AggregateRootCache>()
                 .AddSingleton<IAggregateRootIndexCache, AggregateRootIndexCache>()
-                .AddSingleton<IRollbackService, RollbackService>()
+                .AddSingleton<IReplayEventProxy, ReplayEventProxy>()
 
                 .AddTransient<CommandExecutorHandler>()
                 .AddTransient<CommandCacheHandler>()
 
-                .AddSingleton<IEventService, RingQueueEventService>()
-                .AddTransient<EventStoreHandler>()
-                .AddTransient<SnapshotHandler>()
+                .AddTransient<EventRecallHandler>()
                 .AddTransient<EventExecutorHandler>()
-
-                .AddSingleton(typeof(ReplayEventProxy<>))
-                .AddSingleton<IReplayEventProxyProvider, ReplayEventProxyProvider>()
 
                 .AddSingleton<IEventExecutor, EventExecutor>()
                 .AddSingleton<IEventHandlerActivator, EventHandlerActivator>()
-                .AddTransient<IEventHandlerProxyProvider, EventHandlerProxyProvider>()
-                .AddSingleton<IMessageListening>(new MessageListening())
+                .AddSingleton<IReplyMessageListening>(new ReplyMessageListening())
             );
             return builder;
         }

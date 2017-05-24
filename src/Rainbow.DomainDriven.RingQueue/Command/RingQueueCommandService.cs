@@ -9,27 +9,45 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 {
     public class RingQueueCommandService : ICommandService
     {
-        private readonly IRingBufferProducer<DomainMessage> _messageProducer;
-        private readonly IMessageListening _messageListening;
+        private readonly IRingBufferProducer<DomainMessage<ICommand>> _messageProducer;
+        private readonly IReplyMessageListening _messageListening;
+        private readonly IRingBufferHandleListening _ringBufferHandleListening;
+
+        private const string COMMAND_QUEUE_NAME = QueueName.CommandQueue;
+
         public RingQueueCommandService(
             IMessageProcessBuilder messageProcessBuilder,
-            IMessageListening messageListening
+            IReplyMessageListening messageListening
             )
         {
             this._messageListening = messageListening;
             var process = messageProcessBuilder.Build();
-            var queue = process.GetQueue(QueueName.CommandQueue);
-            this._messageProducer = new RingBufferProducer<DomainMessage>(queue);
+            var queue = process.GetQueue<DomainMessage<ICommand>>(COMMAND_QUEUE_NAME);
+            this._messageProducer = new RingBufferProducer<DomainMessage<ICommand>>(queue);
+            this._ringBufferHandleListening = new RingBufferHandleListening<DomainMessage<ICommand>>(queue);
         }
 
-        public void Publish<TCommand>(DomainMessage cmd) where TCommand : class
+        public void Publish(DomainMessage<ICommand> message)
         {
-            this._messageProducer.Send(cmd);
-            if (!string.IsNullOrEmpty(cmd.Head.ReplyKey))
+            var seq = this._messageProducer.Send(message);
+            Wait(seq, message.Head);
+        }
+
+        protected virtual void Wait(long sequence, MessageHead head)
+        {
+            ReplyMessage reply = null;
+            switch (head.Consistency)
             {
-                var message = this._messageListening.WiatFor(cmd.Head.ReplyKey);
-                if (!message.IsSuccess) throw message.Exception;
+                case Consistency.Finally:
+                    this._ringBufferHandleListening.Wait(sequence);
+                    this._messageListening.TryGet(head.ReplyTo, out reply);
+                    break;
+                case Consistency.Strong:
+                    this._ringBufferHandleListening.Wait(sequence);
+                    reply = this._messageListening.ForWait(head.ReplyTo);
+                    break;
             }
+            if (reply != null && !reply.IsSuccess) throw reply.Exception;
         }
     }
 }

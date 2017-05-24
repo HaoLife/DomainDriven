@@ -10,11 +10,11 @@ using System.Collections.Concurrent;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
-    public class MongoCommonQueryRepository : IAggregateRootQuery
+    public class MongoAggregateRootCommonQuery : IAggregateRootCommonQuery
     {
         private readonly IMongoDatabase _mongoDatabase;
         private ConcurrentDictionary<Type, Delegate> _cacheInvokes = new ConcurrentDictionary<Type, Delegate>();
-        public MongoCommonQueryRepository(
+        public MongoAggregateRootCommonQuery(
             IMongoDatabase mongoDatabase)
         {
             this._mongoDatabase = mongoDatabase;
@@ -29,12 +29,12 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             return this.DbSet<TAggregateRoot>(typeof(TAggregateRoot).Name);
         }
 
-        IEnumerable<TAggregateRoot> IAggregateRootQuery.Get<TAggregateRoot>(params Guid[] keys)
+        IEnumerable<TAggregateRoot> IAggregateRootCommonQuery.Get<TAggregateRoot>(params Guid[] keys)
         {
             return this.DbSet<TAggregateRoot>().Find(a => keys.Contains(a.Id)).ToList();
         }
 
-        TAggregateRoot IAggregateRootQuery.Get<TAggregateRoot>(Guid id)
+        TAggregateRoot IAggregateRootCommonQuery.Get<TAggregateRoot>(Guid id)
         {
             return this.DbSet<TAggregateRoot>().Find(a => a.Id == id).FirstOrDefault();
         }

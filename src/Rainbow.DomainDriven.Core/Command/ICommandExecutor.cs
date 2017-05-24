@@ -8,7 +8,6 @@ namespace Rainbow.DomainDriven.Command
 {
     public interface ICommandExecutor
     {
-        void Handle(DomainMessage<ICommand> message);
-        void Handle(DomainMessage<ICommand> message, bool isEnd);
+        void Handle(params DomainMessage<ICommand>[] messages);
     }
 }
