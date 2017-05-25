@@ -27,6 +27,12 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             IServiceCollection serviceCollection = new ServiceCollection();
 
+            serviceCollection.Configure<SqliteOptions>(configuration.GetSection("Domain:Sqlite"));
+            serviceCollection.AddTransient<IDbConnection>(a =>
+                    new SqliteConnection(a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\")))
+                );
+
+
             serviceCollection
                 .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
                 //.UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
@@ -37,11 +43,6 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 //.UseEventSourcing()
                 .Build()
                 .Start();
-
-            serviceCollection.Configure<SqliteOptions>(configuration.GetSection("Domain:Sqlite"));
-            serviceCollection.AddTransient<IDbConnection>(a =>
-                    new SqliteConnection(a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\")))
-                );
 
 
             var provider = serviceCollection.BuildServiceProvider();

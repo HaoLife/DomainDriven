@@ -45,7 +45,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._replyMessageListening = replyMessageListening;
             var messageProcess = messageProcessBuilder.Build();
             var eventQueue = messageProcess.GetQueue<DomainMessage<EventStream>>(EVENT_NAME_QUEUE);
-            var producer = new RingBufferProducer<DomainMessage<EventStream>>(eventQueue);
+            _ringBufferProducer = new RingBufferProducer<DomainMessage<EventStream>>(eventQueue);
+            
         }
 
         protected virtual DomainMessage<EventStream> BuildEventMessage(MessageHead head, IEnumerable<IAggregateRoot> roots)
