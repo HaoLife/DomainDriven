@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-alpha00002" />
+    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-alpha00004" />
   </ItemGroup>
 
   <ItemGroup>

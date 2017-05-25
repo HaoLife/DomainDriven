@@ -28,9 +28,9 @@ namespace Rainbow.DomainDriven.ConsoleApp
             IServiceCollection serviceCollection = new ServiceCollection();
 
             serviceCollection
-                //.UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+                .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
                 //.UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
-                .UseDefaultDomain()
+                //.UseDefaultDomain()
                 //.UseDefaultService()
                 //.UseCommandMapping<CommandMappingProvider>()
                 .UseMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
@@ -64,12 +64,12 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             try
             {
-                // commandService.Handle(new CreateUserCommand()
-                // {
-                //     Id = Guid.NewGuid(),
-                //     Name = "nihao 1-1",
-                //     Sex = 1
-                // });
+                commandService.Handle(new CreateUserCommand()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "nihao 1-1",
+                    Sex = 1
+                });
                 // commandService.Handle(new ModifyUserNameCommand()
                 // {
                 //     UserId = id,

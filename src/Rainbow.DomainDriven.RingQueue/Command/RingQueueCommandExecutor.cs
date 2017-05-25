@@ -33,7 +33,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             , IAggregateRootSnapshot aggregateRootSnapshot
             , IAggregateRootCache aggregateRootCache
             , IEventSourceRepository eventSourceRepository
-            , IMessageProcess messageProcess
+            , IMessageProcessBuilder messageProcessBuilder
             , IReplyMessageListening replyMessageListening
             )
         {
@@ -43,6 +43,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._aggregateRootCache = aggregateRootCache;
             this._eventSourceRepository = eventSourceRepository;
             this._replyMessageListening = replyMessageListening;
+            var messageProcess = messageProcessBuilder.Build();
             var eventQueue = messageProcess.GetQueue<DomainMessage<EventStream>>(EVENT_NAME_QUEUE);
             var producer = new RingBufferProducer<DomainMessage<EventStream>>(eventQueue);
         }

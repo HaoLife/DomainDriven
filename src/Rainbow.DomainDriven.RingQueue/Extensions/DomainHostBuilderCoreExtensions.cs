@@ -24,6 +24,8 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<IMessageProcessBuilder>(new MessageProcessBuilder())
                 .AddSingleton<ICommandExecutor, RingQueueCommandExecutor>()
+                .AddSingleton<ICommandHandlerProxy, CommandHandlerProxy>()
+                .AddSingleton<IAggregateRootSnapshot, AggregateRootSnapshot>()
                 .AddTransient<ICommandExecutorContext, RingQueueCommandExecutorContext>()
                 .AddSingleton<ICommandExecutorContextFactory, CommandExecutorContextFactory>()
                 .AddSingleton<ICommandHandlerActivator, CommandHandlerActivator>()
@@ -38,6 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddTransient<EventExecutorHandler>()
 
                 .AddSingleton<IEventExecutor, EventExecutor>()
+                .AddSingleton<IEventHandlerProxy, EventHandlerProxy>()
                 .AddSingleton<IEventHandlerActivator, EventHandlerActivator>()
                 .AddSingleton<IReplyMessageListening>(new ReplyMessageListening())
             );

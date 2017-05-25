@@ -52,7 +52,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             try
             {
                 List<Exception> errors = new List<Exception>();
-                if (Interlocked.Exchange(ref _commited, 1) != 1)
+                if (Interlocked.Exchange(ref _commited, 1) != 0)
                 {
                     throw new InvalidOperationException("重复提交");
                 }
@@ -81,7 +81,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             }
             finally
             {
-                if (Interlocked.Exchange(ref _commited, 0) != 0)
+                if (Interlocked.Exchange(ref _commited, 0) != 1)
                 {
                     throw new InvalidOperationException("无法进行变更状态");
                 }

@@ -62,7 +62,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             var each = this._messageConsumers.Select(a => a.Value);
             foreach (var item in each)
             {
-                Task.Factory.StartNew(a => ((IRingBufferConsumer)a).Run(), item);
+                Task.Factory.StartNew(a => ((IRingBufferConsumer)a).Run(), item, TaskCreationOptions.LongRunning);
             }
         }
 
@@ -71,7 +71,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
             var each = this._messageConsumers.Select(a => a.Value);
             foreach (var item in each)
             {
-                Task.Factory.StartNew(a => ((IRingBufferConsumer)a).Halt(), item, TaskCreationOptions.LongRunning);
+                item.Halt();
             }
         }
     }

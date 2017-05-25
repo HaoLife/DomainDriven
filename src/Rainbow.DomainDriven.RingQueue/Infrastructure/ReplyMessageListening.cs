@@ -35,7 +35,7 @@ namespace Rainbow.DomainDriven.RingQueue.Infrastructure
         
         public bool TryGet(string key, out ReplyMessage replyMessage)
         {
-            return this.TryGet(key, out replyMessage);
+            return this._replyMessages.TryGetValue(key, out replyMessage);
         }
     }
 }

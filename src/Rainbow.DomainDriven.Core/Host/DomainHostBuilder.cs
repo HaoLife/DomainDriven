@@ -30,6 +30,7 @@ namespace Rainbow.DomainDriven.Host
             this._service.TryAdd(new ServiceCollection()
                 .AddSingleton<ICommandService, CommandService>()
                 .AddSingleton<ICommandExecutor, CommandExecutor>()
+                .AddSingleton<ICommandHandlerProxy,CommandHandlerProxy>()
                 .AddSingleton<ICommandExecutorContextFactory, CommandExecutorContextFactory>()
                 .AddSingleton<ICommandHandlerActivator, CommandHandlerActivator>()
                 .AddSingleton<IEventHandlerActivator, EventHandlerActivator>()
