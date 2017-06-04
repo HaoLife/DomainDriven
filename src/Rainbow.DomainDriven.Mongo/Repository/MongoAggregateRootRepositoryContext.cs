@@ -17,18 +17,16 @@ namespace Rainbow.DomainDriven.Mongo.Repository
         IAggregateRootRepositoryContext
     {
         private readonly IAggregateRootOperation _aggregateRootOperation;
-        private readonly IMongoDatabase _mongoDatabase;
+        private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
         private ConcurrentDictionary<Type, Delegate> _cacheInvokes = new ConcurrentDictionary<Type, Delegate>();
-
-
         private int _commited;
         private BulkWriteOptions _options = new BulkWriteOptions() { IsOrdered = false };
 
         public MongoAggregateRootRepositoryContext(
-            IMongoDatabase mongoDatabase,
+            IMongoDatabaseProvider mongoDatabaseProvider,
             IAggregateRootOperation aggregateRootOperation)
         {
-            this._mongoDatabase = mongoDatabase;
+            this._mongoDatabaseProvider = mongoDatabaseProvider;
             this._aggregateRootOperation = aggregateRootOperation;
         }
 
@@ -114,7 +112,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
         private void Store<TAggregateRoot>() where TAggregateRoot : class, IAggregateRoot
         {
             var type = typeof(TAggregateRoot);
-            var collection = _mongoDatabase.GetCollection<TAggregateRoot>(type.Name);
+            var collection = _mongoDatabaseProvider.GetCollection<TAggregateRoot>(type.Name);
             List<WriteModel<TAggregateRoot>> list = new List<WriteModel<TAggregateRoot>>();
             BuildAdded(list, this._aggregateRootOperation.GetAdded(type));
             BuildAdded(list, this._aggregateRootOperation.GetUpdated(type));

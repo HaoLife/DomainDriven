@@ -14,15 +14,18 @@ namespace Rainbow.DomainDriven.RingQueue.Event
     {
         private readonly IEventExecutor _eventExecutor;
         private readonly IEventSourcingRepository _eventSourcingRepository;
+        private readonly ILogger _logger;
         public EventExecutorHandler(
             IEventExecutor eventExecutor
             , IEventSourcingRepository eventSourcingRepository
+            , ILogger<EventExecutorHandler> logger
             )
         {
             this._eventExecutor = eventExecutor;
             this._eventSourcingRepository = eventSourcingRepository;
+            this._logger = logger;
         }
-        
+
         public void Handle(DomainMessage<EventStream>[] messages)
         {
             foreach (var message in messages)
@@ -33,7 +36,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
                 catch (Exception ex)
                 {
-
+                    this._logger.LogError(1, ex, "执行事件失败");
                 }
 
                 try
@@ -42,7 +45,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
                 catch (Exception ex)
                 {
-
+                    this._logger.LogError(1, ex, "存储当前已执行的事件源失败");
                 }
             }
         }

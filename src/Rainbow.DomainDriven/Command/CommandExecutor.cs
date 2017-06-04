@@ -18,10 +18,10 @@ namespace Rainbow.DomainDriven.Command
         private readonly IEventExecutor _eventExecutor;
 
         public CommandExecutor(
-            ICommandHandlerProxy commandHandlerProxy,
-            IAggregateRootRepositoryContext aggregateRootRepositoryContext,
-            ICommandExecutorContextFactory commandExecutorContextFactory,
-            IEventExecutor eventExecutor
+             ICommandHandlerProxy commandHandlerProxy,
+             IAggregateRootRepositoryContext aggregateRootRepositoryContext,
+             ICommandExecutorContextFactory commandExecutorContextFactory,
+             IEventExecutor eventExecutor
             )
         {
             this._commandHandlerProxy = commandHandlerProxy;

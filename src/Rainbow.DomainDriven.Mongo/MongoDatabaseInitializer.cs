@@ -1,26 +1,14 @@
 using System;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
-using System.Linq;
-using System.Collections.Generic;
-using Rainbow.DomainDriven.Mongo.Repository;
 using Rainbow.DomainDriven.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson.Serialization;
-using Rainbow.DomainDriven.DomainExtensions;
 
-namespace Rainbow.DomainDriven.Mongo.DomainExtensions
+namespace Rainbow.DomainDriven.Mongo
 {
-    public class MongoInitializeExtension : IDomainInitializeExtension
+    public class MongoDatabaseInitializer : IDatabaseInitializer
     {
-        public void ApplyServices(IServiceCollection services)
-        {
-            var provider = services.BuildServiceProvider();
-            Initialize(provider);
-        }
-
-        private void Initialize(IServiceProvider provider)
+        public void Initialize(IServiceProvider provider)
         {
             var domainTypeProvider = provider.GetRequiredService<IDomainTypeProvider>();
             

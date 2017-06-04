@@ -11,52 +11,65 @@ using Rainbow.MessageQueue.Ring;
 using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.RingQueue.Infrastructure;
 using Rainbow.DomainDriven.Event;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 
 namespace Rainbow.DomainDriven.RingQueue.Host
 {
-    public class LocalQueueDamianHost : IDomainHost
+    public class LocalQueueDamianHost : DomainHost, IDomainHost
     {
         private readonly IServiceCollection _service;
+        private readonly IConfiguration _configuration;
+        private readonly IChangeToken _changeToken;
 
-        public LocalQueueDamianHost(IServiceCollection service)
+        public LocalQueueDamianHost(IServiceCollection service, IConfiguration configuration)
+            : base(service)
         {
             this._service = service;
+            this._configuration = configuration;
+            this._changeToken = configuration.GetReloadToken();
         }
 
-        public void Start()
+
+
+        public override void Start()
         {
+            base.Start();
+            this.InitializeQueue();
 
-            var provider = this._service.BuildServiceProvider();
-            var ringQueuqOptions = provider.GetRequiredService<IOptions<RiginQueueOptions>>();
-            var builder = provider.GetRequiredService<IMessageProcessBuilder>();
+        }
 
-            BuildEventService(this._service, provider, builder, ringQueuqOptions.Value);
-            BuildCommandService(this._service, provider, builder, ringQueuqOptions.Value);
+        private void InitializeQueue()
+        {
+            var builder = this._provider.GetRequiredService<IMessageProcessBuilder>();
+
+            BuildCommandHander(this._provider, builder);
+            BuildEventHandler(this._provider, builder);
 
             var messageProcess = builder.Build();
             messageProcess.Start();
 
-            var eventSourcingProcess = provider.GetService<IEventSourcingProcess>();
+            var eventSourcingProcess = this._provider.GetService<IEventSourcingProcess>();
             if (eventSourcingProcess != null)
                 eventSourcingProcess.Run();
         }
 
-        private void BuildCommandService(
-            IServiceCollection services
-            , IServiceProvider provider
-            , IMessageProcessBuilder messageProcessBuilder
-            , RiginQueueOptions option)
+        private void BuildCommandHander(
+            IServiceProvider provider
+            , IMessageProcessBuilder messageProcessBuilder)
         {
+
             var queueName = QueueName.CommandQueue;
+            var size = this._configuration.GetValue<int>("CommandQueueSize");
 
             IWaitStrategy wait = new SpinWaitStrategy();
-            MultiSequencer sequencer = new MultiSequencer(option.CommandQueueSize, wait);
+            MultiSequencer sequencer = new MultiSequencer(size, wait);
             RingBuffer<DomainMessage<ICommand>> queue = new RingBuffer<DomainMessage<ICommand>>(sequencer);
             messageProcessBuilder.AddQueue(queueName, queue);
 
             var barrier = queue.NewBarrier();
 
-            var isCache = provider.GetServices<ICommandMappingProvider>().Any();
+            var isCache = provider.GetService<ICommandMappingProvider>() != null;
             if (isCache)
             {
                 var cacheHandler = provider.GetService<CommandCacheHandler>();
@@ -80,16 +93,17 @@ namespace Rainbow.DomainDriven.RingQueue.Host
             messageProcessBuilder.AddConsumer(queueName, QueueName.CommandExecutorConsumer, executorConsumer);
         }
 
-        private void BuildEventService(
-            IServiceCollection services
-            , IServiceProvider provider
-            , IMessageProcessBuilder messageProcessBuilder
-            , RiginQueueOptions option)
+
+        private void BuildEventHandler(
+            IServiceProvider provider
+            , IMessageProcessBuilder messageProcessBuilder)
         {
+
             var queueName = QueueName.EventQueue;
+            var size = this._configuration.GetValue<int>("EventQueueSize");
 
             IWaitStrategy wait = new SpinWaitStrategy();
-            MultiSequencer sequencer = new MultiSequencer(option.EventQueueSize, wait);
+            MultiSequencer sequencer = new MultiSequencer(size, wait);
 
             RingBuffer<DomainMessage<EventStream>> queue = new RingBuffer<DomainMessage<EventStream>>(sequencer);
             messageProcessBuilder.AddQueue(queueName, queue);
@@ -114,7 +128,7 @@ namespace Rainbow.DomainDriven.RingQueue.Host
 
             messageProcessBuilder.AddConsumer(queueName, QueueName.EventSnapshotConsumer, snapshotConsumer);
             messageProcessBuilder.AddConsumer(queueName, QueueName.EventExecutorConsumer, executorConsumer);
-
         }
+
     }
 }

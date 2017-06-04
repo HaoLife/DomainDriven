@@ -9,24 +9,26 @@ using Rainbow.DomainDriven.Repository;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
-    public class MongoAggregateRootQueryable<TAggregateRoot> : 
+    public class MongoAggregateRootQueryable<TAggregateRoot> :
         IAggregateRootQueryable<TAggregateRoot>
         where TAggregateRoot : IAggregateRoot
     {
-        private readonly IQueryable<TAggregateRoot> _mongoCollectionQueryable;
-        public MongoAggregateRootQueryable(IMongoDatabase mongoDatabase)
+        private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
+        public MongoAggregateRootQueryable(IMongoDatabaseProvider mongoDatabaseProvider)
         {
-            this._mongoCollectionQueryable = mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name).AsQueryable();
+            this._mongoDatabaseProvider = mongoDatabaseProvider;
         }
 
-        public Type ElementType => _mongoCollectionQueryable.ElementType;
+        private IQueryable<TAggregateRoot> Queryble => this._mongoDatabaseProvider.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name).AsQueryable();
 
-        public Expression Expression => _mongoCollectionQueryable.Expression;
+        public Type ElementType => this.Queryble.ElementType;
 
-        public IQueryProvider Provider => _mongoCollectionQueryable.Provider;
+        public Expression Expression => this.Queryble.Expression;
 
-        public IEnumerator<TAggregateRoot> GetEnumerator() => _mongoCollectionQueryable.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _mongoCollectionQueryable.GetEnumerator();
+        public IQueryProvider Provider => this.Queryble.Provider;
+
+        public IEnumerator<TAggregateRoot> GetEnumerator() => this.Queryble.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => this.Queryble.GetEnumerator();
 
     }
 }

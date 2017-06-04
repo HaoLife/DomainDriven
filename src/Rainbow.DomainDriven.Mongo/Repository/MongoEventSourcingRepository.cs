@@ -11,22 +11,18 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class MongoEventSourcingRepository : IEventSourcingRepository
     {
-        private readonly IMongoCollection<DomainEventSourcing> _collection;
-        private readonly IMongoDatabase _database;
-        private List<string> _collectionNames;
+        private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
         private static Guid KEY = new Guid("00000000-0000-0000-0000-000000000000");
 
-        public MongoEventSourcingRepository(IOptions<MongoOptions> options)
+        public MongoEventSourcingRepository(IMongoDatabaseProvider mongoDatabaseProvider)
         {
-            var client = new MongoClient(options.Value.EventSourceConnectionString);
-            var database = client.GetDatabase(options.Value.EventSourceDatabase);
-            this._database = database;
-            this._collection = database.GetCollection<DomainEventSourcing>(nameof(DomainEventSourcing));
+            this._mongoDatabaseProvider = mongoDatabaseProvider;
         }
 
         EventSource IEventSourcingRepository.Current()
         {
-            var result = _collection.Find(a => a.Id == KEY).FirstOrDefault();
+            var collection = this._mongoDatabaseProvider.GetCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
+            var result = collection.Find(a => a.Id == KEY).FirstOrDefault();
             return result == null ? null : result.EventSrouce;
         }
 
@@ -34,12 +30,13 @@ namespace Rainbow.DomainDriven.Mongo.Repository
         {
             var entity = new DomainEventSourcing()
             {
-                Id = new Guid("00000000-0000-0000-0000-000000000000"),
+                Id = KEY,
                 EventSrouce = current
             };
 
             var query = Builders<DomainEventSourcing>.Filter.Empty;
-            var result = this._collection.ReplaceOne(query, entity, new UpdateOptions() { IsUpsert = true });
+            var collection = this._mongoDatabaseProvider.GetCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
+            var result = collection.ReplaceOne(query, entity, new UpdateOptions() { IsUpsert = true });
         }
 
         List<EventSource> IEventSourcingRepository.Take(EventSource current, int size)
@@ -51,7 +48,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             }
 
             var filter = Builders<EventSource>.Filter.Gt("Event.UTCTimestamp", timestamp);
-            var esCollection = this._database.GetCollection<EventSource>(nameof(EventSource));
+            var esCollection = this._mongoDatabaseProvider.GetCollection<EventSource>(typeof(EventSource).Name);
             return esCollection.Find(filter).Limit(size).ToList();
 
         }

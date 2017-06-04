@@ -12,17 +12,17 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class MongoAggregateRootCommonQuery : IAggregateRootCommonQuery
     {
-        private readonly IMongoDatabase _mongoDatabase;
+        private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
         private ConcurrentDictionary<Type, Delegate> _cacheInvokes = new ConcurrentDictionary<Type, Delegate>();
         public MongoAggregateRootCommonQuery(
-            IMongoDatabase mongoDatabase)
+            IMongoDatabaseProvider mongoDatabaseProvider)
         {
-            this._mongoDatabase = mongoDatabase;
+            this._mongoDatabaseProvider = mongoDatabaseProvider;
         }
 
         private IMongoCollection<TAggregateRoot> DbSet<TAggregateRoot>(string name)
         {
-            return this._mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
+            return this._mongoDatabaseProvider.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
         }
         private IMongoCollection<TAggregateRoot> DbSet<TAggregateRoot>()
         {

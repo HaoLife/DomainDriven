@@ -17,7 +17,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         private readonly IMongoCollection<TAggregateRoot> _mongoCollection;
 
-        public MongoAggregateRootRepository(IMongoDatabase mongoDatabase)
+        public MongoAggregateRootRepository(IMongoDatabaseProvider mongoDatabase)
         {
             this._mongoCollection = mongoDatabase.GetCollection<TAggregateRoot>(typeof(TAggregateRoot).Name);
         }

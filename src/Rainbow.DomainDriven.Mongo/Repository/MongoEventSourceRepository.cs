@@ -10,16 +10,14 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 {
     public class MongoEventSourceRepository : IEventSourceRepository
     {
-        private readonly IMongoCollection<EventSource> _collection;
-        public MongoEventSourceRepository(IOptions<MongoOptions> options)
+        private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
+        public MongoEventSourceRepository(IMongoDatabaseProvider mongoDatabaseProvider)
         {
-            var client = new MongoClient(options.Value.EventSourceConnectionString);
-            var database = client.GetDatabase(options.Value.EventSourceDatabase);
-            this._collection = database.GetCollection<EventSource>(nameof(EventSource)); ;
+            this._mongoDatabaseProvider = mongoDatabaseProvider;
         }
         public void AddRange(IEnumerable<EventSource> events)
         {
-            _collection.InsertMany(events);
+            this._mongoDatabaseProvider.GetEventCollection<EventSource>(typeof(EventSource).Name).InsertMany(events);
         }
 
         public IEnumerable<EventSource> GetAggregateRootEvents(Guid aggregateRootId, string aggregateRootTypeName, int version = 0)
@@ -30,7 +28,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
                     filter.Eq(p => p.AggregateRootTypeName, aggregateRootTypeName),
                     filter.Gt(p => p.Event.Version, version)
                 );
-            return this._collection.Find(query).ToEnumerable();
+            return this._mongoDatabaseProvider.GetEventCollection<EventSource>(typeof(EventSource).Name).Find(query).ToEnumerable();
         }
     }
 }

@@ -7,12 +7,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Rainbow.DomainDriven.Infrastructure;
 
 namespace Rainbow.DomainDriven.Event
 {
     public class EventHandlerSelector : IEventHandlerSelector
     {
         private ConcurrentDictionary<Type, List<Type>> _cacheEventHandler = new ConcurrentDictionary<Type, List<Type>>();
+    
+        private readonly IAssemblyProvider _assemblyProvider;
+        // public EventHandlerSelector()
+        // {
+            
+        // }
+
+        public EventHandlerSelector(IAssemblyProvider assemblyProvider)
+        {
+            this._assemblyProvider = assemblyProvider;
+            this.Initialize(this._assemblyProvider.Assemblys);
+        }
+
         public IEnumerable<Type> FindHandlerTypes<TEvent>() where TEvent : IEvent
         {
             List<Type> handleTypes;
@@ -21,7 +35,7 @@ namespace Rainbow.DomainDriven.Event
         }
 
 
-        public void Initialize(IEnumerable<Assembly> assemblys)
+        private void Initialize(IEnumerable<Assembly> assemblys)
         {
             this.RegisterHandler(assemblys.SelectMany(p => p.GetTypes()));
         }

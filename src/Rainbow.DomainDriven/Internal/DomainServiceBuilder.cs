@@ -1,16 +1,21 @@
-using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
 using System.Linq;
-using System.Collections.Generic;
 using Rainbow.DomainDriven.Domain;
+using Microsoft.Extensions.DependencyModel;
 
-namespace Rainbow.DomainDriven.DomainExtensions
+namespace Rainbow.DomainDriven.Internal
 {
-    public class DomainServiceInitializeExtension : IDomainInitializeExtension
+    internal class DomainServiceBuilder
     {
-        public void ApplyServices(IServiceCollection services)
+        private readonly IServiceCollection _services;
+        public DomainServiceBuilder(IServiceCollection services)
+        {
+            this._services = services;
+        }
+
+        public void Build()
         {
             var dependencyContext = DependencyContext.Load(Assembly.GetEntryAssembly());
             IEnumerable<Assembly> assemblys = dependencyContext.RuntimeLibraries
@@ -22,7 +27,7 @@ namespace Rainbow.DomainDriven.DomainExtensions
             {
                 if (!typeof(IDomainService).GetTypeInfo().IsAssignableFrom(type)) continue;
                 if (!type.GetTypeInfo().IsClass) continue;
-                services.AddSingleton(type);
+                this._services.AddSingleton(type);
             }
 
         }

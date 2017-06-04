@@ -23,6 +23,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private readonly IReplyMessageListening _replyMessageListening;
         private readonly IAggregateRootCache _aggregateRootCache;
         private readonly IAggregateRootRepositoryContext _aggregateRootRepositoryContext;
+        private readonly ILogger _logger;
 
 
         public EventRecallHandler(
@@ -31,7 +32,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             , IDomainTypeProvider domainTypeSearch
             , IReplyMessageListening replyMessageListening
             , IAggregateRootCache aggregateRootCache
-            , IAggregateRootRepositoryContext aggregateRootRepositoryContext)
+            , IAggregateRootRepositoryContext aggregateRootRepositoryContext
+            , ILogger<EventRecallHandler> logger)
         {
             this._replayEventProxy = replayEventProxy;
             this._aggregateRootCommonQuery = aggregateRootCommonQuery;
@@ -39,6 +41,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             this._replyMessageListening = replyMessageListening;
             this._aggregateRootCache = aggregateRootCache;
             this._aggregateRootRepositoryContext = aggregateRootRepositoryContext;
+            this._logger = logger;
         }
 
         protected virtual bool CheckNotify(MessageHead head)
@@ -76,7 +79,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
             catch (Exception ex)
             {
-
+                this._logger.LogError(2, ex, "事件回溯存储聚合根失败");
             }
         }
 

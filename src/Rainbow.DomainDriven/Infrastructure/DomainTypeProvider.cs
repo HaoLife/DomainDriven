@@ -13,11 +13,15 @@ namespace Rainbow.DomainDriven.Infrastructure
         private readonly Dictionary<string, Type> _cacheType;
         private readonly List<Func<Type, bool>> _checks;
 
+        private readonly IAssemblyProvider _assemblyProvider;
+
         public IEnumerable<Type> Events => _cacheType.Values.Where(a => IsEvent(a));
 
-        public IEnumerable<Type> AggregateRoots =>_cacheType.Values.Where(a => IsAggregateRoot(a));
+        public IEnumerable<Type> AggregateRoots => _cacheType.Values.Where(a => IsAggregateRoot(a));
 
         public IEnumerable<Type> Commands => _cacheType.Values.Where(a => IsCommand(a));
+
+
 
         public DomainTypeProvider()
         {
@@ -28,6 +32,12 @@ namespace Rainbow.DomainDriven.Infrastructure
                 IsAggregateRoot,
                 IsEvent
             };
+        }
+
+        public DomainTypeProvider(IAssemblyProvider assemblyProvider) : this()
+        {
+            this._assemblyProvider = assemblyProvider;
+            this.Initialize(this._assemblyProvider.Assemblys);
         }
 
         public Type GetType(string name)

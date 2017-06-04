@@ -11,6 +11,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using Rainbow.DomainDriven.ConsoleApp.Config;
 using Microsoft.Extensions.Logging;
+using Rainbow.DomainDriven.Host;
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
@@ -27,29 +28,49 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             IServiceCollection serviceCollection = new ServiceCollection();
 
+            serviceCollection.AddOptions();
             serviceCollection.Configure<SqliteOptions>(configuration.GetSection("Domain:Sqlite"));
             serviceCollection.AddTransient<IDbConnection>(a =>
-                    new SqliteConnection(a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\")))
+                    {
+                        var connectionString = a.GetService<IOptions<SqliteOptions>>().Value.ConnectionString;
+                        connectionString = connectionString.Replace("${workspaceRoot}", Path.Combine(AppContext.BaseDirectory, "../../../"));
+
+                        return new SqliteConnection(connectionString);
+                    }
+
                 );
+
+            // serviceCollection
+            //     //.UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
+            //     //.UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
+            //     .UseDefaultDomain()
+            //     //.UseDefaultService()
+            //     //.UseCommandMapping<CommandMappingProvider>()
+            //     .UseMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
+            //     //.UseEventSourcing()
+            //     .Build()
+            //     .Start();
 
 
             serviceCollection
-                .UseLocalQueueDomain(configuration.GetSection("Domain:Local"))
-                //.UseLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
-                //.UseDefaultDomain()
-                //.UseDefaultService()
-                //.UseCommandMapping<CommandMappingProvider>()
-                .UseMongoAggregateRootRepository(configuration.GetSection("Domain:MongoDB"))
-                //.UseEventSourcing()
-                .Build()
-                .Start();
+                .AddDomain()
+                .AddDomainService()
+                //.AddLocalQueueDomain(configuration.GetSection("Domain:Local"))
+                //.AddLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
+                //.AddCommandMapping<CommandMappingProvider>()
+                .AddMongo(configuration.GetSection("Domain:MongoDB"));
 
+            serviceCollection.AddLogging();
 
             var provider = serviceCollection.BuildServiceProvider();
 
             var loggerFactory = provider.GetService<ILoggerFactory>();
             loggerFactory.AddDebug();
             loggerFactory.AddConsole(configuration.GetSection("Logging"));
+
+
+            var domainHost = provider.GetRequiredService<IDomainHost>();
+            domainHost.Start();
 
             var commandService = provider.GetRequiredService<ICommandService>();
             //commandService.Handle(new CreateUserCommand() { Id = Guid.NewGuid(), Name = "nihao 1", Sex = 1 });

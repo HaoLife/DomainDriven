@@ -6,15 +6,25 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
+using Rainbow.DomainDriven.Infrastructure;
 
 namespace Rainbow.DomainDriven.Command
 {
     public class CommandHandlerSelector : ICommandHandlerSelector
     {
-
         private ConcurrentDictionary<Type, Type> _cacheCommandExecutor = new ConcurrentDictionary<Type, Type>();
+        private readonly IAssemblyProvider _assemblyProvider;
 
-        public void Initialize(IEnumerable<Assembly> assemblys)
+        // public CommandHandlerSelector()
+        // {
+        // }
+
+        public CommandHandlerSelector(IAssemblyProvider assemblyProvider)
+        {
+            this._assemblyProvider = assemblyProvider;
+            this.Initialize(this._assemblyProvider.Assemblys);
+        }
+        private void Initialize(IEnumerable<Assembly> assemblys)
         {
             this.RegisterHandler(assemblys.SelectMany(p => p.GetTypes()));
         }

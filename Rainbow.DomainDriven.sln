@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3EE6B986-C6F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{39B08101-9037-47EF-BCB0-F5558FEB9F80}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj", "{9A4E9F88-5281-43E7-B41A-80D8A877BD83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven", "src\Rainbow.DomainDriven\Rainbow.DomainDriven.csproj", "{9A4E9F88-5281-43E7-B41A-80D8A877BD83}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.ConsoleApp", "samples\Rainbow.DomainDriven.ConsoleApp\Rainbow.DomainDriven.ConsoleApp.csproj", "{A230F532-9A96-4A38-A35A-28D15585F7D6}"
 EndProject
