@@ -1,35 +1,24 @@
-﻿using Rainbow.DomainDriven;
-using Rainbow.DomainDriven.Host;
+
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rainbow.DomainDriven.Command;
-using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Infrastructure;
-using Rainbow.DomainDriven.Internal;
+using Rainbow.DomainDriven.Host;
+using Rainbow.DomainDriven.Cache;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
+
         public static IServiceCollection AddDomain(this IServiceCollection services)
         {
             services.TryAdd(new ServiceCollection()
-                .AddSingleton<IAssemblyProvider, AssemblyProvider>()
+                // .AddSingleton<IAssemblyProvider, AssemblyProvider>()
+                // .AddSingleton<IDomainTypeProvider, DomainTypeProvider>()
+                // .AddSingleton<ICommandExecutorFactory, ObjectExecutorFactory>()
                 .AddSingleton<ICommandService, CommandService>()
-                .AddSingleton<ICommandExecutor, CommandExecutor>()
-                .AddSingleton<ICommandHandlerProxy, CommandHandlerProxy>()
-                .AddSingleton<ICommandExecutorContextFactory, CommandExecutorContextFactory>()
-                .AddSingleton<ICommandHandlerActivator, CommandHandlerActivator>()
-                .AddSingleton<IEventHandlerActivator, EventHandlerActivator>()
-                .AddSingleton<IEventExecutor, EventExecutor>()
-                .AddSingleton<IEventHandlerProxy, EventHandlerProxy>()
-                .AddSingleton<ICommandHandlerSelector, CommandHandlerSelector>()
-                .AddSingleton<IEventHandlerSelector, EventHandlerSelector>()
-                .AddSingleton<IDomainTypeProvider, DomainTypeProvider>()
-                .AddTransient<ICommandExecutorContext, CommandExecutorContext>()
                 .AddSingleton<IDomainHost>(new DomainHost(services))
             );
-
-
             return services;
         }
 
@@ -38,6 +27,18 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var builder = new DomainServiceBuilder(services);
             builder.Build();
+            return services;
+        }
+
+
+        public static IServiceCollection AddCommandMapping<TCommandMappingProvider>(this IServiceCollection services)
+            where TCommandMappingProvider : class, ICommandMappingProvider
+        {
+
+            services.TryAdd(new ServiceCollection()
+                .AddSingleton<ICommandMappingProvider, TCommandMappingProvider>()
+            );
+            
             return services;
         }
 

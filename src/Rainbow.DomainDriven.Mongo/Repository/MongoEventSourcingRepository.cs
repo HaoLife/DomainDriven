@@ -39,18 +39,5 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             var result = collection.ReplaceOne(query, entity, new UpdateOptions() { IsUpsert = true });
         }
 
-        List<EventSource> IEventSourcingRepository.Take(EventSource current, int size)
-        {
-            var timestamp = 0L;
-            if (current != null)
-            {
-                timestamp = current.Event.UTCTimestamp;
-            }
-
-            var filter = Builders<EventSource>.Filter.Gt("Event.UTCTimestamp", timestamp);
-            var esCollection = this._mongoDatabaseProvider.GetCollection<EventSource>(typeof(EventSource).Name);
-            return esCollection.Find(filter).Limit(size).ToList();
-
-        }
     }
 }

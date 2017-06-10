@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Rainbow.DomainDriven.Event
 {
-    public interface IEventHandler<in TEvent> 
-        where TEvent : IEvent
+    public interface IEventHandler
     {
-        void Handle(TEvent evt);
+        void Handle(IEvent evt);
     }
 }

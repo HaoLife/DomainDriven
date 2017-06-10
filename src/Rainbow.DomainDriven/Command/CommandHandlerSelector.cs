@@ -1,23 +1,18 @@
-﻿using Rainbow.DomainDriven.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Reflection;
-using Microsoft.Extensions.DependencyModel;
 using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.Utilities;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.Command
 {
     public class CommandHandlerSelector : ICommandHandlerSelector
     {
-        private ConcurrentDictionary<Type, Type> _cacheCommandExecutor = new ConcurrentDictionary<Type, Type>();
+        private ConcurrentDictionary<Type, Type> _cacheCommandHandler = new ConcurrentDictionary<Type, Type>();
         private readonly IAssemblyProvider _assemblyProvider;
 
-        // public CommandHandlerSelector()
-        // {
-        // }
 
         public CommandHandlerSelector(IAssemblyProvider assemblyProvider)
         {
@@ -32,7 +27,7 @@ namespace Rainbow.DomainDriven.Command
         public virtual Type FindHandlerType<TCommand>() where TCommand : ICommand
         {
             var HandlerType = default(Type);
-            this._cacheCommandExecutor.TryGetValue(typeof(TCommand), out HandlerType);
+            this._cacheCommandHandler.TryGetValue(typeof(TCommand), out HandlerType);
             return HandlerType;
         }
 
@@ -44,7 +39,7 @@ namespace Rainbow.DomainDriven.Command
 
             foreach (var execType in HandlerTypes)
             {
-                this._cacheCommandExecutor.TryAdd(execType.GetGenericArguments().FirstOrDefault(), executorType);
+                this._cacheCommandHandler.TryAdd(execType.GetGenericArguments().FirstOrDefault(), executorType);
             }
         }
 

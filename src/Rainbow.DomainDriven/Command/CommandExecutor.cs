@@ -1,89 +1,88 @@
-﻿using Rainbow.DomainDriven.Domain;
-using Rainbow.DomainDriven.Event;
-using Rainbow.DomainDriven.Message;
-using Rainbow.DomainDriven.Repository;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Rainbow.DomainDriven.Cache;
+using Rainbow.DomainDriven.Domain;
+using Rainbow.DomainDriven.Event;
+using Rainbow.DomainDriven.Repository;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.Command
 {
     public class CommandExecutor : ICommandExecutor
     {
-        private readonly ICommandHandlerProxy _commandHandlerProxy;
-        private readonly IAggregateRootRepositoryContext _aggregateRootRepositoryContext;
         private readonly ICommandExecutorContextFactory _commandExecutorContextFactory;
+        private readonly ICommandHandler _commandHandler;
+        private readonly IAggregateRootRepositoryContextFactory _aggregateRootRepositoryContextFactory;
         private readonly IEventExecutor _eventExecutor;
-
         public CommandExecutor(
-             ICommandHandlerProxy commandHandlerProxy,
-             IAggregateRootRepositoryContext aggregateRootRepositoryContext,
+             ICommandHandler commandHandler,
+             IAggregateRootRepositoryContextFactory aggregateRootRepositoryContextFactory,
              ICommandExecutorContextFactory commandExecutorContextFactory,
              IEventExecutor eventExecutor
             )
         {
-            this._commandHandlerProxy = commandHandlerProxy;
-            this._aggregateRootRepositoryContext = aggregateRootRepositoryContext;
+            this._commandHandler = commandHandler;
+            this._aggregateRootRepositoryContextFactory = aggregateRootRepositoryContextFactory;
             this._commandExecutorContextFactory = commandExecutorContextFactory;
             this._eventExecutor = eventExecutor;
+
+        }
+        public void Handle(ICommand command)
+        {
+            var context = _commandExecutorContextFactory.Create();
+
+            try
+            {
+                this._commandHandler.Handle(context, command);
+                this.Store(context.TrackedAggregateRoots);
+                var sources = BuildEventSources(context.TrackedAggregateRoots);
+                Task.Factory.StartNew(item => this._eventExecutor.Handle(item as EventSource[]), sources);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                context.Clear();
+            }
         }
 
         protected virtual void Store(IEnumerable<IAggregateRoot> roots)
         {
-            foreach (var item in roots)
+            var context = _aggregateRootRepositoryContextFactory.Create();
+
+            try
             {
-                var isAdd = item.UncommittedEvents.Any(a => a.Version == 1);
-                if (isAdd)
+                foreach (var item in roots)
                 {
-                    this._aggregateRootRepositoryContext.Add(item);
+                    var isAdd = item.UncommittedEvents.Any(a => a.Version == 1);
+                    if (isAdd)
+                    {
+                        context.Add(item);
+                    }
+                    else
+                    {
+                        context.Update(item);
+                    }
                 }
-                else
-                {
-                    this._aggregateRootRepositoryContext.Update(item);
-                }
+                context.Commit();
             }
-            this._aggregateRootRepositoryContext.Commit();
+            catch (Exception ex)
+            {
+                context.RollBack();
+                throw ex;
+            }
         }
 
-
-        protected virtual DomainMessage<EventStream> BuildEventMessage(MessageHead head, IEnumerable<IAggregateRoot> roots)
+        protected virtual EventSource[] BuildEventSources(IEnumerable<IAggregateRoot> roots)
         {
             var events = roots
                 .SelectMany(p => p.UncommittedEvents.Select(item => new EventSource(item, p.GetType().Name, p.Id)));
 
-            var stream = new EventStream(events.ToList());
-            var eventHead = new MessageHead(Priority.Normal, head.Consistency);
-            return new DomainMessage<EventStream>(eventHead, stream);
+            return events.ToArray();
         }
 
-
-        public void Handle(params DomainMessage<ICommand>[] messages)
-        {
-            ICommandExecutorContext context = this._commandExecutorContextFactory.Create();
-
-            foreach (var message in messages)
-            {
-                try
-                {
-                    this._commandHandlerProxy.Handle(context, message.Content);
-                    this.Store(context.TrackedAggregateRoots);
-                    var evtMessage = BuildEventMessage(message.Head, context.TrackedAggregateRoots);
-                    Task.Factory.StartNew(item => this._eventExecutor.Handle(item as DomainMessage<EventStream>), evtMessage);
-
-                }
-                catch (Exception ex)
-                {
-                    _aggregateRootRepositoryContext.RollBack();
-                    throw ex;
-                }
-                finally
-                {
-                    context.Clear();
-                }
-            }
-
-        }
     }
 }

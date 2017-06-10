@@ -1,19 +1,18 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
+using Rainbow.DomainDriven.Repository;
 
 namespace Rainbow.DomainDriven.Command
 {
     public class CommandExecutorContextFactory : ICommandExecutorContextFactory
     {
-        private readonly IServiceProvider _serviceProvider;
-        public CommandExecutorContextFactory(IServiceProvider serviceProvider)
+        private readonly IAggregateRootQuery _aggregateRootQuery;
+        public CommandExecutorContextFactory(IAggregateRootQuery aggregateRootQuery)
         {
-            this._serviceProvider = serviceProvider;
+            this._aggregateRootQuery = aggregateRootQuery;
         }
-
         public ICommandExecutorContext Create()
         {
-            return this._serviceProvider.GetService<ICommandExecutorContext>();
+            return new CommandExecutorContext(this._aggregateRootQuery);
         }
     }
 }

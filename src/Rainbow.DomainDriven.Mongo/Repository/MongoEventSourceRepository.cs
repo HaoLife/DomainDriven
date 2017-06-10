@@ -30,5 +30,18 @@ namespace Rainbow.DomainDriven.Mongo.Repository
                 );
             return this._mongoDatabaseProvider.GetEventCollection<EventSource>(typeof(EventSource).Name).Find(query).ToEnumerable();
         }
+
+        public List<EventSource> Take(EventSource eventSource, int size)
+        {
+            var timestamp = 0L;
+            if (eventSource == null)
+            {
+                timestamp = eventSource.Event.UTCTimestamp;
+            }
+
+            var filter = Builders<EventSource>.Filter.Gt("Event.UTCTimestamp", timestamp);
+            var esCollection = this._mongoDatabaseProvider.GetCollection<EventSource>(typeof(EventSource).Name);
+            return esCollection.Find(filter).Limit(size).ToList();
+        }
     }
 }

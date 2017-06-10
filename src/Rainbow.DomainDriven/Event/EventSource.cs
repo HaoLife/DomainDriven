@@ -1,11 +1,10 @@
 using System;
-using Rainbow.DomainDriven.Event;
 
 namespace Rainbow.DomainDriven.Event
 {
     public class EventSource
     {
-
+        
         public EventSource() { }
         public EventSource(IEvent evt, string aggrTypeName, Guid aggrId)
         {

@@ -1,4 +1,4 @@
-﻿using Rainbow.DomainDriven.Repository;
+using Rainbow.DomainDriven.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,6 @@ using Rainbow.DomainDriven.Domain;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
 using Rainbow.DomainDriven.Mongo.Internal;
-using Rainbow.DomainDriven.Cache;
 using System.Threading;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -68,7 +67,6 @@ namespace Rainbow.DomainDriven.Mongo.Repository
                     {
                         errors.Add(ex.InnerException);
                     }
-
                 }
                 this._aggregateRootOperation.Clear();
                 if (errors.Any()) throw errors.FirstOrDefault();
@@ -115,8 +113,8 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             var collection = _mongoDatabaseProvider.GetCollection<TAggregateRoot>(type.Name);
             List<WriteModel<TAggregateRoot>> list = new List<WriteModel<TAggregateRoot>>();
             BuildAdded(list, this._aggregateRootOperation.GetAdded(type));
-            BuildAdded(list, this._aggregateRootOperation.GetUpdated(type));
-            BuildAdded(list, this._aggregateRootOperation.GetRemoved(type));
+            BuildUpdated(list, this._aggregateRootOperation.GetUpdated(type));
+            BuildRemoved(list, this._aggregateRootOperation.GetRemoved(type));
             collection.BulkWrite(list, _options);
         }
 

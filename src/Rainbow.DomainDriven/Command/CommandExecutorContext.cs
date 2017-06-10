@@ -1,24 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Rainbow.DomainDriven.Domain;
-using Rainbow.DomainDriven.Cache;
 using Rainbow.DomainDriven.Repository;
 
 namespace Rainbow.DomainDriven.Command
 {
-    public sealed class CommandExecutorContext : ICommandExecutorContext
+    public class CommandExecutorContext : ICommandExecutorContext
     {
         private readonly List<IAggregateRoot> _unNoticeRoots;
-        private readonly IAggregateRootCommonQuery _commonRepository;
+        private readonly IAggregateRootQuery _aggregateRootQuery;
         public IEnumerable<IAggregateRoot> TrackedAggregateRoots => this._unNoticeRoots;
 
         public CommandExecutorContext(
-            IAggregateRootCommonQuery commonRepository
+            IAggregateRootQuery aggregateRootQuery
             )
         {
-            this._commonRepository = commonRepository;
+            this._aggregateRootQuery = aggregateRootQuery;
             this._unNoticeRoots = new List<IAggregateRoot>();
         }
 
@@ -45,7 +42,7 @@ namespace Rainbow.DomainDriven.Command
 
             if (aggregate == null)
             {
-                aggregate = this._commonRepository.Get<TAggregateRoot>(id);
+                aggregate = this._aggregateRootQuery.Get<TAggregateRoot>(id);
             }
 
             if (aggregate == null) return null;

@@ -8,12 +8,12 @@ namespace Rainbow.DomainDriven.ConsoleApp.EventHandler.Cache
 {
     public class UserHandler : IEventHandler<CreatedEvent>
     {
-        private readonly IAggregateRootCommonQuery _commonQueryRepository;
+        private readonly IAggregateRootQuery _commonQueryRepository;
 
         //1.获取聚合跟仓库
         //2.获取存储仓库
         public UserHandler(
-            IAggregateRootCommonQuery commonQueryRepository)
+            IAggregateRootQuery commonQueryRepository)
         {
             this._commonQueryRepository = commonQueryRepository;
         }

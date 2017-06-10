@@ -2,7 +2,6 @@
 using Rainbow.DomainDriven.ConsoleApp.Command;
 using System.Linq;
 using Rainbow.DomainDriven.ConsoleApp.Domain;
-using Rainbow.DomainDriven.ConsoleApp.DomainService;
 
 namespace Rainbow.DomainDriven.ConsoleApp.CommandExecutor
 {

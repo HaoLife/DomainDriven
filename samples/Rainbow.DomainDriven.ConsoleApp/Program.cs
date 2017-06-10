@@ -9,9 +9,9 @@ using Rainbow.DomainDriven.Domain;
 using System.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
-using Rainbow.DomainDriven.ConsoleApp.Config;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Host;
+using Rainbow.DomainDriven.ConsoleApp.Mapping;
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
@@ -53,11 +53,12 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
 
             serviceCollection
-                .AddDomain()
+                //.AddDomain()
+                .AddLocalQueueDomain(configuration.GetSection("Domain:Local"))
                 .AddDomainService()
                 //.AddLocalQueueDomain(configuration.GetSection("Domain:Local"))
                 //.AddLocalMultiQueueDomain(configuration.GetSection("Domain:Local"))
-                //.AddCommandMapping<CommandMappingProvider>()
+                .AddCommandMapping<CommandMappingProvider>()
                 .AddMongo(configuration.GetSection("Domain:MongoDB"));
 
             serviceCollection.AddLogging();

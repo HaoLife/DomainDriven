@@ -17,13 +17,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAdd(new ServiceCollection()
                 .AddSingleton<IMongoDatabaseProvider>(new MongoDatabaseProvider(configuration))
-                .AddSingleton<IAggregateRootCommonQuery, MongoAggregateRootCommonQuery>()
-                .AddSingleton(typeof(IAggregateRootQueryable<>), typeof(MongoAggregateRootQueryable<>))
+                .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
+                .AddSingleton<IAggregateRootQuery, MongoAggregateRootQuery>()
+                .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
                 .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
                 .AddSingleton<IEventSourcingRepository, MongoEventSourcingRepository>()
-                .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
                 .AddTransient<IAggregateRootOperation, AggregateRootOperation>()
                 .AddTransient<IAggregateRootRepositoryContext, MongoAggregateRootRepositoryContext>()
+                .AddTransient<IAggregateRootRepositoryContextFactory, MongoAggregateRootRepositoryContextFactory>()
                 );
 
             return services;

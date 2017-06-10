@@ -9,5 +9,7 @@ namespace Rainbow.DomainDriven.Repository
         void AddRange(IEnumerable<EventSource> events);
 
         IEnumerable<EventSource> GetAggregateRootEvents(Guid aggregateRootId, string aggregateRootTypeName, int version = 0);
+
+        List<EventSource> Take(EventSource eventSource, int size);
     }
 }

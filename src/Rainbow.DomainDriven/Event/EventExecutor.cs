@@ -1,23 +1,22 @@
 using System;
-using System.Collections.Generic;
-using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Event
 {
     public class EventExecutor : IEventExecutor
     {
-        private readonly IEventHandlerProxy _eventHandlerProxy;
 
-        public EventExecutor(IEventHandlerProxy eventHandlerProxy)
+        private readonly IEventHandler _eventHandler;
+
+        public EventExecutor(IEventHandler eventHandler)
         {
-            this._eventHandlerProxy = eventHandlerProxy;
+            this._eventHandler = eventHandler;
         }
         
-        public void Handle(DomainMessage<EventStream> message)
+        public void Handle(params EventSource[] sources)
         {
-            foreach(var item in message.Content.Sources)
+            foreach (var item in sources)
             {
-                this._eventHandlerProxy.Handle(item.Event);
+                this._eventHandler.Handle(item.Event);
             }
         }
     }

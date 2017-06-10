@@ -7,61 +7,55 @@ namespace Rainbow.DomainDriven.Command
 
         public static void Send(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Normal, Consistency.Lose)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Normal, Consistency.Lose));
         }
 
 
         public static void SendQuick(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Quick, Consistency.Lose)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Quick, Consistency.Lose));
         }
 
 
         public static void SendSlow(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Slow, Consistency.Lose)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Slow, Consistency.Lose));
         }
 
 
         public static void Handle(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Normal, Consistency.Finally)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Normal, Consistency.Finally));
         }
 
 
         public static void HandleQuick(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Quick, Consistency.Finally)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Quick, Consistency.Finally));
         }
 
 
         public static void HandleSlow(this ICommandService service, ICommand cmd)
         {
-            service.Publish(new DomainMessage<ICommand>()
-            {
-                Content = cmd,
-                Head = new MessageHead(Priority.Slow, Consistency.Finally)
-            });
+            service.Publish(cmd, new MessageDescribe(Priority.Slow, Consistency.Finally));
+        }
+
+
+        public static void Wait(this ICommandService service, ICommand cmd)
+        {
+            service.Publish(cmd, new MessageDescribe(Priority.Normal, Consistency.Strong));
+        }
+
+
+        public static void WaitQuick(this ICommandService service, ICommand cmd)
+        {
+            service.Publish(cmd, new MessageDescribe(Priority.Quick, Consistency.Strong));
+        }
+
+
+        public static void WaitSlow(this ICommandService service, ICommand cmd)
+        {
+            service.Publish(cmd, new MessageDescribe(Priority.Slow, Consistency.Strong));
         }
     }
 }

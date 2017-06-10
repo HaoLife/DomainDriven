@@ -1,8 +1,8 @@
 using System;
-using Rainbow.DomainDriven.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using Rainbow.DomainDriven.Infrastructure;
 
 namespace Rainbow.DomainDriven.Mongo
 {
@@ -10,8 +10,9 @@ namespace Rainbow.DomainDriven.Mongo
     {
         public void Initialize(IServiceProvider provider)
         {
-            var domainTypeProvider = provider.GetRequiredService<IDomainTypeProvider>();
-            
+            var assemblyProvider = new AssemblyProvider();
+            var domainTypeProvider = new DomainTypeProvider(assemblyProvider);
+
             var serializer = new DateTimeSerializer(DateTimeKind.Local);
             BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
 

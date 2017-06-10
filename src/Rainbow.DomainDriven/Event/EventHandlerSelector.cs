@@ -16,10 +16,6 @@ namespace Rainbow.DomainDriven.Event
         private ConcurrentDictionary<Type, List<Type>> _cacheEventHandler = new ConcurrentDictionary<Type, List<Type>>();
     
         private readonly IAssemblyProvider _assemblyProvider;
-        // public EventHandlerSelector()
-        // {
-            
-        // }
 
         public EventHandlerSelector(IAssemblyProvider assemblyProvider)
         {

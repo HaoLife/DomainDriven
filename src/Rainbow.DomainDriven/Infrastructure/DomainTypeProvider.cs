@@ -21,9 +21,7 @@ namespace Rainbow.DomainDriven.Infrastructure
 
         public IEnumerable<Type> Commands => _cacheType.Values.Where(a => IsCommand(a));
 
-
-
-        public DomainTypeProvider()
+        public DomainTypeProvider(IAssemblyProvider assemblyProvider)
         {
             this._cacheType = new Dictionary<string, Type>();
             this._checks = new List<Func<Type, bool>>()
@@ -32,10 +30,6 @@ namespace Rainbow.DomainDriven.Infrastructure
                 IsAggregateRoot,
                 IsEvent
             };
-        }
-
-        public DomainTypeProvider(IAssemblyProvider assemblyProvider) : this()
-        {
             this._assemblyProvider = assemblyProvider;
             this.Initialize(this._assemblyProvider.Assemblys);
         }

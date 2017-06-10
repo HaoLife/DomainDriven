@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Rainbow.DomainDriven.Command
 {
-    public interface ICommandHandler<in TCommand>
+    public interface ICommandHandler
     {
-        void Handler(ICommandContext context, TCommand cmd);
+        void Handle(ICommandContext context, ICommand cmd);
     }
 }

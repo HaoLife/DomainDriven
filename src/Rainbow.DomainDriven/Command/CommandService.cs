@@ -1,35 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
+using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.Message;
 
 namespace Rainbow.DomainDriven.Command
 {
     public class CommandService : ICommandService
     {
-        private readonly ICommandExecutor _commandExecutor;
-
+        private readonly IDomainHost _domainHost;
         public CommandService(
-            ICommandExecutor commandExecutor
+            IDomainHost domainHost
             )
         {
-            this._commandExecutor = commandExecutor;
+            this._domainHost = domainHost;
         }
-
-        public void Publish(DomainMessage<ICommand> message)
+        public void Publish(ICommand command, MessageDescribe describe)
         {
-            switch (message.Head.Consistency)
-            {
-                case Consistency.Lose:
-                    Task.Factory.StartNew(item => this._commandExecutor.Handle(item as DomainMessage<ICommand>), message);
-                    break;
-                case Consistency.Finally:
-                case Consistency.Strong:
-                    this._commandExecutor.Handle(message);
-                    break;
-            }
+            var commandExecutor = this._domainHost.Factory.Create(describe);
+            commandExecutor.Handle(command);
         }
-
     }
 }

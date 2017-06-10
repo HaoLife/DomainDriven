@@ -1,9 +1,5 @@
-﻿using Rainbow.DomainDriven.Domain;
-using Rainbow.DomainDriven.Repository;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.Command
 {
@@ -12,6 +8,5 @@ namespace Rainbow.DomainDriven.Command
         void Add<TAggregateRoot>(TAggregateRoot aggregate) where TAggregateRoot : class, IAggregateRoot;
 
         TAggregateRoot Get<TAggregateRoot>(Guid id) where TAggregateRoot : class, IAggregateRoot;
-
     }
 }

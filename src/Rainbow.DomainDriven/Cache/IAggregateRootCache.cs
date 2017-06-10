@@ -1,4 +1,4 @@
-﻿using Rainbow.DomainDriven.Domain;
+using Rainbow.DomainDriven.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;

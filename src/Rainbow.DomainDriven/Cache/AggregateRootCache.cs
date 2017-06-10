@@ -20,7 +20,7 @@ namespace Rainbow.DomainDriven.Cache
 
         private string CacheKey(Type aggregateType, Guid id)
         {
-            return $"{aggregateType.Name}:{id.ToShort()}";
+            return $"{aggregateType.Name}:{id.ToString("N")}";
         }
         private string CacheKey<TAggregateRoot>(Guid id)
         {
