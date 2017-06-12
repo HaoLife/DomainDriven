@@ -11,6 +11,6 @@
     <ProjectReference Include="..\Rainbow.DomainDriven\Rainbow.DomainDriven.csproj" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-alpha00007" />
+    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-*" />
   </ItemGroup>
 </Project>
