@@ -53,7 +53,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         protected virtual void PushReply(List<ReplyMessage> replyMessages, DomainMessage<ICommand> message, Exception ex = null)
         {
-            if (!CheckNotify(message)) return;
+            if (!CheckNotify(message, ex)) return;
 
             var replyMessage = this.BuildReplyMessage(message.ReplyKey, ex);
             replyMessages.Add(replyMessage);
@@ -73,8 +73,12 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             return new DomainMessage<EventStream>() { ReplyKey = replyKey, Content = stream, MessageDescribe = message.MessageDescribe };
         }
 
-        protected virtual bool CheckNotify(DomainMessage<ICommand> message)
+        protected virtual bool CheckNotify(DomainMessage<ICommand> message, Exception ex)
         {
+            if (ex != null)
+            {
+                return Consistency.Lose != message.MessageDescribe.Consistency && !string.IsNullOrEmpty(message.ReplyKey);
+            }
             return Consistency.Finally == message.MessageDescribe.Consistency && !string.IsNullOrEmpty(message.ReplyKey);
         }
 
@@ -109,13 +113,19 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         protected virtual ReplyMessage BuildReplyMessage(string replyKey, Exception ex = null)
         {
-            var replyMessage = new ReplyMessage() { IsSuccess = ex != null, Exception = ex, ReplyKey = replyKey };
+            var replyMessage = new ReplyMessage() { IsSuccess = ex == null, Exception = ex, ReplyKey = replyKey };
             return replyMessage;
         }
 
         protected virtual void StoreEvents(IEnumerable<EventSource> eventSources)
         {
+            if (!eventSources.Any()) return;
             this._eventSourceRepository.AddRange(eventSources);
+        }
+        protected virtual void SendEvents(List<DomainMessage<EventStream>> evtMessages)
+        {
+            if (!evtMessages.Any()) return;
+            this._ringBufferProducer.Send(evtMessages);
         }
 
         protected virtual void Notify(List<ReplyMessage> replyMessages)
@@ -157,7 +167,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             //事件源存储，事件消息堆积，消息通知
             var sources = evtMessages.SelectMany(a => a.Content.Sources);
             this.StoreEvents(sources);
-            this._ringBufferProducer.Send(evtMessages);
+            this.SendEvents(evtMessages);
             //通知消息
             this.Notify(replyMessages);
         }

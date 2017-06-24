@@ -87,7 +87,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             try
             {
-                commandService.Handle(new CreateUserCommand()
+                commandService.Wait(new CreateUserCommand()
                 {
                     Id = Guid.NewGuid(),
                     Name = "nihao 1-1",

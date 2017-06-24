@@ -25,6 +25,7 @@ namespace Rainbow.DomainDriven.RingQueue.Message
             this._monitorCache.Add(key, message);
             this._replyMessageStore.RegisterChangeCallback(key, Callback);
             SpinWait.SpinUntil(() => message.Status == 1);
+            if (!message.Message.IsSuccess) throw message.Message.Exception;
         }
 
         public void Callback(ReplyMessage message)
@@ -32,6 +33,7 @@ namespace Rainbow.DomainDriven.RingQueue.Message
             if (this._monitorCache.TryGetValue(message.ReplyKey, out MonitorMessage value))
             {
                 value.Status = 1;
+                value.Message = message;
             }
         }
     }
