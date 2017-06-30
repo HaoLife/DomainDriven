@@ -93,7 +93,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                             .FirstOrDefault();
                 if (isAdd)
                 {
-                    root = Activator.CreateInstance(type) as IAggregateRoot;
+                    root = Activator.CreateInstance(type, true) as IAggregateRoot;
                     addAggregateRoots.Add(root);
                 }
                 this._replayEventHandler.Handle(root, item.Event);
