@@ -21,7 +21,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         EventSource IEventSourcingRepository.Current()
         {
-            var collection = this._mongoDatabaseProvider.GetCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
+            var collection = this._mongoDatabaseProvider.GetEventCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
             var result = collection.Find(a => a.Id == KEY).FirstOrDefault();
             return result == null ? null : result.EventSrouce;
         }
@@ -35,7 +35,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             };
 
             var query = Builders<DomainEventSourcing>.Filter.Empty;
-            var collection = this._mongoDatabaseProvider.GetCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
+            var collection = this._mongoDatabaseProvider.GetEventCollection<DomainEventSourcing>(typeof(DomainEventSourcing).Name);
             var result = collection.ReplaceOne(query, entity, new UpdateOptions() { IsUpsert = true });
         }
 
