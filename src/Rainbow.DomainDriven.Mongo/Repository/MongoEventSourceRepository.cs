@@ -40,7 +40,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
             }
 
             var filter = Builders<EventSource>.Filter.Gt("Event.UTCTimestamp", timestamp);
-            var esCollection = this._mongoDatabaseProvider.GetCollection<EventSource>(typeof(EventSource).Name);
+            var esCollection = this._mongoDatabaseProvider.GetEventCollection<EventSource>(typeof(EventSource).Name);
             return esCollection.Find(filter).Limit(size).ToList();
         }
     }
