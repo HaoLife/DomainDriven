@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.ConsoleApp.Mapping;
+using Rainbow.DomainDriven.ConsoleApp.Query;
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
@@ -19,6 +20,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
     {
         public static void Main(string[] args)
         {
+            AutoMapperInitializer.Init();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             IConfiguration configuration = new ConfigurationBuilder()
@@ -62,6 +64,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 .AddMongo(configuration.GetSection("Domain:MongoDB"));
 
             serviceCollection.AddLogging();
+            serviceCollection.AddSingleton<UserQuery>();
 
             var provider = serviceCollection.BuildServiceProvider();
 
@@ -74,17 +77,8 @@ namespace Rainbow.DomainDriven.ConsoleApp
             domainHost.Start();
 
             var commandService = provider.GetRequiredService<ICommandService>();
-            //commandService.Handle(new CreateUserCommand() { Id = Guid.NewGuid(), Name = "nihao 1", Sex = 1 });
-
 
             Guid id = new Guid("4c704243-55a7-408b-87c8-519193969c8b");
-            // commandService.Send(new CreateUserCommand()
-            // {
-            //     Id = id,
-            //     Name = "nihao 1",
-            //     Sex = 1
-            // });
-
             try
             {
                 commandService.Wait(new CreateUserCommand()
@@ -93,11 +87,6 @@ namespace Rainbow.DomainDriven.ConsoleApp
                     Name = "nihao 1-1",
                     Sex = 1
                 });
-                // commandService.Handle(new ModifyUserNameCommand()
-                // {
-                //     UserId = id,
-                //     Name = "11"
-                // });
             }
             catch (DomainException domainEx)
             {
@@ -108,26 +97,8 @@ namespace Rainbow.DomainDriven.ConsoleApp
                 Console.WriteLine($"未知异常-异常内容：{ex.Message}");
             }
 
-            // for (int i = 0; i < 3; i++)
-            // {
-            //     Task.Factory.StartNew((a) =>
-            //     {
-            //         try
-            //         {
-            //             commandService.Handle(new CreateUserCommand()
-            //             {
-            //                 Id = Guid.NewGuid(),
-            //                 Name = $"nihao-{id.ToShort()}",
-            //                 Sex = 1
-            //             });
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Console.WriteLine($"执行并非线程错误：{a} - 错误原因：{e.Message}");
-            //         }
-
-            //     }, i);
-            // }
+            var query = provider.GetRequiredService<UserQuery>();
+            var user = query.Query();
 
             Console.WriteLine("end");
             Console.ReadLine();

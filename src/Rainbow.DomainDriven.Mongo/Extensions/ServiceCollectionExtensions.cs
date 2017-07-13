@@ -22,9 +22,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
                 .AddSingleton<IEventSourceRepository, MongoEventSourceRepository>()
                 .AddSingleton<IEventSourcingRepository, MongoEventSourcingRepository>()
+                .AddSingleton<IAggregateRootRepositoryContextFactory, MongoAggregateRootRepositoryContextFactory>()
+                .AddSingleton(typeof(IAggregateRootExprssionQueryOfT<>), typeof(MongoAggregateRootExprssionQueryOfT<>))
                 .AddTransient<IAggregateRootOperation, AggregateRootOperation>()
                 .AddTransient<IAggregateRootRepositoryContext, MongoAggregateRootRepositoryContext>()
-                .AddTransient<IAggregateRootRepositoryContextFactory, MongoAggregateRootRepositoryContextFactory>()
                 );
 
             return services;
