@@ -20,9 +20,12 @@ namespace Rainbow.DomainDriven.Mongo
             {
                 if (!BsonClassMap.IsClassMapRegistered(item))
                 {
-                    BsonClassMap.RegisterClassMap(new BsonClassMap(item));
+                    var classmap = new BsonClassMap(item);
+                    classmap.AutoMap();
+                    BsonClassMap.RegisterClassMap(classmap);
                 }
             }
+
         }
     }
 }
