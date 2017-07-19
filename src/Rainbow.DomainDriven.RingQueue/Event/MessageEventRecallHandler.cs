@@ -49,7 +49,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         protected virtual ReplyMessage BuildReplyMessage(string replyKey, Exception ex = null)
         {
-            var replyMessage = new ReplyMessage() { IsSuccess = ex != null, Exception = ex, ReplyKey = replyKey };
+            var replyMessage = new ReplyMessage() { IsSuccess = ex == null, Exception = ex, ReplyKey = replyKey };
             return replyMessage;
         }
 
@@ -91,6 +91,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 var root = cacheAggregateRoots
                             .Where(a => a.Id == item.AggregateRootId && a.GetType() == type)
                             .FirstOrDefault();
+                if (root == null && !isAdd)
+                {
+                    root = addAggregateRoots.Where(a => a.Id == item.AggregateRootId && a.GetType() == type)
+                            .FirstOrDefault();
+                }
                 if (isAdd)
                 {
                     root = Activator.CreateInstance(type, true) as IAggregateRoot;
@@ -111,13 +116,28 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             List<IAggregateRoot> addRoots = new List<IAggregateRoot>();
             List<ReplyMessage> replyMessages = new List<ReplyMessage>();
             //批量获取要更新的聚合根，并回溯事件生成新的状态保存
-            foreach (var item in updateEvents)
+            try
             {
-                var keys = item.Select(a => a.AggregateRootId).Distinct().ToArray();
-                var type = this._domainTypeProvider.GetType(item.Key);
-                var roots = this._aggregateRootQuery.Get(type, keys);
-                updateRoots.AddRange(roots);
+                foreach (var item in updateEvents)
+                {
+                    var keys = item.Select(a => a.AggregateRootId).Distinct().ToArray();
+                    var type = this._domainTypeProvider.GetType(item.Key);
+
+                    var roots = this._aggregateRootQuery.Get(type, keys);
+                    updateRoots.AddRange(roots);
+                }
             }
+            catch (Exception ex)
+            {
+                foreach (var item in messages)
+                    if (CheckNotify(item))
+                        replyMessages.Add(this.BuildReplyMessage(item.ReplyKey, ex));
+
+                this._logger.LogError(LogEvent.EventHandle, ex, "查询回滚对象");
+                this.Notify(replyMessages);
+                return;
+            }
+
             foreach (var item in messages)
             {
                 try

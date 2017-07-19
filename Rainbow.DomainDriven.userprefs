@@ -1,8 +1,7 @@
 ﻿<Properties StartupConfiguration="{A230F532-9A96-4A38-A35A-28D15585F7D6}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/Rainbow.DomainDriven.RingQueue/Command/CommandCacheHandler.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="src/Rainbow.DomainDriven.Mongo/DomainEventSourcing.cs">
     <Files>
-      <File FileName="src/Rainbow.DomainDriven.Mongo/DomainEventSourcing.cs" Line="9" Column="20" />
-      <File FileName="src/Rainbow.DomainDriven.RingQueue/Command/CommandCacheHandler.cs" Line="4" Column="28" />
+      <File FileName="src/Rainbow.DomainDriven.Mongo/DomainEventSourcing.cs" Line="11" Column="2" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

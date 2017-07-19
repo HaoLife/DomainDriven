@@ -42,7 +42,7 @@ namespace Rainbow.DomainDriven.ConsoleApp.CommandExecutor
             //throw new DomainDriven.Domain.DomainException(100,"故意出错");
             var user = new User(cmd.Id, cmd.Name, cmd.Sex);
             //_userService.RegisterUser(user);
-
+            user.ModifyName(cmd.Name);
             context.Add(user);
         }
     }

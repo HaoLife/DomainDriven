@@ -78,6 +78,9 @@ namespace Rainbow.DomainDriven.ConsoleApp
 
             var commandService = provider.GetRequiredService<ICommandService>();
 
+            var logger = loggerFactory.CreateLogger<Program>();
+            logger.LogDebug("开始调试");
+            
             Guid id = new Guid("4c704243-55a7-408b-87c8-519193969c8b");
             try
             {

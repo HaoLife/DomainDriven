@@ -5,6 +5,10 @@ using MongoDB.Driver;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Repository;
 using System.Linq;
+using MongoDB.Driver.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Collections;
 
 namespace Rainbow.DomainDriven.Mongo.Repository
 {
@@ -12,6 +16,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
     {
 
         private readonly IMongoDatabaseProvider _mongoDatabaseProvider;
+        private ConcurrentDictionary<Type, Delegate> _cacheListInvokes = new ConcurrentDictionary<Type, Delegate>();
         private ConcurrentDictionary<Type, Delegate> _cacheInvokes = new ConcurrentDictionary<Type, Delegate>();
         public MongoAggregateRootQuery(
             IMongoDatabaseProvider mongoDatabaseProvider)
@@ -30,7 +35,7 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         IEnumerable<TAggregateRoot> IAggregateRootQuery.Get<TAggregateRoot>(params Guid[] keys)
         {
-            return this.DbSet<TAggregateRoot>().Find(a => keys.Contains(a.Id)).ToList();
+            return this.DbSet<TAggregateRoot>().AsQueryable().Where(a => keys.Contains(a.Id)).ToList();
         }
 
         TAggregateRoot IAggregateRootQuery.Get<TAggregateRoot>(Guid id)
@@ -40,13 +45,47 @@ namespace Rainbow.DomainDriven.Mongo.Repository
 
         public IAggregateRoot Get(Type aggregateRootType, Guid id)
         {
-            return this.DbSet<IAggregateRoot>(aggregateRootType.Name).Find(a => a.Id == id).FirstOrDefault();
+            var func = _cacheListInvokes.GetOrAdd(aggregateRootType, GetDelegate);
+            var rt = func.DynamicInvoke(id);
+            return (IAggregateRoot)rt;
+
         }
 
         public IEnumerable<IAggregateRoot> Get(Type aggregateRootType, params Guid[] keys)
         {
-            return this.DbSet<IAggregateRoot>(aggregateRootType.Name).Find(a => keys.Contains(a.Id)).ToList();
+            var func = _cacheListInvokes.GetOrAdd(aggregateRootType, GetDelegateList);
+            var rt = func.DynamicInvoke(keys);
+            List<IAggregateRoot> result = new List<IAggregateRoot>();
+
+            var temps = (IEnumerable)rt;
+            foreach (var item in temps)
+                result.Add((IAggregateRoot)item);
+
+            return result;
         }
+
+        private Delegate GetDelegateList(Type type)
+        {
+            var keysType = typeof(Guid[]);
+            var keysTypeExp = Expression.Parameter(keysType);
+            var instance = Expression.Constant(this);
+            var methodType = typeof(IAggregateRootQuery).GetMethod(nameof(Get), new Type[] { keysType })
+                .MakeGenericMethod(type);
+            var callExp = Expression.Call(instance, methodType, keysTypeExp);
+            return Expression.Lambda(callExp, keysTypeExp).Compile();
+        }
+
+        private Delegate GetDelegate(Type type)
+        {
+            var keyType = typeof(Guid);
+            var keyTypeExp = Expression.Parameter(keyType);
+            var instance = Expression.Constant(this);
+            var methodType = typeof(IAggregateRootQuery).GetMethod(nameof(Get), new Type[] { keyType })
+                .MakeGenericMethod(type);
+            var callExp = Expression.Call(instance, methodType, keyTypeExp);
+            return Expression.Lambda(callExp, keyTypeExp).Compile();
+        }
+
 
     }
 }

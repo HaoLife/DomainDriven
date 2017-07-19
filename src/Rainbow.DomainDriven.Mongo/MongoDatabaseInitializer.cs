@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Rainbow.DomainDriven.Infrastructure;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.Mongo
 {
@@ -15,8 +16,8 @@ namespace Rainbow.DomainDriven.Mongo
 
             var serializer = new DateTimeSerializer(DateTimeKind.Local);
             BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
-
-            foreach (var item in domainTypeProvider.Events)
+            Type[] types = domainTypeProvider.Events.Union(domainTypeProvider.AggregateRoots).ToArray();
+            foreach (var item in types)
             {
                 if (!BsonClassMap.IsClassMapRegistered(item))
                 {
@@ -25,6 +26,7 @@ namespace Rainbow.DomainDriven.Mongo
                     BsonClassMap.RegisterClassMap(classmap);
                 }
             }
+            
 
         }
     }
