@@ -88,7 +88,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 .SelectMany(p => p.UncommittedEvents);
 
             //回溯领域对象并设置到缓存中
-            if (evts.Any())
+            if (evts.Where(a => a.Version != 1).Any())
             {
 
                 var currentEvents = evtMessages.SelectMany(a => a.Content.Sources);
@@ -107,8 +107,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         protected virtual void Rollback(IEnumerable<IAggregateRoot> roots)
         {
-            foreach (var root in roots)
-                this._aggregateRootCache.Set(root);
+            if (roots != null)
+                foreach (var root in roots)
+                    this._aggregateRootCache.Set(root);
         }
 
         protected virtual ReplyMessage BuildReplyMessage(string replyKey, Exception ex = null)
