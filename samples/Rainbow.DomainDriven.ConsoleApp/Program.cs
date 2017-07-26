@@ -13,9 +13,17 @@ using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Host;
 using Rainbow.DomainDriven.ConsoleApp.Mapping;
 using Rainbow.DomainDriven.ConsoleApp.Query;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Castle.DynamicProxy;
+using System.Linq;
+using Autofac.Builder;
+using Autofac.Extras.DynamicProxy;
+using Rainbow.DomainDriven.ConsoleApp.Interceptors;
 
 namespace Rainbow.DomainDriven.ConsoleApp
 {
+
     public class Program
     {
         public static void Main(string[] args)
@@ -66,21 +74,36 @@ namespace Rainbow.DomainDriven.ConsoleApp
             serviceCollection.AddLogging();
             serviceCollection.AddSingleton<UserQuery>();
 
-            var provider = serviceCollection.BuildServiceProvider();
+
+            var container = new ContainerBuilder();
+            container.Populate(serviceCollection);
+
+            //container.Populate
+
+            container.RegisterType<LoggerInterceptor>();
+
+            container.RegisterType<CommandService>()
+                .As<ICommandService>()
+                .EnableInterfaceInterceptors()
+                .InterceptedBy(typeof(LoggerInterceptor));
+
+
+            var provider = new AutofacServiceProvider(container.Build());
+
+            //var provider = serviceCollection.BuildServiceProvider();
 
             var loggerFactory = provider.GetService<ILoggerFactory>();
             loggerFactory.AddDebug();
             loggerFactory.AddConsole(configuration.GetSection("Logging"));
 
 
-            var domainHost = provider.GetRequiredService<IDomainHost>();
-            domainHost.Start();
-
+            provider.UseDomain();
+            
             var commandService = provider.GetRequiredService<ICommandService>();
 
             var logger = loggerFactory.CreateLogger<Program>();
             logger.LogDebug("开始调试");
-            
+
             Guid id = new Guid("4c704243-55a7-408b-87c8-519193969c8b");
             try
             {
