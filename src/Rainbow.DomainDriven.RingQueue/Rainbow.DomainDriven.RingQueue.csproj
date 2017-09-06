@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>portable</DebugType>
     <AssemblyName>Rainbow.DomainDriven.RingQueue</AssemblyName>
     <PackageId>Rainbow.DomainDriven.RingQueue</PackageId>
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
-    <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
+    <Version>2.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rainbow.DomainDriven\Rainbow.DomainDriven.csproj" />
+    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0-*" />
+  <ItemGroup>
+    <ProjectReference Include="..\Rainbow.DomainDriven\Rainbow.DomainDriven.csproj" />
   </ItemGroup>
 </Project>
