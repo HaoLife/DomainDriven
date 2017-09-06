@@ -3,6 +3,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>portable</DebugType>
     <PackageId>Rainbow.DomainDriven.RingQueue</PackageId>
+    <Version>2.0.0</Version>
+    <Authors>haozi</Authors>
+    <Company>Rainbow</Company>
+    <Product>DomainDriven</Product>
+    <Description>CQRS+DDD+EDA</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0" />

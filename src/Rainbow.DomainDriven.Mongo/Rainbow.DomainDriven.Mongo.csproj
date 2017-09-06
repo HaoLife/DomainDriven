@@ -4,6 +4,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>portable</DebugType>
     <PackageId>Rainbow.DomainDriven.Mongo</PackageId>
+    <Description>CQRS+DDD+EDA</Description>
+    <Product>DomainDriven</Product>
+    <Company>Rainbow</Company>
+    <Authors>haozi</Authors>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
