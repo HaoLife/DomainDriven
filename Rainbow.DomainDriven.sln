@@ -12,15 +12,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Consol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Mongo", "src\Rainbow.DomainDriven.Mongo\Rainbow.DomainDriven.Mongo.csproj", "{D94F6982-AD11-42F5-9777-C064F00F31E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.RingQueue", "src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.csproj", "{810172AB-206B-4350-AED2-31B45495CF24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.RingQueue", "src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.csproj", "{810172AB-206B-4350-AED2-31B45495CF24}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{4752A76F-4E69-4E1B-B1F2-D9C477706F33}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.Test", "test\Rainbow.DomainDriven.Test\Rainbow.DomainDriven.Test.csproj", "{8C0FC380-3B09-4015-9EE4-8825624A4A50}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Test", "test\Rainbow.DomainDriven.Test\Rainbow.DomainDriven.Test.csproj", "{8C0FC380-3B09-4015-9EE4-8825624A4A50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.Mongo.Test", "test\Rainbow.DomainDriven.Mongo.Test\Rainbow.DomainDriven.Mongo.Test.csproj", "{294A128F-1D16-46AD-A846-637A0D88DD79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Mongo.Test", "test\Rainbow.DomainDriven.Mongo.Test\Rainbow.DomainDriven.Mongo.Test.csproj", "{294A128F-1D16-46AD-A846-637A0D88DD79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.RingQueue.Test", "test\Rainbow.DomainDriven.RingQueue.Test\Rainbow.DomainDriven.RingQueue.Test.csproj", "{1AF502C0-74F9-4592-9302-CDB0AD97901E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.RingQueue.Test", "test\Rainbow.DomainDriven.RingQueue.Test\Rainbow.DomainDriven.RingQueue.Test.csproj", "{1AF502C0-74F9-4592-9302-CDB0AD97901E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj", "{CF148F8E-4297-4EE0-A30F-4348A801F9ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +106,18 @@ Global
 		{1AF502C0-74F9-4592-9302-CDB0AD97901E}.Release|x64.Build.0 = Release|Any CPU
 		{1AF502C0-74F9-4592-9302-CDB0AD97901E}.Release|x86.ActiveCfg = Release|Any CPU
 		{1AF502C0-74F9-4592-9302-CDB0AD97901E}.Release|x86.Build.0 = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|x64.Build.0 = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Debug|x86.Build.0 = Debug|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|x64.ActiveCfg = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|x64.Build.0 = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|x86.ActiveCfg = Release|Any CPU
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -116,5 +130,9 @@ Global
 		{8C0FC380-3B09-4015-9EE4-8825624A4A50} = {4752A76F-4E69-4E1B-B1F2-D9C477706F33}
 		{294A128F-1D16-46AD-A846-637A0D88DD79} = {4752A76F-4E69-4E1B-B1F2-D9C477706F33}
 		{1AF502C0-74F9-4592-9302-CDB0AD97901E} = {4752A76F-4E69-4E1B-B1F2-D9C477706F33}
+		{CF148F8E-4297-4EE0-A30F-4348A801F9ED} = {3EE6B986-C6F3-4965-BCCD-F2EDCF4BE465}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {68916ADF-12A3-47C7-9830-DB7E38AF6A5F}
 	EndGlobalSection
 EndGlobal
