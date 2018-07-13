@@ -6,5 +6,6 @@ namespace Rainbow.DomainDriven.Infrastructure
 {
     public interface IInitializer
     {
+        void Initialize(IServiceProvider provider);
     }
 }

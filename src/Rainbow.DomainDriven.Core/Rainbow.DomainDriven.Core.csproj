@@ -5,8 +5,4 @@
     <RootNamespace>Rainbow.DomainDriven</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Store\" />
-  </ItemGroup>
-
 </Project>
