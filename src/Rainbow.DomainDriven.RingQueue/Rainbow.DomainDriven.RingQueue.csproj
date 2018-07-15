@@ -13,6 +13,6 @@
     <PackageReference Include="Rainbow.MessageQueue.Ring" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rainbow.DomainDriven\Rainbow.DomainDriven.csproj" />
+    <ProjectReference Include="..\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj" />
   </ItemGroup>
 </Project>
