@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.Command
 {
     public interface ICommandMappringProvider
     {

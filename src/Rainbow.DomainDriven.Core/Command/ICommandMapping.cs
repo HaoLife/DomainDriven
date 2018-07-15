@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Rainbow.DomainDriven.Command
 {
-    public interface ICommondBus
+    public interface ICommandMapping
     {
-        Task Publish(ICommand command);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rainbow.DomainDriven.Event;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

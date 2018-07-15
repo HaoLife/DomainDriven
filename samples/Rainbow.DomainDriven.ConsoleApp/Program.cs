@@ -62,6 +62,7 @@ namespace Rainbow.DomainDriven.ConsoleApp
             //     .Start();
 
 
+
             serviceCollection
                 //.AddDomain()
                 .AddLocalQueueDomain(configuration.GetSection("Domain:Local"))
