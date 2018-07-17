@@ -7,6 +7,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj" />
+    <ProjectReference Include="..\..\src\Rainbow.DomainDriven.Mongo\Rainbow.DomainDriven.Mongo.csproj" />
+    <ProjectReference Include="..\..\src\Rainbow.DomainDriven.RingQueue\Rainbow.DomainDriven.RingQueue.csproj" />
   </ItemGroup>
   <ItemGroup>
 

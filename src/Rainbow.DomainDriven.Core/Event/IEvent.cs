@@ -11,6 +11,8 @@ namespace Rainbow.DomainDriven.Event
         string AggregateRootTypeName { get; set; }
         long UTCTimestamp { get; }
         int Version { get; set; }
+        EventOperation Operation { get; set; }
+
 
     }
 }

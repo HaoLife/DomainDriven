@@ -6,7 +6,11 @@ namespace Rainbow.DomainDriven.Domain
 {
     public interface IAggregateRootRebuilder
     {
-        IAggregateRoot Get<TAggregateRoot>(Guid id) where TAggregateRoot : IAggregateRoot;
+        TAggregateRoot Rebuild<TAggregateRoot>(Guid id) where TAggregateRoot : IAggregateRoot;
+
+        IAggregateRoot Rebuild(Type type, Guid id);
+        IAggregateRoot Rebuild(IAggregateRoot aggregateRoot);
+        IEnumerable<IAggregateRoot> Rebuild(Type type, Guid[] ids);
 
     }
 

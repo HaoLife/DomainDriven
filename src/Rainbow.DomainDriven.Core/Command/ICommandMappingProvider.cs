@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Rainbow.DomainDriven.Command
 {
-    public interface ICommandMappringProvider
+    public interface ICommandMappingProvider
     {
+        Dictionary<Guid, Type> Find(ICommand cmd);
+
     }
 }

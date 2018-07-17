@@ -10,8 +10,11 @@ namespace Rainbow.DomainDriven.Store
         void Add(TAggregateRoot aggregate);
         void Add(TAggregateRoot[] aggregates);
         void Update(TAggregateRoot aggregate);
-        void Update(TAggregateRoot[] aggregate);
+        void Update(TAggregateRoot[] aggregates);
         void Remove(TAggregateRoot aggregate);
-        void Remove(TAggregateRoot[] aggregate);
+        void Remove(TAggregateRoot[] aggregates);
+
+        TAggregateRoot Get(Guid id);
+        List<TAggregateRoot> Get(Guid[] ids);
     }
 }

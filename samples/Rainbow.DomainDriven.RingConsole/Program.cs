@@ -25,6 +25,10 @@ namespace Rainbow.DomainDriven.RingConsole
 
             serviceCollection.AddDomain(builder =>
             {
+                builder
+                    .AddRing(configuration.GetSection("ring"))
+                    .AddMongo(configuration.GetSection("mongo"))
+                    .AddDomainService();
             });
 
 

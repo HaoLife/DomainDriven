@@ -1,0 +1,26 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.Framework;
+using Rainbow.DomainDriven.Infrastructure;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Rainbow.DomainDriven.Extensions
+{
+    public static class CoreBuilderExtensions
+    {
+        public static IDomainBuilder AddDomainCore(this IDomainBuilder builder)
+        {
+            builder.Services.TryAdd(new ServiceCollection()
+                .AddSingleton<IAssemblyProvider, AssemblyProvider>()
+                .AddSingleton<ICommandRegister, AutoCommandRegister>()
+                .AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>()
+                );
+
+            return builder;
+        }
+
+    }
+}

@@ -13,6 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddDomain(this IServiceCollection services, Action<IDomainBuilder> configure)
         {
+            services.AddOptions();
             configure(new DomainBuilder(services));
             return services;
         }
