@@ -65,7 +65,7 @@ namespace Rainbow.DomainDriven.Domain
 
         private List<IAggregateRoot> GetAggregateRoot<TAggregateRoot>(Guid[] ids) where TAggregateRoot : IAggregateRoot
         {
-            return _snapshootStoreFactory.Create<TAggregateRoot>().Get(ids).Select(a => a as IAggregateRoot).ToList();
+            return _snapshootStoreFactory.Create<TAggregateRoot>().Get(ids);
         }
 
         public IEnumerable<IAggregateRoot> Rebuild(Type type, Guid[] ids)

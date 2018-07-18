@@ -7,6 +7,8 @@ namespace Rainbow.DomainDriven.Store
 {
     public interface ISnapshootStoreFactory
     {
-        ISnapshootStore<TAggregateRoot> Create<TAggregateRoot>() where TAggregateRoot : IAggregateRoot;
+        ISnapshootStore<TAggregateRoot> CreateOfT<TAggregateRoot>() where TAggregateRoot : IAggregateRoot;
+
+        ISnapshootStore Create<TAggregateRoot>() where TAggregateRoot : IAggregateRoot;
     }
 }

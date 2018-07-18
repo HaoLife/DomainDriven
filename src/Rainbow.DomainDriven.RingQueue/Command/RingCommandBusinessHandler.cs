@@ -71,7 +71,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                             var expression =
                                 Expression.Lambda<Action<RingCommandContext, ICommand>>(
                                     Expression.Call(null, getHandleMethod, parameter, parameter2),
-                                    parameter);
+                                    parameter, parameter2);
                             return expression.Compile();
                         });
 

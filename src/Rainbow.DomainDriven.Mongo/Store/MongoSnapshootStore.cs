@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Rainbow.DomainDriven.Mongo.Store
 {
-    public class MongoSnapshootStore<TAggregateRoot> : ISnapshootStore<TAggregateRoot>, IConfigureChange
+    public class MongoSnapshootStore<TAggregateRoot> : ISnapshootStore<TAggregateRoot>, IConfigureChange, ISnapshootStore
         where TAggregateRoot : IAggregateRoot
     {
         private MongoSnapshootStoreFactory _factory;
@@ -85,6 +85,67 @@ namespace Rainbow.DomainDriven.Mongo.Store
         public List<TAggregateRoot> Get(Guid[] ids)
         {
             return _collection.Find(a => ids.Contains(a.Id)).ToList();
+        }
+
+        public void Add(IAggregateRoot aggregate)
+        {
+            if (aggregate == null || !aggregate.GetType().Equals(typeof(TAggregateRoot)))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+
+            this.Add((TAggregateRoot)aggregate);
+        }
+
+        public void Add(IAggregateRoot[] aggregates)
+        {
+            if (!aggregates.All(a => a.GetType().Equals(typeof(TAggregateRoot))))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+            var roots = aggregates.Select(a => (TAggregateRoot)a).ToArray();
+
+            this.Add(roots);
+        }
+
+        public void Update(IAggregateRoot aggregate)
+        {
+            if (aggregate == null || !aggregate.GetType().Equals(typeof(TAggregateRoot)))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+
+            this.Update((TAggregateRoot)aggregate);
+        }
+
+        public void Update(IAggregateRoot[] aggregates)
+        {
+            if (!aggregates.All(a => a.GetType().Equals(typeof(TAggregateRoot))))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+            var roots = aggregates.Select(a => (TAggregateRoot)a).ToArray();
+
+            this.Update(roots);
+        }
+
+        public void Remove(IAggregateRoot aggregate)
+        {
+            if (aggregate == null || !aggregate.GetType().Equals(typeof(TAggregateRoot)))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+
+            this.Remove((TAggregateRoot)aggregate);
+        }
+
+        public void Remove(IAggregateRoot[] aggregates)
+        {
+            if (!aggregates.All(a => a.GetType().Equals(typeof(TAggregateRoot))))
+                throw new Exception($"类型不是{typeof(TAggregateRoot).Name}");
+            var roots = aggregates.Select(a => (TAggregateRoot)a).ToArray();
+
+            this.Remove(roots);
+        }
+
+        IAggregateRoot ISnapshootStore.Get(Guid id)
+        {
+            return this.Get(id);
+        }
+
+        List<IAggregateRoot> ISnapshootStore.Get(Guid[] ids)
+        {
+            return this.Get(ids).Select(a => (IAggregateRoot)a).ToList();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Framework;
 using Rainbow.DomainDriven.Infrastructure;
 using System;
@@ -15,8 +16,11 @@ namespace Rainbow.DomainDriven.Extensions
         {
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<IAssemblyProvider, AssemblyProvider>()
+                .AddSingleton<IEventRebuildHandler, EventRebuildHandler>()
                 .AddSingleton<ICommandRegister, AutoCommandRegister>()
                 .AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>()
+                .AddSingleton<IEventRegister, AutoEventRegister>()
+                .AddSingleton<IEventHandlerFactory, EventHandlerFactory>()
                 );
 
             return builder;

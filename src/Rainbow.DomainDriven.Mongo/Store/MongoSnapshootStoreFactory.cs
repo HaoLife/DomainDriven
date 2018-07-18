@@ -41,9 +41,14 @@ namespace Rainbow.DomainDriven.Mongo.Store
         }
 
 
-        public ISnapshootStore<TAggregateRoot> Create<TAggregateRoot>() where TAggregateRoot : IAggregateRoot
+        public ISnapshootStore<TAggregateRoot> CreateOfT<TAggregateRoot>() where TAggregateRoot : IAggregateRoot
         {
             return _cache.GetOrAdd(typeof(TAggregateRoot), new MongoSnapshootStore<TAggregateRoot>(this)) as ISnapshootStore<TAggregateRoot>;
+        }
+
+        public ISnapshootStore Create<TAggregateRoot>() where TAggregateRoot : IAggregateRoot
+        {
+            return _cache.GetOrAdd(typeof(TAggregateRoot), new MongoSnapshootStore<TAggregateRoot>(this)) as ISnapshootStore;
         }
     }
 }

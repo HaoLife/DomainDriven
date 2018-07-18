@@ -8,6 +8,6 @@ namespace Rainbow.DomainDriven.Event
     {
         void Add(Type eventType, Type handlerType);
 
-        Type FindHandlerType<TEvent>() where TEvent : IEvent;
+        IEnumerable<Type> FindHandlerType<TEvent>() where TEvent : IEvent;
     }
 }

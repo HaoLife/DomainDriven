@@ -29,8 +29,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         public RingCommandBus(IOptionsMonitor<RingOptions> options, IServiceProvider provider)
         {
-            provider.GetRequiredService<IOptionsMonitor<RingOptions>>();
-
+            _provider = provider;
             _optionsReloadToken = options.OnChange(ReloadOptions);
             ReloadOptions(options.CurrentValue);
         }
@@ -53,7 +52,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var eventStore = _provider.GetRequiredService<IEventStore>();
             var eventBus = _provider.GetRequiredService<IEventBus>();
             var commandRegister = _provider.GetRequiredService<ICommandRegister>();
-            var aggregateRootRebuilder = _provider.GetRequiredService<IAggregateRootRebuilder>();
 
             IContextCache contextCache = new RingContextCache();
 
@@ -70,7 +68,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             MultiSequencer sequencer = new MultiSequencer(size, wait);
             RingBuffer<ICommand> queue = new RingBuffer<ICommand>(sequencer);
             var barrier = queue.NewBarrier();
-            List<Sequence> sequences = new List<Sequence>();
 
             var commandMappingProvider = _provider.GetService<ICommandMappingProvider>();
             if (commandMappingProvider != null)
@@ -86,7 +83,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                     cacheHandler);
 
                 barrier = queue.NewBarrier(cacheConsumer.Sequence);
-                sequences.Add(cacheConsumer.Sequence);
                 consumers.Add(cacheConsumer);
             }
 
@@ -98,17 +94,16 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 , eventBus
                 , replyBus
                 , commandRegister
-                , aggregateRootRebuilder
+                , rootRebuilder
                 );
             IRingBufferConsumer executorConsumer = new RingBufferConsumer<ICommand>(
                 queue,
                 barrier,
                 executorHandler);
 
-            sequences.Add(executorConsumer.Sequence);
             consumers.Add(executorConsumer);
 
-            queue.AddGatingSequences(sequences.ToArray());
+            queue.AddGatingSequences(executorConsumer.Sequence);
 
             consumers.ForEach(a => Task.Factory.StartNew(a.Run, TaskCreationOptions.LongRunning));
 
@@ -131,6 +126,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 while (_replySequencer.Current < index)
                 {
                     Thread.Sleep(0);
+                }
+                ReplyMessage message = _replyQueue[index].Value;
+                if (message.CommandId == command.Id)
+                {
+                    if (!message.IsSuccess) throw message.Exception;
                 }
             });
         }

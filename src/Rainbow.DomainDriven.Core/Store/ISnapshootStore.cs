@@ -5,16 +5,16 @@ using System.Text;
 
 namespace Rainbow.DomainDriven.Store
 {
-    public interface ISnapshootStore<TAggregateRoot> where TAggregateRoot : IAggregateRoot
+    public interface ISnapshootStore
     {
-        void Add(TAggregateRoot aggregate);
-        void Add(TAggregateRoot[] aggregates);
-        void Update(TAggregateRoot aggregate);
-        void Update(TAggregateRoot[] aggregates);
-        void Remove(TAggregateRoot aggregate);
-        void Remove(TAggregateRoot[] aggregates);
+        void Add(IAggregateRoot aggregate);
+        void Add(IAggregateRoot[] aggregates);
+        void Update(IAggregateRoot aggregate);
+        void Update(IAggregateRoot[] aggregates);
+        void Remove(IAggregateRoot aggregate);
+        void Remove(IAggregateRoot[] aggregates);
 
-        TAggregateRoot Get(Guid id);
-        List<TAggregateRoot> Get(Guid[] ids);
+        IAggregateRoot Get(Guid id);
+        List<IAggregateRoot> Get(Guid[] ids);
     }
 }

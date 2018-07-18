@@ -18,6 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IDomainBuilder AddRing(this IDomainBuilder builder, IConfiguration configuration)
         {
             builder.Services.AddLogging();
+            builder.Services.AddMemoryCache();
 
             builder.AddDomainCore();
             builder.AddRingOptions(configuration);
