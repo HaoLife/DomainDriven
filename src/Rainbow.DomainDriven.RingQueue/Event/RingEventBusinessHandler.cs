@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Text;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Rainbow.DomainDriven.Store;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -16,9 +18,31 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private readonly ConcurrentDictionary<Type, Action<IEvent>> _cache = new ConcurrentDictionary<Type, Action<IEvent>>();
         private static readonly MethodInfo _handleCommandMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
 
+        private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000002");
+
         private IEventRegister _eventRegister;
         private IEventHandlerFactory _eventHandlerFactory;
         private ILogger<RingEventBusinessHandler> _logger;
+        private ISubscribeEventStore _subscribeEventStore;
+
+        private SubscribeEvent _subscribeEvent = new SubscribeEvent() { Id = _defaultSubscribeId, UTCTimestamp = 0 };
+
+        public RingEventBusinessHandler(
+            IEventRegister eventRegister
+            , IEventHandlerFactory eventHandlerFactory
+            , ISubscribeEventStore subscribeEventStore
+            , ILoggerFactory loggerFactory)
+        {
+
+            _eventRegister = eventRegister;
+            _eventHandlerFactory = eventHandlerFactory;
+            _subscribeEventStore = subscribeEventStore;
+            _logger = loggerFactory.CreateLogger<RingEventBusinessHandler>();
+
+
+            var subscribeEvent = _subscribeEventStore.Get(_defaultSubscribeId);
+            if (subscribeEvent != null) _subscribeEvent = subscribeEvent;
+        }
 
         public void Handle(IEvent[] messages)
         {
@@ -40,6 +64,16 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 call(message);
             }
             //记录业务消费者处理的的最后的事件
+
+            var evt = messages.LastOrDefault();
+            if (evt != null)
+            {
+                _subscribeEvent.AggregateRootId = evt.AggregateRootId;
+                _subscribeEvent.AggregateRootTypeName = evt.AggregateRootTypeName;
+                _subscribeEvent.EventId = evt.Id;
+                _subscribeEvent.UTCTimestamp = evt.UTCTimestamp;
+                _subscribeEventStore.Save(_subscribeEvent);
+            }
         }
 
 

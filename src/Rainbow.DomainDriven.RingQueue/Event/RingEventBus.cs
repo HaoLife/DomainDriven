@@ -11,6 +11,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Rainbow.DomainDriven.Store;
 using Rainbow.DomainDriven.Infrastructure;
 using System.Threading.Tasks;
+using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -43,10 +44,12 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
             var snapshootStoreFactory = _provider.GetRequiredService<ISnapshootStoreFactory>();
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
-            var commandHandlerFactory = _provider.GetRequiredService<IEventHandlerFactory>();
-            var eventStore = _provider.GetRequiredService<IMemoryCache>();
+            var eventHandlerFactory = _provider.GetRequiredService<IEventHandlerFactory>();
+            var memoryCache = _provider.GetRequiredService<IMemoryCache>();
             var eventRegister = _provider.GetRequiredService<IEventRegister>();
             var assemblyProvider = _provider.GetRequiredService<IAssemblyProvider>();
+            var eventRebuildHandler = _provider.GetRequiredService<IEventRebuildHandler>();
+            var subscribeEventStore = _provider.GetRequiredService<ISubscribeEventStore>();
 
             var size = _options.EventQueueSize;
 
@@ -58,7 +61,12 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var barrier = queue.NewBarrier();
 
             var snapshootHandler = new RingEventSnapshootHandler(
-                assemblyProvider);
+                assemblyProvider
+                , snapshootStoreFactory
+                , eventRebuildHandler
+                , subscribeEventStore
+                , memoryCache
+                , loggerFactory);
             IRingBufferConsumer snapshootConsumer = new RingBufferConsumer<IEvent>(
                 queue,
                 barrier,
@@ -68,7 +76,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             consumers.Add(snapshootConsumer);
 
 
-            var executorHandler = new RingEventBusinessHandler();
+            var executorHandler = new RingEventBusinessHandler(
+                eventRegister
+                , eventHandlerFactory
+                , subscribeEventStore
+                , loggerFactory);
             IRingBufferConsumer executorConsumer = new RingBufferConsumer<IEvent>(
                 queue,
                 barrier,

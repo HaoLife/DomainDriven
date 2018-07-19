@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using Rainbow.DomainDriven.Infrastructure;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -24,10 +25,34 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private ISnapshootStoreFactory _snapshootStoreFactory;
         private IEventRebuildHandler _eventRebuildHandler;
         private ILogger<RingEventSnapshootHandler> _logger;
+        private ISubscribeEventStore _subscribeEventStore;
+        private IMemoryCache _memoryCache;
 
-        public RingEventSnapshootHandler(IAssemblyProvider assemblyProvider)
+
+        private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000001");
+        private SubscribeEvent _subscribeEvent = new SubscribeEvent() { Id = _defaultSubscribeId, UTCTimestamp = 0 };
+
+
+        public RingEventSnapshootHandler(
+            IAssemblyProvider assemblyProvider
+            , ISnapshootStoreFactory snapshootStoreFactory
+            , IEventRebuildHandler eventRebuildHandler
+            , ISubscribeEventStore subscribeEventStore
+            , IMemoryCache memoryCache
+            , ILoggerFactory loggerFactory)
         {
+            this._assemblyProvider = assemblyProvider;
+            _snapshootStoreFactory = snapshootStoreFactory;
+            _eventRebuildHandler = eventRebuildHandler;
+            _subscribeEventStore = subscribeEventStore;
+            _memoryCache = memoryCache;
+            _logger = loggerFactory.CreateLogger<RingEventSnapshootHandler>();
+
+
             this.Initialize(assemblyProvider.Assemblys);
+
+            var subscribeEvent = _subscribeEventStore.Get(_defaultSubscribeId);
+            if (subscribeEvent != null) _subscribeEvent = subscribeEvent;
         }
 
 
@@ -69,7 +94,22 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 {
                     throw new Exception($"无法找到类型{item.Key}的聚合根");
                 }
-                var roots = GetSnapshot(entityType).Get(item.Value.Select(a => a.AggregateRootId).ToArray());
+
+                //这里可以先从缓存获取，如果没有全部找到，再从数据库拿没有取到的。
+
+                var ids = item.Value.Where(a => a.Operation != EventOperation.Created).Select(a => a.AggregateRootId).ToArray();
+                List<IAggregateRoot> roots = new List<IAggregateRoot>();
+                foreach (var id in ids)
+                {
+                    var root = _memoryCache.Get<IAggregateRoot>($"{entityType.Name}_{id}");
+                    if (root != null) roots.Add(root);
+                }
+                var storeIds = ids.Except(roots.Select(a => a.Id)).ToArray();
+                if (storeIds.Length > 0)
+                {
+                    var storeRoots = GetSnapshot(entityType).Get(storeIds);
+                    roots.AddRange(storeRoots);
+                }
 
                 aggregateRoots.AddRange(roots);
             }
@@ -94,6 +134,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 {
                     removeRoots.Add(root);
                 }
+                if (root == null)
+                {
+                    _logger.LogInformation($"回溯快照的时候没有找到聚合根：[{item.AggregateRootId} - {item.AggregateRootTypeName}]");
+                    continue;
+                }
                 _eventRebuildHandler.Handle(root, item);
 
             }
@@ -113,10 +158,32 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 TryAction(list => snapshootStore.Add(list), removed);
                 TryAction(list => snapshootStore.Add(list), updated);
 
+
             }
+
+            //存储缓存
+            aggregateRoots.Except(removeRoots).ToList().ForEach(a =>
+            {
+                _memoryCache.Set($"{a.GetType().Name}_{a.Id}", a);
+            });
+
+            removeRoots.ForEach(a =>
+            {
+                _memoryCache.Remove($"{a.GetType().Name}_{a.Id}");
+            });
 
 
             //记录快照消费者处理的的最后的事件
+
+            var evt = messages.LastOrDefault();
+            if (evt != null)
+            {
+                _subscribeEvent.AggregateRootId = evt.AggregateRootId;
+                _subscribeEvent.AggregateRootTypeName = evt.AggregateRootTypeName;
+                _subscribeEvent.EventId = evt.Id;
+                _subscribeEvent.UTCTimestamp = evt.UTCTimestamp;
+                _subscribeEventStore.Save(_subscribeEvent);
+            }
         }
 
         private void TryAction(Action<IAggregateRoot[]> call, IAggregateRoot[] roots, int retry = 0)
