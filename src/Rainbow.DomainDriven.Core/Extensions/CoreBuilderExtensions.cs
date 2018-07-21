@@ -23,6 +23,7 @@ namespace Rainbow.DomainDriven.Extensions
                 .AddSingleton<IEventRegister, AutoEventRegister>()
                 .AddSingleton<IEventHandlerFactory, EventHandlerFactory>()
                 .AddSingleton<IAggregateRootRebuilder, AggregateRootRebuilder>()
+                .AddSingleton<IEventRebuildInitializer, EventRebuildInitializer>()
                 );
 
             return builder;

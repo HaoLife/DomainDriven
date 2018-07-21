@@ -44,8 +44,12 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             if (subscribeEvent != null) _subscribeEvent = subscribeEvent;
         }
 
+
         public void Handle(IEvent[] messages)
         {
+            messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
+            if (!messages.Any()) return;
+
             foreach (var message in messages)
             {
                 var call = _cache.GetOrAdd(

@@ -9,5 +9,6 @@ namespace Rainbow.DomainDriven.Store
     {
         SubscribeEvent Get(Guid id);
         void Save(SubscribeEvent subscribeEvent);
+        IEnumerable<SubscribeEvent> Get();
     }
 }

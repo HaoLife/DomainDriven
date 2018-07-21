@@ -11,6 +11,6 @@ namespace Rainbow.DomainDriven.Store
 
         IEnumerable<IEvent> GetAggregateRootEvents(Guid aggregateRootId, string aggregateRootTypeName, int version = 0);
 
-        List<IEvent> Take(int size, long uTCTimestamp = 0);
+        List<IEvent> Take(int size, long utcTimestamp = 0);
     }
 }

@@ -82,6 +82,10 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public void Handle(IEvent[] messages)
         {
+
+            messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
+            if (!messages.Any()) return;
+
             var dict = messages.GroupBy(a => a.AggregateRootTypeName).ToDictionary(a => a.Key, a => a.ToList());
 
             List<IAggregateRoot> aggregateRoots = new List<IAggregateRoot>();

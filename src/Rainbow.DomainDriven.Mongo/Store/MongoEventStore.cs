@@ -43,9 +43,9 @@ namespace Rainbow.DomainDriven.Mongo.Store
             return _collection.Find(a => a.Id == aggregateRootId && a.AggregateRootTypeName == aggregateRootTypeName && a.Version > version).ToList();
         }
 
-        public List<IEvent> Take(int size, long uTCTimestamp = 0)
+        public List<IEvent> Take(int size, long utcTimestamp = 0)
         {
-            var filter = Builders<IEvent>.Filter.Gt(a => a.UTCTimestamp, uTCTimestamp); ;
+            var filter = Builders<IEvent>.Filter.Gt(a => a.UTCTimestamp, utcTimestamp); ;
             return _collection.Find(filter).Limit(size).ToList();
         }
     }

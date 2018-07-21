@@ -6,6 +6,7 @@ using Rainbow.DomainDriven.Store;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.Mongo.Store
 {
@@ -38,6 +39,11 @@ namespace Rainbow.DomainDriven.Mongo.Store
         public void Save(SubscribeEvent subscribeEvent)
         {
             _collection.ReplaceOne(a => a.Id == subscribeEvent.Id, subscribeEvent);
+        }
+
+        public IEnumerable<SubscribeEvent> Get()
+        {
+            return _collection.AsQueryable().ToList();
         }
     }
 }
