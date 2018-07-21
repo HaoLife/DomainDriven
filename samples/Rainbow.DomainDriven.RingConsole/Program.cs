@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rainbow.DomainDriven.Command;
 using System;
 using System.IO;
 
@@ -39,7 +40,8 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var provider = new AutofacServiceProvider(container.Build());
 
-
+            var commandBus = provider.GetRequiredService<ICommandBus>();
+            // commandBus.Publish()
 
             Console.WriteLine("Hello World!");
         }

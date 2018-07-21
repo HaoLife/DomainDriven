@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Framework;
 using Rainbow.DomainDriven.Infrastructure;
@@ -21,6 +22,7 @@ namespace Rainbow.DomainDriven.Extensions
                 .AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>()
                 .AddSingleton<IEventRegister, AutoEventRegister>()
                 .AddSingleton<IEventHandlerFactory, EventHandlerFactory>()
+                .AddSingleton<IAggregateRootRebuilder, AggregateRootRebuilder>()
                 );
 
             return builder;
