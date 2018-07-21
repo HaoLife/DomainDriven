@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/samples/Rainbow.DomainDriven.ConsoleApp/bin/Debug/netcoreapp1.1/Rainbow.DomainDriven.ConsoleApp.dll",
+            "program": "${workspaceRoot}/samples/Rainbow.DomainDriven.RingConsole/bin/Debug/netcoreapp2.0/Rainbow.DomainDriven.RingConsole.dll",
             "args": [],
-            "cwd": "${workspaceRoot}/samples/Rainbow.DomainDriven.ConsoleApp",
+            "cwd": "${workspaceRoot}/samples/Rainbow.DomainDriven.RingConsole",
             "stopAtEntry": false,
             "externalConsole": false
         },

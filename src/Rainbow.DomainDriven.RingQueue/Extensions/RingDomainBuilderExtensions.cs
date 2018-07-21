@@ -10,6 +10,8 @@ using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.RingQueue.Command;
 using Rainbow.DomainDriven.Extensions;
 using Rainbow.DomainDriven.Domain;
+using Rainbow.DomainDriven.RingQueue.Event;
+using Rainbow.DomainDriven.Event;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<ICommandBus, RingCommandBus>()
-                .AddSingleton<IAggregateRootRebuilder, AggregateRootRebuilder>()
+                .AddSingleton<IEventBus, RingEventBus>()
                 );
             //IEventBus
 
