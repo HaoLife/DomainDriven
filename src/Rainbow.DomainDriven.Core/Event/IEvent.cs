@@ -6,8 +6,8 @@ namespace Rainbow.DomainDriven.Event
 {
     public interface IEvent
     {
-        Guid Id { get; set; }
-        Guid AggregateRootId { get; }
+        Guid Id { get; }
+        Guid AggregateRootId { get; set; }
         string AggregateRootTypeName { get; set; }
         long UTCTimestamp { get; }
         int Version { get; set; }

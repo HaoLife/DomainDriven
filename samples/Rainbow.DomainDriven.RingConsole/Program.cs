@@ -3,6 +3,8 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.RingConsole.Command;
+using Rainbow.DomainDriven.RingConsole.Mapping;
 using System;
 using System.IO;
 
@@ -29,6 +31,7 @@ namespace Rainbow.DomainDriven.RingConsole
                 builder
                     .AddRing(configuration.GetSection("ring"))
                     .AddMongo(configuration.GetSection("mongo"))
+                    .AddMapping<CommandMappingProvider>()
                     .AddDomainService();
             });
 
@@ -41,7 +44,17 @@ namespace Rainbow.DomainDriven.RingConsole
             var provider = new AutofacServiceProvider(container.Build());
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
-            // commandBus.Publish()
+
+            var createCommand = new CreateUserCommand()
+            {
+                UserId = Guid.NewGuid(),
+                Name = "nihao 1-1",
+                Sex = 1
+
+            };
+
+            var task = commandBus.Publish(createCommand);
+            task.Wait();
 
             Console.WriteLine("Hello World!");
         }
