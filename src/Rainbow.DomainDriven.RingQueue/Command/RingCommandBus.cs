@@ -125,7 +125,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 while (_replySequencer.Current < index)
                 {
-                    Thread.Sleep(0);
+                    Thread.Yield();
                 }
                 ReplyMessage message = _replyQueue[index].Value;
                 if (message.CommandId == command.Id)

@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
+using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.RingConsole.Command;
 using Rainbow.DomainDriven.RingConsole.Mapping;
 using System;
@@ -43,6 +44,9 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var provider = new AutofacServiceProvider(container.Build());
 
+            var eventRebuildInitializer = provider.GetRequiredService<IEventRebuildInitializer>();
+            eventRebuildInitializer.Initialize();
+
             var commandBus = provider.GetRequiredService<ICommandBus>();
 
             var createCommand = new CreateUserCommand()
@@ -57,6 +61,7 @@ namespace Rainbow.DomainDriven.RingConsole
             task.Wait();
 
             Console.WriteLine("Hello World!");
+            Console.Read();
         }
     }
 }

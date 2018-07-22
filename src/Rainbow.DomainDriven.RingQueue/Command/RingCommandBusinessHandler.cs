@@ -17,7 +17,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
     {
 
         private readonly ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>> _cache = new ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>>();
-        private static readonly MethodInfo _handleCommandMethod = typeof(RingCommandBusinessHandler).GetMethod(nameof(HandleCommand), BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo _handleMethod = typeof(RingCommandBusinessHandler).GetMethod(nameof(HandleCommand), BindingFlags.Instance | BindingFlags.NonPublic);
 
         private RingCommandContext context;
         private IContextCache _contextCache;
@@ -65,12 +65,13 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                         key: message.GetType(),
                         valueFactory: (type) =>
                         {
-                            var getHandleMethod = _handleCommandMethod.MakeGenericMethod(type);
+                            var getHandleMethod = _handleMethod.MakeGenericMethod(type);
+                            var instance = Expression.Constant(this);
                             var parameter = Expression.Parameter(typeof(RingCommandContext), "context");
                             var parameter2 = Expression.Parameter(typeof(ICommand), "command");
                             var expression =
                                 Expression.Lambda<Action<RingCommandContext, ICommand>>(
-                                    Expression.Call(null, getHandleMethod, parameter, parameter2),
+                                    Expression.Call(instance, getHandleMethod, parameter, parameter2),
                                     parameter, parameter2);
                             return expression.Compile();
                         });

@@ -17,7 +17,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 {
     public class RingEventSnapshootHandler : IMessageHandler<IEvent>
     {
-        private static readonly MethodInfo _handleCommandMethod = typeof(RingEventSnapshootHandler).GetMethod(nameof(GetSnapshot), BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo _handleMethod = typeof(RingEventSnapshootHandler).GetMethod(nameof(GetSnapshotStore), BindingFlags.Instance | BindingFlags.NonPublic);
         private ConcurrentDictionary<Type, Func<ISnapshootStore>> _cache = new ConcurrentDictionary<Type, Func<ISnapshootStore>>();
         private ConcurrentDictionary<string, Type> _cacheEntitys = new ConcurrentDictionary<string, Type>();
 
@@ -65,7 +65,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         private void RegisterHandler(Type type)
         {
-            if (!typeof(IAggregateRoot).GetTypeInfo().IsAssignableFrom(type)) return;
+            if (!typeof(IAggregateRoot).GetTypeInfo().IsAssignableFrom(type) && type.IsClass) return;
 
             _cacheEntitys.TryAdd(type.Name, type);
 
@@ -90,7 +90,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
             List<IAggregateRoot> aggregateRoots = new List<IAggregateRoot>();
             List<IAggregateRoot> removeRoots = new List<IAggregateRoot>();
+            List<IAggregateRoot> addRoots = new List<IAggregateRoot>();
 
+            //获取
             foreach (var item in dict)
             {
                 Type entityType;
@@ -101,7 +103,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
                 //这里可以先从缓存获取，如果没有全部找到，再从数据库拿没有取到的。
 
-                var ids = item.Value.Where(a => a.Operation != EventOperation.Created).Select(a => a.AggregateRootId).ToArray();
+                var createIds = item.Value.Where(a => a.Operation == EventOperation.Created).Select(a => a.AggregateRootId).ToArray();
+
+                var ids = item.Value.Select(a => a.AggregateRootId).Except(createIds).ToArray();
+
+
                 List<IAggregateRoot> roots = new List<IAggregateRoot>();
                 foreach (var id in ids)
                 {
@@ -118,6 +124,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 aggregateRoots.AddRange(roots);
             }
 
+            //重建
             foreach (var item in messages)
             {
                 IAggregateRoot root = aggregateRoots.FirstOrDefault(a => a.Id == item.AggregateRootId);
@@ -132,6 +139,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
                     root = Activator.CreateInstance(entityType, true) as IAggregateRoot;
                     aggregateRoots.Add(root);
+                    addRoots.Add(root);
 
                 }
                 else if (item.Operation == EventOperation.Removed)
@@ -153,7 +161,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             foreach (var item in rootDict)
             {
                 var snapshootStore = GetSnapshot(item.Key);
-                var addeds = item.Value.Where(a => a.Version == 1).ToArray();
+
+                var addeds = item.Value.Intersect(addRoots).ToArray();
                 var removed = item.Value.Intersect(removeRoots).ToArray();
                 var updated = item.Value.Except(addeds).Except(removed).ToArray();
 
@@ -213,10 +222,11 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 key: rootType,
                 valueFactory: (type) =>
                 {
-                    var getHandleMethod = _handleCommandMethod.MakeGenericMethod(type);
+                    var getHandleMethod = _handleMethod.MakeGenericMethod(type);
+                    var instance = Expression.Constant(this);
                     var expression =
                         Expression.Lambda<Func<ISnapshootStore>>(
-                            Expression.Call(null, getHandleMethod));
+                            Expression.Call(instance, getHandleMethod));
                     return expression.Compile();
                 });
 
@@ -224,7 +234,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         }
 
 
-        public ISnapshootStore GetSnapshotStore<TAggregateRoot>() where TAggregateRoot : class, IAggregateRoot
+        private ISnapshootStore GetSnapshotStore<TAggregateRoot>() where TAggregateRoot : class, IAggregateRoot
         {
             return _snapshootStoreFactory.Create<TAggregateRoot>();
         }

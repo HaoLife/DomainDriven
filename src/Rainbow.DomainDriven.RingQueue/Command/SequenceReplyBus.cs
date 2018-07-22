@@ -19,8 +19,10 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         {
             var seq = _replyQueue.Next(events.Length);
             var index = seq - events.Length + 1;
+            var start = index;
             while (index <= seq)
             {
+                _replyQueue[index].Value = events[index - start];
                 _replyQueue.Publish(index);
                 index++;
             }

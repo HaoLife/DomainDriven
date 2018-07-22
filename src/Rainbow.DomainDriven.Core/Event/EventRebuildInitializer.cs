@@ -44,7 +44,9 @@ namespace Rainbow.DomainDriven.Event
             {
                 var evts = _eventStore.Take(number, utcTimestamp);
                 isUpdate = evts.Count > 0;
-                if (isUpdate) _eventBus.Publish(evts.ToArray());
+                if (!isUpdate) break;
+                _eventBus.Publish(evts.ToArray());
+                utcTimestamp = evts.Max(a => a.UTCTimestamp);
 
             } while (isUpdate);
 

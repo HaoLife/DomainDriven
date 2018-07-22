@@ -26,6 +26,12 @@ namespace Rainbow.DomainDriven.Mongo.Store
         {
             Options = options;
 
+            if (!options.DatabaseInitializer.IsRun)
+            {
+                options.DatabaseInitializer.Initialize();
+            }
+
+
             var client = new MongoClient(Options.SnapshootConnection);
             var database = client.GetDatabase(Options.SnapshootDbName);
             MongoDatabase = database;

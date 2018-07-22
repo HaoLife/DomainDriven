@@ -12,7 +12,7 @@ namespace Rainbow.DomainDriven.Command
     public class AutoCommandRegister : ICommandRegister
     {
         private IAssemblyProvider _assemblyProvider;
-        private SortedDictionary<Type, Type> _cacheCommandHandler = new SortedDictionary<Type, Type>();
+        private ConcurrentDictionary<Type, Type> _cacheCommandHandler = new ConcurrentDictionary<Type, Type>();
 
         public AutoCommandRegister(IAssemblyProvider assemblyProvider)
         {
@@ -33,8 +33,9 @@ namespace Rainbow.DomainDriven.Command
 
             foreach (var execType in HandlerTypes)
             {
-                if (this._cacheCommandHandler.ContainsKey(execType.GetGenericArguments().FirstOrDefault()))
-                    this._cacheCommandHandler.Add(execType.GetGenericArguments().FirstOrDefault(), handlerType);
+                var commandType = execType.GetGenericArguments().FirstOrDefault();
+                if (!this._cacheCommandHandler.ContainsKey(commandType))
+                    this._cacheCommandHandler.TryAdd(commandType, handlerType);
             }
         }
 
@@ -49,7 +50,7 @@ namespace Rainbow.DomainDriven.Command
         public void Add(Type commandType, Type handlerType)
         {
             if (this._cacheCommandHandler.ContainsKey(commandType))
-                this._cacheCommandHandler.Add(commandType, handlerType);
+                this._cacheCommandHandler.TryAdd(commandType, handlerType);
         }
 
         public Type FindHandlerType<TCommand>() where TCommand : ICommand

@@ -16,7 +16,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
     public class RingEventBusinessHandler : IMessageHandler<IEvent>
     {
         private readonly ConcurrentDictionary<Type, Action<IEvent>> _cache = new ConcurrentDictionary<Type, Action<IEvent>>();
-        private static readonly MethodInfo _handleCommandMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo _handleMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
 
         private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000002");
 
@@ -56,11 +56,12 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                     key: message.GetType(),
                     valueFactory: (type) =>
                     {
-                        var getHandleMethod = _handleCommandMethod.MakeGenericMethod(type);
+                        var getHandleMethod = _handleMethod.MakeGenericMethod(type);
+                        var instance = Expression.Constant(this);
                         var parameter = Expression.Parameter(typeof(IEvent), "evt");
                         var expression =
                             Expression.Lambda<Action<IEvent>>(
-                                Expression.Call(null, getHandleMethod, parameter),
+                                Expression.Call(instance, getHandleMethod, parameter),
                                 parameter);
                         return expression.Compile();
                     });

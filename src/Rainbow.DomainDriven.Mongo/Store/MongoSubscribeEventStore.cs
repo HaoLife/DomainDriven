@@ -25,6 +25,11 @@ namespace Rainbow.DomainDriven.Mongo.Store
         {
             Options = options;
 
+            if (!options.DatabaseInitializer.IsRun)
+            {
+                options.DatabaseInitializer.Initialize();
+            }
+
             var client = new MongoClient(Options.SnapshootConnection);
             var database = client.GetDatabase(Options.EventDbName);
             _collection = database.GetCollection<SubscribeEvent>(options.SubscribeEventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
@@ -38,7 +43,7 @@ namespace Rainbow.DomainDriven.Mongo.Store
 
         public void Save(SubscribeEvent subscribeEvent)
         {
-            _collection.ReplaceOne(a => a.Id == subscribeEvent.Id, subscribeEvent);
+            _collection.ReplaceOne(a => a.Id == subscribeEvent.Id, subscribeEvent, new UpdateOptions() { IsUpsert = true });
         }
 
         public IEnumerable<SubscribeEvent> Get()

@@ -38,7 +38,7 @@ namespace Rainbow.DomainDriven.RingConsole.Domain
 
         public void Handle(CreatedEvent evt)
         {
-            this.Id = evt.Id;
+            this.Id = evt.AggregateRootId;
             this.Name = evt.Name;
             this.Sex = evt.Sex;
             this.CreateTime = new DateTime(evt.UTCTimestamp).ToLocalTime();

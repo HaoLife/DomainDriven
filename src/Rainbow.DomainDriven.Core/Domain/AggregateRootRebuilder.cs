@@ -13,7 +13,7 @@ namespace Rainbow.DomainDriven.Domain
     {
         private readonly ConcurrentDictionary<Type, Func<Guid[], List<IAggregateRoot>>> _cache = new ConcurrentDictionary<Type, Func<Guid[], List<IAggregateRoot>>>();
 
-        private static readonly MethodInfo _handleCommandMethod = typeof(AggregateRootRebuilder).GetMethod(nameof(GetAggregateRoot), BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo _handleMethod = typeof(AggregateRootRebuilder).GetMethod(nameof(GetAggregateRoot), BindingFlags.Instance | BindingFlags.NonPublic);
 
         private ISnapshootStoreFactory _snapshootStoreFactory;
         private IEventStore _eventStore;
@@ -51,11 +51,12 @@ namespace Rainbow.DomainDriven.Domain
                 key: rootType,
                 valueFactory: (type) =>
                 {
-                    var getHandleMethod = _handleCommandMethod.MakeGenericMethod(type);
+                    var getHandleMethod = _handleMethod.MakeGenericMethod(type);
+                    var instance = Expression.Constant(this);
                     var parameter = Expression.Parameter(typeof(Guid[]), "ids");
                     var expression =
                         Expression.Lambda<Func<Guid[], List<IAggregateRoot>>>(
-                            Expression.Call(null, getHandleMethod, parameter),
+                            Expression.Call(instance, getHandleMethod, parameter),
                             parameter);
                     return expression.Compile();
                 });

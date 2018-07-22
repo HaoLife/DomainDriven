@@ -25,6 +25,10 @@ namespace Rainbow.DomainDriven.Mongo.Store
         private void ReloadOptions(MongoOptions options)
         {
             Options = options;
+            if (!options.DatabaseInitializer.IsRun)
+            {
+                options.DatabaseInitializer.Initialize();
+            }
 
             var client = new MongoClient(Options.SnapshootConnection);
             var database = client.GetDatabase(Options.EventDbName);
@@ -45,7 +49,9 @@ namespace Rainbow.DomainDriven.Mongo.Store
 
         public List<IEvent> Take(int size, long utcTimestamp = 0)
         {
-            var filter = Builders<IEvent>.Filter.Gt(a => a.UTCTimestamp, utcTimestamp); ;
+            //UTCTimestamp 使用表达式模式出现无法序列化问题
+            var filter = Builders<IEvent>.Filter.Gt("UTCTimestamp", utcTimestamp);
+            //var filter = Builders<IEvent>.Filter.Empty;
             return _collection.Find(filter).Limit(size).ToList();
         }
     }

@@ -17,9 +17,9 @@ namespace Rainbow.DomainDriven.Event
             this.Operation = operation;
         }
 
-        public long UTCTimestamp { get; private set; }
+        public long UTCTimestamp { get; protected set; }
         public int Version { get; set; }
-        public Guid Id { get; private set; }
+        public Guid Id { get; protected set; }
 
         public Guid AggregateRootId { get; set; }
 

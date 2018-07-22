@@ -8,6 +8,11 @@ namespace Rainbow.DomainDriven.RingConsole.Event.UserEvent
 {
     public class CreatedEvent : DomainEvent
     {
+        public CreatedEvent()
+            : base(EventOperation.Created)
+        {
+
+        }
         public string Name { get; set; }
         public int Sex { get; set; }
     }

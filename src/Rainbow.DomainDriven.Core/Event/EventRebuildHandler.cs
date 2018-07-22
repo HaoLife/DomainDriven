@@ -13,7 +13,7 @@ namespace Rainbow.DomainDriven.Event
 
         private readonly ConcurrentDictionary<Type, Action<IAggregateRoot, IEvent>> _cache = new ConcurrentDictionary<Type, Action<IAggregateRoot, IEvent>>();
 
-        private static readonly MethodInfo _handleCommandMethod = typeof(AggregateRootRebuilder).GetMethod(nameof(HandleInvoke), BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly MethodInfo _handleMethod = typeof(EventRebuildHandler).GetMethod(nameof(HandleInvoke), BindingFlags.Instance | BindingFlags.NonPublic);
 
 
         public void Handle(IAggregateRoot root, IEvent evt)
@@ -22,12 +22,13 @@ namespace Rainbow.DomainDriven.Event
                 key: evt.GetType(),
                 valueFactory: (type) =>
                 {
-                    var getHandleMethod = _handleCommandMethod.MakeGenericMethod(type);
+                    var getHandleMethod = _handleMethod.MakeGenericMethod(type);
+                    var instance = Expression.Constant(this);
                     var parameter = Expression.Parameter(typeof(IAggregateRoot), "root");
                     var parameter2 = Expression.Parameter(typeof(IEvent), "evt");
                     var expression =
                         Expression.Lambda<Action<IAggregateRoot, IEvent>>(
-                            Expression.Call(null, getHandleMethod, parameter, parameter2),
+                            Expression.Call(instance, getHandleMethod, parameter, parameter2),
                             parameter, parameter2);
                     return expression.Compile();
                 });

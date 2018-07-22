@@ -8,7 +8,7 @@ namespace Rainbow.DomainDriven.Command
     {
         public AbstractCommand()
         {
-            Id = new Guid();
+            Id = Guid.NewGuid();
         }
         public AbstractCommand(Guid id, int priority = 0)
         {
