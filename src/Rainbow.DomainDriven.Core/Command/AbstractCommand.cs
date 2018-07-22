@@ -16,8 +16,8 @@ namespace Rainbow.DomainDriven.Command
             this.Priority = priority;
         }
 
-        public Guid Id { get; private set; }
+        public Guid Id { get; set; }
 
-        public int Priority { get; private set; }
+        public int Priority { get; set; }
     }
 }
