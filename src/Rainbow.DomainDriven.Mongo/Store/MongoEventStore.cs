@@ -8,9 +8,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using MongoDB.Bson.Serialization;
 
 namespace Rainbow.DomainDriven.Mongo.Store
 {
+
+    public class CreatedEvent2 : DomainEvent
+    {
+
+    }
+
     public class MongoEventStore : IEventStore
     {
         public MongoOptions Options { get; private set; }
@@ -30,10 +37,29 @@ namespace Rainbow.DomainDriven.Mongo.Store
                 options.DatabaseInitializer.Initialize();
             }
 
+
+
             var client = new MongoClient(Options.SnapshootConnection);
             var database = client.GetDatabase(Options.EventDbName);
             _collection = database.GetCollection<IEvent>(options.EventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
 
+            var indk = Builders<IEvent>.IndexKeys;
+            var aggrIndex = indk.Combine(
+                indk.Ascending(nameof(IEvent.AggregateRootId)),
+                indk.Ascending(nameof(IEvent.AggregateRootTypeName)),
+                indk.Ascending(nameof(IEvent.Version))
+            );
+
+
+            var timestampIndex = indk.Ascending(nameof(IEvent.UTCTimestamp));
+
+
+            //Unique = true 这里如果加唯一索引，可能在批量写入事件时出现错误
+            var aggrIndexModel = new CreateIndexModel<IEvent>(aggrIndex, new CreateIndexOptions() { Name = "aggr_index" });
+            var timestampIndexModel = new CreateIndexModel<IEvent>(timestampIndex, new CreateIndexOptions() { Name = "timestamp_index" });
+
+            _collection.Indexes.CreateOne(timestampIndexModel);
+            _collection.Indexes.CreateOne(aggrIndexModel);
         }
 
 

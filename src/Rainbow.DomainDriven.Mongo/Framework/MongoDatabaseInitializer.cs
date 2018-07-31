@@ -22,6 +22,7 @@ namespace Rainbow.DomainDriven.Mongo.Framework
         public MongoDatabaseInitializer()
         {
             _assemblyProvider = new AssemblyProvider();
+            Initialize();
 
         }
 
