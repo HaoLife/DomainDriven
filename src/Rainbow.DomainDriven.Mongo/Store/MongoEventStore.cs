@@ -8,15 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using MongoDB.Bson.Serialization;
 
 namespace Rainbow.DomainDriven.Mongo.Store
 {
-
-    public class CreatedEvent2 : DomainEvent
-    {
-
-    }
 
     public class MongoEventStore : IEventStore
     {
@@ -76,7 +70,7 @@ namespace Rainbow.DomainDriven.Mongo.Store
         public List<IEvent> Take(int size, long utcTimestamp = 0)
         {
             //UTCTimestamp 使用表达式模式出现无法序列化问题
-            var filter = Builders<IEvent>.Filter.Gt("UTCTimestamp", utcTimestamp);
+            var filter = Builders<IEvent>.Filter.Gt(nameof(IEvent.UTCTimestamp), utcTimestamp);
             //var filter = Builders<IEvent>.Filter.Empty;
             return _collection.Find(filter).Limit(size).ToList();
         }
