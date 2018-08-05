@@ -34,6 +34,7 @@ namespace Rainbow.DomainDriven.Mongo.Framework
 
             BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
 
+
             this.Register(_assemblyProvider.Assemblys.SelectMany(p => p.GetTypes()));
 
             Type[] types = events.Union(roots).ToArray();
@@ -44,6 +45,7 @@ namespace Rainbow.DomainDriven.Mongo.Framework
                 {
                     var classmap = new BsonClassMap(item);
                     classmap.AutoMap();
+                    classmap.SetIgnoreExtraElements(true);
                     BsonClassMap.RegisterClassMap(classmap);
                 }
             }
