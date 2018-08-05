@@ -8,6 +8,7 @@ using System.Text;
 using System.Reflection;
 using Rainbow.DomainDriven.Event;
 using System.Linq;
+using MongoDB.Bson.Serialization.Conventions;
 
 namespace Rainbow.DomainDriven.Mongo.Framework
 {

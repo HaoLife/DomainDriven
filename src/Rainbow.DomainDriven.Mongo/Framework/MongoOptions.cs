@@ -14,6 +14,5 @@ namespace Rainbow.DomainDriven.Mongo.Framework
         public string EventName { get; set; } = "events";
         public string SubscribeEventName { get; set; } = "subscribes";
 
-        public IDatabaseInitializer DatabaseInitializer { get; set; } = new MongoDatabaseInitializer();
     }
 }

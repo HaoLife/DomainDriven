@@ -25,11 +25,6 @@ namespace Rainbow.DomainDriven.Mongo.Store
         private void ReloadOptions(MongoOptions options)
         {
             Options = options;
-            if (!options.DatabaseInitializer.IsRun)
-            {
-                options.DatabaseInitializer.Initialize();
-            }
-
             var client = new MongoClient(Options.SnapshootConnection);
             var database = client.GetDatabase(Options.EventDbName);
             _collection = database.GetCollection<IEvent>(options.EventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
