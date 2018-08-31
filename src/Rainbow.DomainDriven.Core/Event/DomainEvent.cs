@@ -12,9 +12,9 @@ namespace Rainbow.DomainDriven.Event
         {
         }
         public DomainEvent(EventOperation operation)
-            : this(StringExtension.ToSeqGuid(), operation)
+            : this(DateTime.Now.ToSequenceGuid(), operation)
         {
-            
+
         }
         public DomainEvent(Guid id, EventOperation operation)
         {

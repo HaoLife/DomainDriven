@@ -23,39 +23,39 @@ namespace Rainbow.DomainDriven.Core.Extensions
             return new Guid(result.ToString());
         }
 
-        private static Byte[] _hostNameGuid;
+        private static Byte[] _hostNameBytes;
 
-        private static Byte[] HostNameGuid
+        private static Byte[] HostNameBytes
         {
             get
             {
-                if (_hostNameGuid == null || _hostNameGuid.Length != 7)
+                if (_hostNameBytes == null || _hostNameBytes.Length != 7)
                 {
 
                     var temp = System.Net.Dns.GetHostName().ToGuid().ToByteArray();
-                    _hostNameGuid = temp.Take(7).ToArray();
+                    _hostNameBytes = temp.Take(7).ToArray();
                 }
-                return _hostNameGuid;
+                return _hostNameBytes;
             }
         }
         private static long _seq = 0;
         private static long[] _seqs = new long[2];
 
-        public static Guid ToSeqGuid()
-        {
-            var t = HostNameGuid;
-            var m = BitConverter.GetBytes(DateTime.Now.Ticks);
-            var index = DateTime.Now.Millisecond % 2;
-            var e = (_seqs[index]++) % 128;
-            var s = (byte)(e & 0xFF);
-            byte[] bytes = new byte[16];
-            t.CopyTo(bytes, 0);
-            m.CopyTo(bytes, 7);
-            bytes[15] = s;
-            //重制另一个为0
-            _seqs[(index + 1) % 2] = 0;
-            return new Guid(bytes);
 
+        public static Guid ToSequenceGuid(this DateTime time)
+        {
+            var m = BitConverter.GetBytes(time.Ticks);
+            //位运算 0 or 1 ,这里取ticks的末尾第二位作为随机数
+            var index = (time.Ticks>>1) & 1;
+            //为运算 1111 1111 获取0-255
+            var e = (byte)((_seqs[index]++) & 0xFF);
+            byte[] bytes = new byte[16];
+            HostNameBytes.CopyTo(bytes, 0);
+            m.CopyTo(bytes, 7);
+            bytes[15] = e;
+            //重制另一个为0
+            _seqs[(index + 1) & 1] = 0;
+            return new Guid(bytes);
         }
     }
 }
