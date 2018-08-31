@@ -15,7 +15,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
-    public class RingEventSnapshootHandler : IMessageHandler<IEvent>
+    public class RingEventSnapshootHandler : AbstractBatchMessageHandler<IEvent>
     {
         private static readonly MethodInfo _handleMethod = typeof(RingEventSnapshootHandler).GetMethod(nameof(GetSnapshotStore), BindingFlags.Instance | BindingFlags.NonPublic);
         private ConcurrentDictionary<Type, Func<ISnapshootStore>> _cache = new ConcurrentDictionary<Type, Func<ISnapshootStore>>();
@@ -80,7 +80,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         }
 
 
-        public void Handle(IEvent[] messages)
+        public override void Handle(IEvent[] messages, long endSequence)
         {
 
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();

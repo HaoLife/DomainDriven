@@ -13,7 +13,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
-    public class RingEventBusinessHandler : IMessageHandler<IEvent>
+    public class RingEventBusinessHandler : AbstractBatchMessageHandler<IEvent>
     {
         private readonly ConcurrentDictionary<Type, Action<IEvent>> _cache = new ConcurrentDictionary<Type, Action<IEvent>>();
         private static readonly MethodInfo _handleMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -45,7 +45,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         }
 
 
-        public void Handle(IEvent[] messages)
+        public override void Handle(IEvent[] messages, long endSequence)
         {
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
             if (!messages.Any()) return;

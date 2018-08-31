@@ -10,7 +10,7 @@ using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    class RingCommandCacheHandler : IMessageHandler<ICommand>
+    class RingCommandCacheHandler : AbstractBatchMessageHandler<ICommand>
     {
         private readonly ICommandMappingProvider _commandMappingProvider;
         private readonly IAggregateRootRebuilder _aggregateRootRebuilder;
@@ -37,7 +37,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             return source;
         }
 
-        public void Handle(ICommand[] messages)
+        public override void Handle(ICommand[] messages, long endSequence)
         {
             ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
 

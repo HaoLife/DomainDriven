@@ -13,7 +13,7 @@ using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    public class RingCommandBusinessHandler : IMessageHandler<ICommand>
+    public class RingCommandBusinessHandler : AbstractBatchMessageHandler<ICommand>
     {
 
         private readonly ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>> _cache = new ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>>();
@@ -51,7 +51,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         }
 
-        public void Handle(ICommand[] messages)
+        public override void Handle(ICommand[] messages, long endSequence)
         {
             List<IEvent> evs = new List<IEvent>();
             //回复消息
@@ -121,5 +121,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
             handler.Handle(context, (TCommand)command);
         }
+
     }
 }
