@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Rainbow.DomainDriven.Core.Extensions;
 
 namespace Rainbow.DomainDriven.Event
 {
@@ -11,9 +12,14 @@ namespace Rainbow.DomainDriven.Event
         {
         }
         public DomainEvent(EventOperation operation)
+            : this(StringExtension.ToSeqGuid(), operation)
+        {
+            
+        }
+        public DomainEvent(Guid id, EventOperation operation)
         {
             this.UTCTimestamp = DateTime.Now.ToUniversalTime().Ticks;
-            this.Id = Guid.NewGuid();
+            this.Id = id;
             this.Operation = operation;
         }
 
