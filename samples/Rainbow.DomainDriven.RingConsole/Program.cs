@@ -8,6 +8,9 @@ using Rainbow.DomainDriven.RingConsole.Command;
 using Rainbow.DomainDriven.RingConsole.Mapping;
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Rainbow.DomainDriven.RingConsole
 {
@@ -24,6 +27,8 @@ namespace Rainbow.DomainDriven.RingConsole
             IServiceCollection serviceCollection = new ServiceCollection();
 
             serviceCollection.AddOptions();
+
+            serviceCollection.AddLogging(builder => builder.AddFile(opts => configuration.GetSection("FileLoggingOptions").Bind(opts)));
 
 
 
@@ -49,16 +54,33 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
 
-            var createCommand = new CreateUserCommand()
+            var size = 10000;
+
+            do
             {
-                UserId = Guid.NewGuid(),
-                Name = "nihao 1-1",
-                Sex = 1
+                Task[] tasks = new Task[size];
+                long seq = 0;
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                Console.WriteLine($"开始执行");
+                for (var i = 0; i < size; i++, seq++)
+                {
+                    var createCommand = new CreateUserCommand()
+                    {
+                        UserId = Guid.NewGuid(),
+                        Name = $"nihao 1-{seq}",
+                        Sex = 1
 
-            };
+                    };
 
-            var task = commandBus.Publish(createCommand);
-            task.Wait();
+                    var task = commandBus.Publish(createCommand);
+                    tasks[i] = task;
+                }
+                Task.WaitAll(tasks);
+                var errCount = tasks.Where(a => a.Exception != null).Count();
+                Console.WriteLine($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
+            } while (Console.ReadLine() != "c");
+
 
             Console.WriteLine("Hello World!");
             Console.Read();

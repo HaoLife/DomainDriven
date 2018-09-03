@@ -95,6 +95,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 , replyBus
                 , commandRegister
                 , rootRebuilder
+                , loggerFactory
                 );
             IRingBufferConsumer executorConsumer = new RingBufferConsumer<ICommand>(
                 queue,
@@ -125,7 +126,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 while (_replySequencer.Current < index)
                 {
-                    Thread.Yield();
+                    Thread.Sleep(0);
+                }
+                while (_replyQueue[index].Value == null)
+                {
+                    Thread.Sleep(0);
                 }
                 ReplyMessage message = _replyQueue[index].Value;
                 if (message.CommandId == command.Id)

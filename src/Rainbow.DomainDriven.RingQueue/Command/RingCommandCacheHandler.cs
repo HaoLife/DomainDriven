@@ -22,7 +22,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             IAggregateRootRebuilder aggregateRootRebuilder,
             IContextCache contextCache,
             ILoggerFactory loggerFactory
-        )
+        ) : base(1000)
         {
             this._aggregateRootRebuilder = aggregateRootRebuilder;
             this._contextCache = contextCache;
@@ -41,27 +41,42 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         {
             ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
 
-            foreach (var message in messages)
+            try
             {
-                var mapValue = this._commandMappingProvider.Find(message);
-                foreach (var item in mapValue)
-                    data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
+
+                foreach (var message in messages)
+                {
+                    var mapValue = this._commandMappingProvider.Find(message);
+                    foreach (var item in mapValue)
+                        data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"执行缓存失败: {endSequence - messages.Length + 1} - {endSequence} 错误内容：{ex.Message}", ex);
             }
 
-
-            foreach (var item in data)
+            try
             {
-                var caches = item.Value.Where(a => _contextCache.Exists(item.Key, a)).ToArray();
 
-                var reads = item.Value.Where(a => !_contextCache.Exists(item.Key, a)).ToArray();
-                var aggregateRoots = this._aggregateRootRebuilder.Rebuild(item.Key, reads);
-                foreach (var aggr in aggregateRoots)
-                    this._contextCache.Set(aggr);
+                foreach (var item in data)
+                {
+                    var caches = item.Value.Where(a => _contextCache.Exists(item.Key, a)).ToArray();
 
-                var keys = aggregateRoots.Select(a => a.Id).ToArray();
-                var invalids = reads.Where(a => !keys.Contains(a)).ToList();
-                foreach (var invalid in invalids)
-                    this._contextCache.Set(item.Key, invalid, null);
+                    var reads = item.Value.Where(a => !_contextCache.Exists(item.Key, a)).ToArray();
+                    var aggregateRoots = this._aggregateRootRebuilder.Rebuild(item.Key, reads);
+                    foreach (var aggr in aggregateRoots)
+                        this._contextCache.Set(aggr);
+
+                    var keys = aggregateRoots.Select(a => a.Id).ToArray();
+                    var invalids = reads.Where(a => !keys.Contains(a)).ToList();
+                    foreach (var invalid in invalids)
+                        this._contextCache.Set(item.Key, invalid, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"存储缓存失败: {endSequence - messages.Length + 1} - {endSequence} 错误内容：{ex.Message}", ex);
             }
         }
 

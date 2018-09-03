@@ -10,6 +10,7 @@ using System.Text;
 using System.Linq;
 using Rainbow.DomainDriven.Store;
 using Rainbow.DomainDriven.Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
@@ -28,6 +29,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         private ICommandRegister _commandRegister;
         private IAggregateRootRebuilder _aggregateRootRebuilder;
+        private ILogger _logger;
 
 
         public RingCommandBusinessHandler(
@@ -37,7 +39,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             , IEventBus eventBus
             , IReplyBus replyBus
             , ICommandRegister commandRegister
-            , IAggregateRootRebuilder aggregateRootRebuilder)
+            , IAggregateRootRebuilder aggregateRootRebuilder
+            , ILoggerFactory loggerFactory)
+            : base(1000)
         {
             this.context = new RingCommandContext(contextCache, aggregateRootRebuilder);
             this._contextCache = contextCache;
@@ -47,18 +51,22 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._replyBus = replyBus;
             this._commandRegister = commandRegister;
             this._aggregateRootRebuilder = aggregateRootRebuilder;
+            this._logger = loggerFactory.CreateLogger<RingCommandBusinessHandler>();
 
 
         }
 
         public override void Handle(ICommand[] messages, long endSequence)
         {
+            //Console.WriteLine($"执行序列：{endSequence}");
             List<IEvent> evs = new List<IEvent>();
             //回复消息
             List<ReplyMessage> replys = new List<ReplyMessage>();
+            var seq = endSequence - messages.Length + 1;
 
-            foreach (var message in messages)
+            for (int i = 0; i < messages.Length; i++)
             {
+                var message = messages[i];
                 try
                 {
                     var call = _cache.GetOrAdd(
@@ -81,14 +89,14 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                     var unEvts = context.TrackedAggregateRoots.SelectMany(p => p.UncommittedEvents);
                     evs.AddRange(unEvts);
                     //加入回复消息
-                    replys.Add(new ReplyMessage(message.Id));
+                    replys.Add(new ReplyMessage(message.Id) { Seq = seq + i });
 
                 }
                 catch (Exception ex)
                 {
                     //加入错误回复消息
                     //清空上下文，移除缓存
-                    replys.Add(new ReplyMessage(message.Id, ex));
+                    replys.Add(new ReplyMessage(message.Id, ex) { Seq = seq });
                     //如果聚合根中包含有创建的事件，则该聚合根可直接删除。
                     var emptyRoots = context.TrackedAggregateRoots.Where(a => a.UncommittedEvents.Count() == 0);
                     var clearRoots = context.TrackedAggregateRoots.Except(emptyRoots);
@@ -106,10 +114,35 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             //存储事件
             //发送消息到消息总线
             //发送回复消息
-            _eventStore.AddRange(evs);
-            _eventBus.Publish(evs.ToArray());
-            _replyBus.Publish(replys.ToArray());
+            try
+            {
+                _eventStore.AddRange(evs);
+            }
+            catch (Exception ex)
+            {
+                replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                _logger.LogError($"存储事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+            }
 
+            try
+            {
+                //todo:如果数量超过消息队列的最大值，会一直等待
+                _eventBus.Publish(evs.ToArray());
+
+            }
+            catch (Exception ex)
+            {
+                replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                _logger.LogError($"推送事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+            }
+            try
+            {
+                _replyBus.Publish(replys.ToArray());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"事件通知失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+            }
 
         }
 

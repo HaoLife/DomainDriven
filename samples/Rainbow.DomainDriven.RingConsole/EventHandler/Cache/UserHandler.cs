@@ -20,9 +20,9 @@ namespace Rainbow.DomainDriven.RingConsole.EventHandler.Cache
         }
         public void Handle(CreatedEvent evt)
         {
-            var user = this._snapshootQuery.FirstOrDefault(a => a.Id == evt.AggregateRootId);
-            Console.WriteLine($"执行变更缓存业务,更新用户:id:{user.Id} ,name:{user.Name} ,sex:{user.Sex}");
-            throw new Exception("测试一个异常");
+            //var user = this._snapshootQuery.FirstOrDefault(a => a.Id == evt.AggregateRootId);
+            //Console.WriteLine($"执行变更缓存业务,更新用户:id:{user.Id} ,name:{user.Name} ,sex:{user.Sex}");
+            //throw new Exception("测试一个异常");
         }
     }
 }

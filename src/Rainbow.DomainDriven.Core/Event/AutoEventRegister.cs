@@ -37,7 +37,7 @@ namespace Rainbow.DomainDriven.Event
 
             foreach (var handlerInterface in handlerInterfaceTypes)
             {
-                var types = this._cacheEventHandler.GetOrAdd(handlerInterface, new List<Type>());
+                var types = this._cacheEventHandler.GetOrAdd(handlerInterface.GetGenericArguments().FirstOrDefault(), new List<Type>());
                 types.Add(handlerType);
             }
         }

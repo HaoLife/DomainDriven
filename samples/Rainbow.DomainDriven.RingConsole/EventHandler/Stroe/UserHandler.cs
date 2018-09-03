@@ -12,21 +12,17 @@ namespace Rainbow.DomainDriven.RingConsole.EventHandler.Stroe
     public class UserHandler : IEventHandler<CreatedEvent>
     {
         private readonly ISnapshootQuery<User> _snapshootQuery;
-        private readonly IDbConnection _connection;
 
         //1.获取聚合跟仓库
         //2.获取存储仓库
         public UserHandler(
-            ISnapshootQueryFactory snapshootQueryFactory
-            , IDbConnection connection)
+            ISnapshootQueryFactory snapshootQueryFactory)
         {
             _snapshootQuery = snapshootQueryFactory.Create<User>();
-            this._connection = connection;
         }
         public void Handle(CreatedEvent evt)
         {
-            var user = this._snapshootQuery.FirstOrDefault(a => a.Id == evt.AggregateRootId);
-            this._connection.Execute("insert into [User] ([Id],[Name],[Sex]) values(@Id,@Name,@Sex)", user);
+
         }
     }
 }
