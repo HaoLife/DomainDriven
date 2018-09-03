@@ -168,8 +168,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
                 //存储快照
                 TryAction(list => snapshootStore.Add(list), addeds);
-                TryAction(list => snapshootStore.Add(list), removed);
-                TryAction(list => snapshootStore.Add(list), updated);
+                TryAction(list => snapshootStore.Remove(list), removed);
+                TryAction(list => snapshootStore.Update(list), updated);
 
 
             }
@@ -199,7 +199,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
         }
 
-        private void TryAction(Action<IAggregateRoot[]> call, IAggregateRoot[] roots, int retry = 0)
+        private void TryAction(Action<IAggregateRoot[]> call, IAggregateRoot[] roots, int retry = 1)
         {
             try
             {
@@ -208,7 +208,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
             catch (Exception ex)
             {
-                _logger.LogError($"执行存储快照失败,重试次数{retry}", ex);
+                _logger.LogError($"执行存储快照失败,重试次数{retry} - {ex.Message}", ex);
                 if (retry >= 3)
                     TryAction(call, roots, retry + 1);
             }

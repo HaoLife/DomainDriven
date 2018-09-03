@@ -28,7 +28,12 @@ namespace Rainbow.DomainDriven.RingConsole
 
             serviceCollection.AddOptions();
 
-            serviceCollection.AddLogging(builder => builder.AddFile(opts => configuration.GetSection("FileLoggingOptions").Bind(opts)));
+            serviceCollection.AddLogging(builder =>
+                builder
+                    .AddFile(opts => configuration.GetSection("FileLoggingOptions").Bind(opts))
+                    .AddConsole()
+            
+            );
 
 
 
@@ -79,8 +84,8 @@ namespace Rainbow.DomainDriven.RingConsole
                 Task.WaitAll(tasks);
                 var errCount = tasks.Where(a => a.Exception != null).Count();
                 Console.WriteLine($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
-            } while (Console.ReadLine() != "c");
-
+                //} while (Console.ReadLine() != "c");
+            } while (true);
 
             Console.WriteLine("Hello World!");
             Console.Read();

@@ -128,10 +128,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 {
                     Thread.Sleep(0);
                 }
-                while (_replyQueue[index].Value == null)
-                {
-                    Thread.Sleep(0);
-                }
                 ReplyMessage message = _replyQueue[index].Value;
                 if (message.CommandId == command.Id)
                 {

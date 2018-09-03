@@ -15,6 +15,8 @@ namespace Rainbow.DomainDriven.Extensions
     {
         public static IDomainBuilder AddDomainCore(this IDomainBuilder builder)
         {
+            builder.Services.AddLogging();
+
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<IAssemblyProvider, AssemblyProvider>()
                 .AddSingleton<IEventRebuildHandler, EventRebuildHandler>()

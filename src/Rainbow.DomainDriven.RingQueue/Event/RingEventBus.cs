@@ -12,6 +12,7 @@ using Rainbow.DomainDriven.Store;
 using Rainbow.DomainDriven.Infrastructure;
 using System.Threading.Tasks;
 using Rainbow.DomainDriven.Domain;
+using System.Linq;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -97,6 +98,17 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public void Publish(IEvent[] events)
         {
+            if (events.Length > _handleQueue.Size)
+            {
+                SplitPublish(events);
+                return;
+            }
+            AllPublish(events);
+
+        }
+
+        private void AllPublish(IEvent[] events)
+        {
             var seq = _handleQueue.Next(events.Length);
             var index = seq - events.Length + 1;
             var start = index;
@@ -106,7 +118,20 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 _handleQueue.Publish(index);
                 index++;
             }
+        }
 
+        private void SplitPublish(IEvent[] events)
+        {
+            int skip = 0;
+            int take = _handleQueue.Size / 2;
+            IEvent[] evs = events.Skip(skip).Take(take).ToArray();
+            do
+            {
+                AllPublish(evs);
+                skip += evs.Length;
+                evs = events.Skip(skip).Take(take).ToArray();
+
+            } while (evs.Length > 0);
         }
     }
 }
