@@ -59,7 +59,7 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
 
-            var size = 10000;
+            var size = 1;
 
             do
             {
