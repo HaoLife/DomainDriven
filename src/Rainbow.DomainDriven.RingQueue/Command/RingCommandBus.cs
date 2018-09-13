@@ -126,7 +126,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 while (_replySequencer.Current < index)
                 {
-                    Thread.Sleep(0);
+                    //休眠10毫秒，这样cpu的利用率可以降低
+                    Thread.Sleep(10);
                 }
                 ReplyMessage message = _replyQueue[index].Value;
                 if (message.CommandId == command.Id)
