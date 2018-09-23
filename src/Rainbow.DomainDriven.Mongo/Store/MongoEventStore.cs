@@ -57,7 +57,14 @@ namespace Rainbow.DomainDriven.Mongo.Store
 
         public IEnumerable<IEvent> GetAggregateRootEvents(Guid aggregateRootId, string aggregateRootTypeName, int version = 0)
         {
-            return _collection.Find(a => a.AggregateRootId == aggregateRootId && a.AggregateRootTypeName == aggregateRootTypeName && a.Version > version).ToList();
+            var filter = Builders<IEvent>.Filter;
+            var query = filter.And(
+                filter.Eq(nameof(IEvent.AggregateRootId), aggregateRootId)
+                ,filter.Eq(nameof(IEvent.AggregateRootTypeName), aggregateRootTypeName)
+                , filter.Gt(nameof(IEvent.Version), version)
+                );
+
+            return _collection.Find(query).ToList();
         }
 
         public List<IEvent> Take(int size, long utcTimestamp = 0)
