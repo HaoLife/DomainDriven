@@ -114,27 +114,33 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             //存储事件
             //发送消息到消息总线
             //发送回复消息
-            try
+
+            if (evs != null && evs.Any())
             {
-                _eventStore.AddRange(evs);
-            }
-            catch (Exception ex)
-            {
-                replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
-                _logger.LogError($"存储事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+
+                try
+                {
+                    _eventStore.AddRange(evs);
+                }
+                catch (Exception ex)
+                {
+                    replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                    _logger.LogError($"存储事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+                }
+
+                try
+                {
+                    //todo:如果数量超过消息队列的最大值，会一直等待
+                    _eventBus.Publish(evs.ToArray());
+
+                }
+                catch (Exception ex)
+                {
+                    replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                    _logger.LogError($"推送事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
+                }
             }
 
-            try
-            {
-                //todo:如果数量超过消息队列的最大值，会一直等待
-                _eventBus.Publish(evs.ToArray());
-
-            }
-            catch (Exception ex)
-            {
-                replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
-                _logger.LogError($"推送事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
-            }
             try
             {
                 _replyBus.Publish(replys.ToArray());
@@ -143,6 +149,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 _logger.LogError($"事件通知失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
             }
+
 
         }
 
