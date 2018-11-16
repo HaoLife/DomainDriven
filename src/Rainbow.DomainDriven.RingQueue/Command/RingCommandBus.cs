@@ -114,7 +114,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             _handleQueue[index].Value = msg;
             _handleQueue.Publish(index);
 
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 msg.Notice.WaitOne();
                 _logger.LogDebug($"等待完成:{index} - {command.Id}");

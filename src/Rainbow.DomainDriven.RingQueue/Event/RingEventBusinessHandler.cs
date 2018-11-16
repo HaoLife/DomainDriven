@@ -88,8 +88,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private void HandleEvent<TEvent>(IEvent evt) where TEvent : IEvent
         {
             var types = _eventRegister.FindHandlerType<TEvent>();
-            //这里可以启用并行线程了，因为command的等待减少了cpu的使用率
-            types.AsParallel().ForAll(a =>
+            //去除并行线程，使用并行线程在task使用量大的情况下会出现死锁
+            foreach (var a in types)
             {
                 try
                 {
@@ -99,7 +99,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 {
                     _logger.LogError($"执行事件类型[{a.FullName}]异常,事件id:{evt.Id}", ex);
                 }
-            });
+            }
         }
     }
 }

@@ -81,7 +81,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                         });
 
                     call(context, message);
-                    _logger.LogDebug($"执行命令seq:{endSequence + 1 - messages.Length + i}");
 
                     var unEvts = context.TrackedAggregateRoots.SelectMany(p => p.UncommittedEvents);
                     evs.AddRange(unEvts);

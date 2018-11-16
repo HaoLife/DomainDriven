@@ -59,8 +59,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
 
 
-            IWaitStrategy wait = new SpinWaitStrategy2(_logger);
-            MultiSequencer2 sequencer = new MultiSequencer2(size, wait);
+            IWaitStrategy wait = new SpinWaitStrategy();
+            MultiSequencer sequencer = new MultiSequencer(size, wait);
             RingBuffer<IEvent> queue = new RingBuffer<IEvent>(sequencer);
             var barrier = queue.NewBarrier();
 
@@ -71,7 +71,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 , subscribeEventStore
                 , memoryCache
                 , loggerFactory);
-            IRingBufferConsumer snapshootConsumer = new RingBufferConsumer2<IEvent>(
+            IRingBufferConsumer snapshootConsumer = new RingBufferConsumer<IEvent>(
                 queue,
                 barrier,
                 snapshootHandler);
@@ -85,7 +85,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 , eventHandlerFactory
                 , subscribeEventStore
                 , loggerFactory);
-            IRingBufferConsumer executorConsumer = new RingBufferConsumer3<IEvent>(
+            IRingBufferConsumer executorConsumer = new RingBufferConsumer<IEvent>(
                 queue,
                 barrier,
                 executorHandler);
@@ -101,7 +101,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public void Publish(IEvent[] events)
         {
-            _logger.LogInformation($"发送事件:{events.Length}");
+            _logger.LogDebug($"发送事件:{events.Length}");
             if (events.Length > _handleQueue.Size)
             {
                 SplitPublish(events);
@@ -131,7 +131,6 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             IEvent[] evs = events.Skip(skip).Take(take).ToArray();
             do
             {
-                _logger.LogDebug($"发送分批:{take} - skip:{skip} - {events.Length}");
                 AllPublish(evs);
                 skip += evs.Length;
                 evs = events.Skip(skip).Take(take).ToArray();
@@ -141,305 +140,4 @@ namespace Rainbow.DomainDriven.RingQueue.Event
     }
 
 
-
-    public class SpinWaitStrategy2 : IWaitStrategy
-    {
-        private ILogger _logger;
-        public SpinWaitStrategy2(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public long WaitFor(long sequence, ISequence cursor, ISequence dependentSequence, ISequenceBarrier barrier)
-        {
-            System.Threading.SpinWait spinWait = default(System.Threading.SpinWait);
-            long value;
-            while ((value = dependentSequence.Value) < sequence)
-            {
-                barrier.CheckAlert();
-                spinWait.SpinOnce();
-            }
-            _logger.LogDebug($"sequence:{sequence} -{dependentSequence.Value}");
-            return value;
-        }
-    }
-
-
-    public class MultiSequencer2 : Sequencer
-    {
-
-        //队列使用情况标记，每过一轮+1
-        private readonly int[] _availableBuffer;
-        //队列最大可存储值下标
-        private readonly int _indexMask;
-        //位移数量值，如1移1位，2移2位，4移3位，8移4位以此类推
-        private readonly int _indexShift;
-        //消费者最小消费的序列缓存值
-        private Sequence _sequenceCache = new Sequence();
-
-        public MultiSequencer2(int bufferSize, IWaitStrategy waitStrategy)
-            : base(bufferSize, waitStrategy)
-        {
-            this._availableBuffer = new int[bufferSize];
-            this._indexMask = bufferSize - 1;
-            this._indexShift = Util.Log2(bufferSize);
-            InitialiseAvailableBuffer();
-        }
-
-        #region 私有方法
-
-
-        private void InitialiseAvailableBuffer()
-        {
-            for (int i = _availableBuffer.Length - 1; i != 0; i--)
-            {
-                SetAvailableBufferValue(i, -1);
-            }
-
-            SetAvailableBufferValue(0, -1);
-
-        }
-
-
-        private int CalculateIndex(long sequence)
-        {
-            return ((int)sequence) & _indexMask;
-        }
-
-        private int CalculateAvailabilityFlag(long sequence)
-        {
-            return (int)((ulong)sequence >> _indexShift);
-        }
-
-        private void SetAvailableBufferValue(int index, int flag)
-        {
-            _availableBuffer[index] = flag;
-        }
-
-        private void SetAvailable(long sequence)
-        {
-            SetAvailableBufferValue(CalculateIndex(sequence), CalculateAvailabilityFlag(sequence));
-        }
-
-        private bool IsAvailable(long sequence)
-        {
-            int index = CalculateIndex(sequence);
-            int flag = CalculateAvailabilityFlag(sequence);
-            return Volatile.Read(ref _availableBuffer[index]) == flag;
-        }
-        #endregion
-
-        public override long Next()
-        {
-            return Next(1);
-        }
-
-        public override long Next(int n)
-        {
-
-            if (n < 1)
-            {
-                throw new ArgumentException("n must be > 0");
-            }
-
-            long current;
-            long next;
-
-            var spinWait = new SpinWait();
-            do
-            {
-                current = _sequence.Value;
-                next = current + n;
-
-                long offsetSequence = next - _bufferSize;
-                long cachedGatingSequence = _sequenceCache.Value;
-
-                //获取队列长度与当前处理值比较，如果没有超过，为可用
-                if (offsetSequence > cachedGatingSequence || cachedGatingSequence > current)
-                {
-                    //询问消费者已经处理的最小的序列是多少，并进行设置
-                    long gatingSequence = Util.GetMinimum(this._gatingSequences, current);
-
-                    if (offsetSequence > gatingSequence)
-                    {
-                        spinWait.SpinOnce();
-                        continue;
-                    }
-
-                    _sequenceCache.SetValue(gatingSequence);
-                }
-                else if (_sequence.CompareAndSet(current, next))
-                {
-                    break;
-                }
-            }
-            while (true);
-
-            return next;
-        }
-
-        public override void Publish(long sequence)
-        {
-            SetAvailable(sequence);
-        }
-
-        public override void Publish(long lo, long hi)
-        {
-            for (long l = lo; l <= hi; l++)
-            {
-                SetAvailable(l);
-            }
-        }
-
-        public override long GetAvailableSequence(long lo, long hi)
-        {
-            for (long sequence = lo; sequence <= hi; sequence++)
-            {
-                if (!IsAvailable(sequence))
-                {
-                    return sequence - 1;
-                }
-            }
-
-            return hi;
-        }
-
-    }
-
-
-    public class RingBufferConsumer2<TMessage> : IRingBufferConsumer
-    {
-
-        private volatile int _running;
-        private readonly IRingBuffer<TMessage> _messageBuffer;
-        private readonly ISequenceBarrier _sequenceBarrier;
-        private readonly IMessageHandler<TMessage> _batchMessageHandler;
-        private Sequence _current = new Sequence();
-
-        public RingBufferConsumer2(
-            IRingBuffer<TMessage> messageQueue,
-            ISequenceBarrier sequenceBarrier,
-            IMessageHandler<TMessage> batchMessageHandler)
-        {
-            this._messageBuffer = messageQueue;
-            this._sequenceBarrier = sequenceBarrier;
-            this._batchMessageHandler = batchMessageHandler;
-        }
-
-        public Sequence Sequence => _current;
-
-        public bool IsRunning => this._running == 1;
-
-        public void Halt()
-        {
-            _running = 0;
-            _sequenceBarrier.Alert();
-        }
-        public void Run()
-        {
-            if (Interlocked.Exchange(ref _running, 1) != 0)
-            {
-                throw new InvalidOperationException("Thread is already running");
-            }
-
-            _sequenceBarrier.ClearAlert();
-            var nextSequence = _current.Value + 1L;
-
-            while (true)
-            {
-                try
-                {
-                    var availableSequence = _sequenceBarrier.WaitFor(nextSequence);
-
-                    while (nextSequence <= availableSequence)
-                    {
-                        this._batchMessageHandler.Handle(_messageBuffer[nextSequence].Value, nextSequence, nextSequence == availableSequence);
-                        nextSequence++;
-                    }
-
-                    _current.SetValue(availableSequence);
-                }
-                catch (AlertException)
-                {
-                    if (_running == 0)
-                    {
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _current.SetValue(nextSequence);
-                    nextSequence++;
-                }
-            }
-        }
-    }
-
-    public class RingBufferConsumer3<TMessage> : IRingBufferConsumer
-    {
-
-        private volatile int _running;
-        private readonly IRingBuffer<TMessage> _messageBuffer;
-        private readonly ISequenceBarrier _sequenceBarrier;
-        private readonly IMessageHandler<TMessage> _batchMessageHandler;
-        private Sequence _current = new Sequence();
-
-        public RingBufferConsumer3(
-            IRingBuffer<TMessage> messageQueue,
-            ISequenceBarrier sequenceBarrier,
-            IMessageHandler<TMessage> batchMessageHandler)
-        {
-            this._messageBuffer = messageQueue;
-            this._sequenceBarrier = sequenceBarrier;
-            this._batchMessageHandler = batchMessageHandler;
-        }
-
-        public Sequence Sequence => _current;
-
-        public bool IsRunning => this._running == 1;
-
-        public void Halt()
-        {
-            _running = 0;
-            _sequenceBarrier.Alert();
-        }
-        public void Run()
-        {
-            if (Interlocked.Exchange(ref _running, 1) != 0)
-            {
-                throw new InvalidOperationException("Thread is already running");
-            }
-
-            _sequenceBarrier.ClearAlert();
-            var nextSequence = _current.Value + 1L;
-
-            while (true)
-            {
-                try
-                {
-                    var availableSequence = _sequenceBarrier.WaitFor(nextSequence);
-
-                    while (nextSequence <= availableSequence)
-                    {
-                        this._batchMessageHandler.Handle(_messageBuffer[nextSequence].Value, nextSequence, nextSequence == availableSequence);
-                        nextSequence++;
-                    }
-
-                    _current.SetValue(availableSequence);
-                }
-                catch (AlertException)
-                {
-                    if (_running == 0)
-                    {
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _current.SetValue(nextSequence);
-                    nextSequence++;
-                }
-            }
-        }
-    }
 }
