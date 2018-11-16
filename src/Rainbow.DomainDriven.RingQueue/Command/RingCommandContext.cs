@@ -42,10 +42,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var aggregate = default(TAggregateRoot);
             aggregate = this._unNoticeRoots.Find(p => p.Id == id) as TAggregateRoot;
 
-            if (aggregate == null)
+            if (aggregate == null && this._contextCache.Exists<TAggregateRoot>(id))
             {
-                if (this._contextCache.Exists<TAggregateRoot>(id)) return aggregate;
-
                 aggregate = this._contextCache.Get<TAggregateRoot>(id);
             }
 
