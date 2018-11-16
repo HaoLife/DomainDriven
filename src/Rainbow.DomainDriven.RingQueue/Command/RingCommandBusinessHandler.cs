@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    public class RingCommandBusinessHandler : AbstractBatchMessageHandler<ICommand>
+    public class RingCommandBusinessHandler : AbstractBatchMessageHandler<CommandMessage>
     {
 
         private readonly ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>> _cache = new ConcurrentDictionary<Type, Action<RingCommandContext, ICommand>>();
@@ -25,7 +25,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private ICommandHandlerFactory _commandHandlerFactory;
         private IEventStore _eventStore;
         private IEventBus _eventBus;
-        private IReplyBus _replyBus;
 
         private ICommandRegister _commandRegister;
         private IAggregateRootRebuilder _aggregateRootRebuilder;
@@ -37,7 +36,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             , ICommandHandlerFactory commandHandlerFactory
             , IEventStore eventStore
             , IEventBus eventBus
-            , IReplyBus replyBus
             , ICommandRegister commandRegister
             , IAggregateRootRebuilder aggregateRootRebuilder
             , ILoggerFactory loggerFactory)
@@ -48,7 +46,6 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             this._commandHandlerFactory = commandHandlerFactory;
             this._eventStore = eventStore;
             this._eventBus = eventBus;
-            this._replyBus = replyBus;
             this._commandRegister = commandRegister;
             this._aggregateRootRebuilder = aggregateRootRebuilder;
             this._logger = loggerFactory.CreateLogger<RingCommandBusinessHandler>();
@@ -56,17 +53,16 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         }
 
-        public override void Handle(ICommand[] messages, long endSequence)
+        public override void Handle(CommandMessage[] messages, long endSequence)
         {
-            //Console.WriteLine($"执行序列：{endSequence}");
             List<IEvent> evs = new List<IEvent>();
             //回复消息
-            List<ReplyMessage> replys = new List<ReplyMessage>();
+            ReplyMessage[] replys = new ReplyMessage[messages.Length];
             var seq = endSequence - messages.Length + 1;
 
             for (int i = 0; i < messages.Length; i++)
             {
-                var message = messages[i];
+                var message = messages[i].Cmd;
                 try
                 {
                     var call = _cache.GetOrAdd(
@@ -85,18 +81,20 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                         });
 
                     call(context, message);
+                    _logger.LogDebug($"执行命令seq:{endSequence + 1 - messages.Length + i}");
 
                     var unEvts = context.TrackedAggregateRoots.SelectMany(p => p.UncommittedEvents);
                     evs.AddRange(unEvts);
                     //加入回复消息
-                    replys.Add(new ReplyMessage(message.Id) { Seq = seq + i });
+                    replys[i] = new ReplyMessage(message.Id) { Seq = seq + i };
 
                 }
                 catch (Exception ex)
                 {
                     //加入错误回复消息
                     //清空上下文，移除缓存
-                    replys.Add(new ReplyMessage(message.Id, ex) { Seq = seq });
+                    replys[i] = new ReplyMessage(message.Id, ex) { Seq = seq };
+
                     //如果聚合根中包含有创建的事件，则该聚合根可直接删除。
                     var emptyRoots = context.TrackedAggregateRoots.Where(a => a.UncommittedEvents.Count() == 0);
                     var clearRoots = context.TrackedAggregateRoots.Except(emptyRoots);
@@ -124,7 +122,12 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 }
                 catch (Exception ex)
                 {
-                    replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                    foreach (var item in replys)
+                    {
+                        item.Exception = ex;
+                        item.IsSuccess = false;
+                    }
+
                     _logger.LogError($"存储事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
                 }
 
@@ -136,14 +139,22 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 }
                 catch (Exception ex)
                 {
-                    replys.ForEach(a => { a.Exception = ex; a.IsSuccess = false; });
+                    foreach (var item in replys)
+                    {
+                        item.Exception = ex;
+                        item.IsSuccess = false;
+                    }
                     _logger.LogError($"推送事件失败 序号： {seq} - {endSequence} 错误消息：{ex.Message}", ex);
                 }
             }
 
             try
             {
-                _replyBus.Publish(replys.ToArray());
+                for (int i = 0; i < messages.Length; i++)
+                {
+                    messages[i].Reply = replys[i];
+                    messages[i].Notice.Set();
+                }
             }
             catch (Exception ex)
             {

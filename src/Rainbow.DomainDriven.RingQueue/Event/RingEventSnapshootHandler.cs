@@ -82,6 +82,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public override void Handle(IEvent[] messages, long endSequence)
         {
+            _logger.LogInformation($"回溯事件:{messages.Length}");
 
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
             if (!messages.Any()) return;
@@ -208,7 +209,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
             catch (Exception ex)
             {
-                _logger.LogError($"执行存储快照失败,重试次数{retry} - {ex.Message}", ex);
+                _logger.LogError(ex, $"执行存储快照失败,重试次数{retry} - {ex.Message}");
                 if (retry >= 3)
                     TryAction(call, roots, retry + 1);
             }

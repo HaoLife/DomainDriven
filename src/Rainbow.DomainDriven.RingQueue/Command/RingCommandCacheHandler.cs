@@ -10,7 +10,7 @@ using Rainbow.DomainDriven.Domain;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
-    class RingCommandCacheHandler : AbstractBatchMessageHandler<ICommand>
+    class RingCommandCacheHandler : AbstractBatchMessageHandler<CommandMessage>
     {
         private readonly ICommandMappingProvider _commandMappingProvider;
         private readonly IAggregateRootRebuilder _aggregateRootRebuilder;
@@ -37,7 +37,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             return source;
         }
 
-        public override void Handle(ICommand[] messages, long endSequence)
+        public override void Handle(CommandMessage[] messages, long endSequence)
         {
             ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
 
@@ -46,7 +46,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
                 foreach (var message in messages)
                 {
-                    var mapValue = this._commandMappingProvider.Find(message);
+                    var mapValue = this._commandMappingProvider.Find(message.Cmd);
                     foreach (var item in mapValue)
                         data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
                 }

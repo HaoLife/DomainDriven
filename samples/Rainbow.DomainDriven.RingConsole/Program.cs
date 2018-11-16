@@ -30,9 +30,10 @@ namespace Rainbow.DomainDriven.RingConsole
 
             serviceCollection.AddLogging(builder =>
                 builder
+                    .AddConfiguration(configuration.GetSection("Logging"))
                     .AddFile(opts => configuration.GetSection("FileLoggingOptions").Bind(opts))
                     .AddConsole()
-            
+
             );
 
 
@@ -58,8 +59,11 @@ namespace Rainbow.DomainDriven.RingConsole
             eventRebuildInitializer.Initialize();
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
+            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
 
-            var size = 1;
+            var logger = loggerFactory.CreateLogger<Program>();
+
+            var size = 10000;
 
             do
             {
@@ -67,7 +71,7 @@ namespace Rainbow.DomainDriven.RingConsole
                 long seq = 0;
                 System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
-                Console.WriteLine($"开始执行");
+                logger.LogDebug("开始执行");
                 for (var i = 0; i < size; i++, seq++)
                 {
                     var createCommand = new CreateUserCommand()
@@ -80,10 +84,11 @@ namespace Rainbow.DomainDriven.RingConsole
 
                     var task = commandBus.Publish(createCommand);
                     tasks[i] = task;
+                    //tasks[i] = Task.FromResult(true);
                 }
                 Task.WaitAll(tasks);
                 var errCount = tasks.Where(a => a.Exception != null).Count();
-                Console.WriteLine($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
+                logger.LogDebug($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
                 //} while (Console.ReadLine() != "c");
             } while (true);
 

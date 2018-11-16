@@ -22,9 +22,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private RingOptions _options;
         private IDisposable _optionsReloadToken;
         private List<IRingBufferConsumer> consumers = new List<IRingBufferConsumer>();
-        private RingBuffer<ICommand> _handleQueue;
-        private RingBuffer<ReplyMessage> _replyQueue;
-        private SingleSequencer _replySequencer;
+        private RingBuffer<CommandMessage> _handleQueue;
+        private ILogger _logger;
 
 
         public RingCommandBus(IOptionsMonitor<RingOptions> options, IServiceProvider provider)
@@ -32,6 +31,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             _provider = provider;
             _optionsReloadToken = options.OnChange(ReloadOptions);
             ReloadOptions(options.CurrentValue);
+            _logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<RingCommandBus>();
         }
 
         private void ReloadOptions(RingOptions options)
@@ -58,15 +58,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var size = _options.CommandQueueSize;
 
 
-            IWaitStrategy replyWait = new SpinWaitStrategy();
-            SingleSequencer replySequencer = new SingleSequencer(size, replyWait);
-            RingBuffer<ReplyMessage> replyQueue = new RingBuffer<ReplyMessage>(replySequencer);
-            var replyBus = new SequenceReplyBus(replyQueue);
-
-
             IWaitStrategy wait = new SpinWaitStrategy();
             MultiSequencer sequencer = new MultiSequencer(size, wait);
-            RingBuffer<ICommand> queue = new RingBuffer<ICommand>(sequencer);
+            RingBuffer<CommandMessage> queue = new RingBuffer<CommandMessage>(sequencer);
             var barrier = queue.NewBarrier();
 
             var commandMappingProvider = _provider.GetService<ICommandMappingProvider>();
@@ -77,7 +71,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                     , rootRebuilder
                     , contextCache
                     , loggerFactory);
-                IRingBufferConsumer cacheConsumer = new RingBufferConsumer<ICommand>(
+                IRingBufferConsumer cacheConsumer = new RingBufferConsumer<CommandMessage>(
                     queue,
                     barrier,
                     cacheHandler);
@@ -92,12 +86,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 , commandHandlerFactory
                 , eventStore
                 , eventBus
-                , replyBus
                 , commandRegister
                 , rootRebuilder
                 , loggerFactory
                 );
-            IRingBufferConsumer executorConsumer = new RingBufferConsumer<ICommand>(
+            IRingBufferConsumer executorConsumer = new RingBufferConsumer<CommandMessage>(
                 queue,
                 barrier,
                 executorHandler);
@@ -111,25 +104,21 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
 
             _handleQueue = queue;
-            _replyQueue = replyQueue;
-            _replySequencer = replySequencer;
         }
 
 
         public Task Publish(ICommand command)
         {
+            var msg = new CommandMessage(command);
             var index = _handleQueue.Next();
-            _handleQueue[index].Value = command;
+            _handleQueue[index].Value = msg;
             _handleQueue.Publish(index);
 
-            return Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
-                while (_replySequencer.Current < index)
-                {
-                    //休眠10毫秒，这样cpu的利用率可以降低
-                    Thread.Sleep(10);
-                }
-                ReplyMessage message = _replyQueue[index].Value;
+                msg.Notice.WaitOne();
+                _logger.LogDebug($"等待完成:{index} - {command.Id}");
+                ReplyMessage message = msg.Reply;
                 if (message.CommandId == command.Id)
                 {
                     if (!message.IsSuccess) throw message.Exception;

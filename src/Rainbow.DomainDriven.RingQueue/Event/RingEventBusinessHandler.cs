@@ -47,6 +47,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         public override void Handle(IEvent[] messages, long endSequence)
         {
+            _logger.LogInformation($"执行事件:{messages.Length}");
+
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
             if (!messages.Any()) return;
 
