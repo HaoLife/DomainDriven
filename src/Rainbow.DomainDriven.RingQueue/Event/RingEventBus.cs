@@ -49,7 +49,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var snapshootStoreFactory = _provider.GetRequiredService<ISnapshootStoreFactory>();
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
             var eventHandlerFactory = _provider.GetRequiredService<IEventHandlerFactory>();
-            var memoryCache = _provider.GetRequiredService<IMemoryCache>();
+            //var memoryCache = _provider.GetRequiredService<IMemoryCache>();
+            var snapshootCache = _provider.GetRequiredService<ISnapshootCache>();
             var eventRegister = _provider.GetRequiredService<IEventRegister>();
             var assemblyProvider = _provider.GetRequiredService<IAssemblyProvider>();
             var eventRebuildHandler = _provider.GetRequiredService<IEventRebuildHandler>();
@@ -69,7 +70,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 , snapshootStoreFactory
                 , eventRebuildHandler
                 , subscribeEventStore
-                , memoryCache
+                , snapshootCache
                 , loggerFactory);
             IRingBufferConsumer snapshootConsumer = new RingBufferConsumer<IEvent>(
                 queue,
