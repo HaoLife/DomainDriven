@@ -10,5 +10,8 @@ namespace Rainbow.DomainDriven.Store
         ISnapshootStore<TAggregateRoot> CreateOfT<TAggregateRoot>() where TAggregateRoot : IAggregateRoot;
 
         ISnapshootStore Create<TAggregateRoot>() where TAggregateRoot : IAggregateRoot;
+
+
+        ISnapshootStore Create(Type aggregateRootType);
     }
 }

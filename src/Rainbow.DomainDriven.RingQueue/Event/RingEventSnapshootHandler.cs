@@ -17,8 +17,6 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 {
     public class RingEventSnapshootHandler : AbstractBatchMessageHandler<IEvent>
     {
-        private static readonly MethodInfo _handleMethod = typeof(RingEventSnapshootHandler).GetMethod(nameof(GetSnapshotStore), BindingFlags.Instance | BindingFlags.NonPublic);
-        private ConcurrentDictionary<Type, Func<ISnapshootStore>> _cache = new ConcurrentDictionary<Type, Func<ISnapshootStore>>();
         private ConcurrentDictionary<string, Type> _cacheEntitys = new ConcurrentDictionary<string, Type>();
 
         private IAssemblyProvider _assemblyProvider;
@@ -26,7 +24,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private IEventRebuildHandler _eventRebuildHandler;
         private ILogger<RingEventSnapshootHandler> _logger;
         private ISubscribeEventStore _subscribeEventStore;
-        private IMemoryCache _memoryCache;
+        private ISnapshootCache _snapshootCache;
 
 
         private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000001");
@@ -38,14 +36,14 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             , ISnapshootStoreFactory snapshootStoreFactory
             , IEventRebuildHandler eventRebuildHandler
             , ISubscribeEventStore subscribeEventStore
-            , IMemoryCache memoryCache
+            , ISnapshootCache snapshootCache
             , ILoggerFactory loggerFactory)
         {
             this._assemblyProvider = assemblyProvider;
             _snapshootStoreFactory = snapshootStoreFactory;
             _eventRebuildHandler = eventRebuildHandler;
             _subscribeEventStore = subscribeEventStore;
-            _memoryCache = memoryCache;
+            _snapshootCache = snapshootCache;
             _logger = loggerFactory.CreateLogger<RingEventSnapshootHandler>();
 
 
@@ -84,6 +82,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         {
             _logger.LogDebug($"回溯事件:{messages.Length}");
 
+            //过滤回溯时间，因为存在重建，所以可能重复消费
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
             if (!messages.Any()) return;
 
@@ -112,13 +111,16 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 List<IAggregateRoot> roots = new List<IAggregateRoot>();
                 foreach (var id in ids)
                 {
-                    var root = _memoryCache.Get<IAggregateRoot>($"{entityType.Name}_{id}");
-                    if (root != null) roots.Add(root);
+                    var key = GetKey(entityType, id);
+                    var root = _snapshootCache.Get(entityType, id);
+                    if (root == null) continue;
+                    roots.Add(root);
                 }
                 var storeIds = ids.Except(roots.Select(a => a.Id)).ToArray();
                 if (storeIds.Length > 0)
                 {
-                    var storeRoots = GetSnapshot(entityType).Get(storeIds);
+                    var snapshootStore = _snapshootStoreFactory.Create(entityType);
+                    var storeRoots = snapshootStore.Get(storeIds);
                     roots.AddRange(storeRoots);
                 }
 
@@ -161,30 +163,23 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
             foreach (var item in rootDict)
             {
-                var snapshootStore = GetSnapshot(item.Key);
+                var snapshootStore = _snapshootStoreFactory.Create(item.Key);
 
                 var addeds = item.Value.Intersect(addRoots).ToArray();
                 var removed = item.Value.Intersect(removeRoots).ToArray();
                 var updated = item.Value.Except(addeds).Except(removed).ToArray();
 
                 //存储快照
-                TryAction(list => snapshootStore.Add(list), addeds);
-                TryAction(list => snapshootStore.Remove(list), removed);
-                TryAction(list => snapshootStore.Update(list), updated);
+                TryActionStore(list => snapshootStore.Add(list), addeds);
+                TryActionStore(list => snapshootStore.Remove(list), removed);
+                TryActionStore(list => snapshootStore.Update(list), updated);
 
 
             }
 
             //存储缓存
-            aggregateRoots.Except(removeRoots).ToList().ForEach(a =>
-            {
-                _memoryCache.Set($"{a.GetType().Name}_{a.Id}", a);
-            });
-
-            removeRoots.ForEach(a =>
-            {
-                _memoryCache.Remove($"{a.GetType().Name}_{a.Id}");
-            });
+            SetCache(aggregateRoots.Except(removeRoots));
+            RemoveCache(removeRoots);
 
 
             //记录快照消费者处理的的最后的事件
@@ -200,7 +195,28 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
         }
 
-        private void TryAction(Action<IAggregateRoot[]> call, IAggregateRoot[] roots, int retry = 1)
+        private void SetCache(IEnumerable<IAggregateRoot> aggregateRoots)
+        {
+            foreach (var a in aggregateRoots)
+            {
+                _snapshootCache.Set(a);
+            }
+        }
+
+        private void RemoveCache(IEnumerable<IAggregateRoot> aggregateRoots)
+        {
+            foreach (var a in aggregateRoots)
+            {
+                _snapshootCache.Remove(a);
+            }
+        }
+
+        private string GetKey(Type aggrType, Guid id)
+        {
+            return $"ss:{aggrType.Name}:{id.ToString("N")}";
+        }
+
+        private void TryActionStore(Action<IAggregateRoot[]> call, IAggregateRoot[] roots, int retry = 1)
         {
             try
             {
@@ -211,33 +227,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             {
                 _logger.LogError(ex, $"执行存储快照失败,重试次数{retry} - {ex.Message}");
                 if (retry >= 3)
-                    TryAction(call, roots, retry + 1);
+                    TryActionStore(call, roots, retry + 1);
             }
         }
 
-
-        private ISnapshootStore GetSnapshot(Type rootType)
-        {
-
-            var call = _cache.GetOrAdd(
-                key: rootType,
-                valueFactory: (type) =>
-                {
-                    var getHandleMethod = _handleMethod.MakeGenericMethod(type);
-                    var instance = Expression.Constant(this);
-                    var expression =
-                        Expression.Lambda<Func<ISnapshootStore>>(
-                            Expression.Call(instance, getHandleMethod));
-                    return expression.Compile();
-                });
-
-            return call();
-        }
-
-
-        private ISnapshootStore GetSnapshotStore<TAggregateRoot>() where TAggregateRoot : class, IAggregateRoot
-        {
-            return _snapshootStoreFactory.Create<TAggregateRoot>();
-        }
     }
 }

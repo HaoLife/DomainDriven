@@ -11,10 +11,6 @@ namespace Rainbow.DomainDriven.Domain
 {
     public class AggregateRootRebuilder : IAggregateRootRebuilder
     {
-        private readonly ConcurrentDictionary<Type, Func<Guid[], List<IAggregateRoot>>> _cache = new ConcurrentDictionary<Type, Func<Guid[], List<IAggregateRoot>>>();
-
-        private static readonly MethodInfo _handleMethod = typeof(AggregateRootRebuilder).GetMethod(nameof(GetAggregateRoot), BindingFlags.Instance | BindingFlags.NonPublic);
-
         private ISnapshootStoreFactory _snapshootStoreFactory;
         private IEventStore _eventStore;
 
@@ -44,30 +40,11 @@ namespace Rainbow.DomainDriven.Domain
         }
 
 
-        public List<IAggregateRoot> Get(Type rootType, Guid[] ids)
+        private List<IAggregateRoot> Get(Type rootType, Guid[] ids)
         {
-
-            var call = _cache.GetOrAdd(
-                key: rootType,
-                valueFactory: (type) =>
-                {
-                    var getHandleMethod = _handleMethod.MakeGenericMethod(type);
-                    var instance = Expression.Constant(this);
-                    var parameter = Expression.Parameter(typeof(Guid[]), "ids");
-                    var expression =
-                        Expression.Lambda<Func<Guid[], List<IAggregateRoot>>>(
-                            Expression.Call(instance, getHandleMethod, parameter),
-                            parameter);
-                    return expression.Compile();
-                });
-
-            return call(ids);
+            return _snapshootStoreFactory.Create(rootType).Get(ids);
         }
 
-        private List<IAggregateRoot> GetAggregateRoot<TAggregateRoot>(Guid[] ids) where TAggregateRoot : IAggregateRoot
-        {
-            return _snapshootStoreFactory.Create<TAggregateRoot>().Get(ids);
-        }
 
         public IEnumerable<IAggregateRoot> Rebuild(Type type, Guid[] ids)
         {
