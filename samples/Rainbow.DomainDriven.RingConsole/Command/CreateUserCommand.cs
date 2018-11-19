@@ -14,5 +14,6 @@ namespace Rainbow.DomainDriven.RingConsole.Command
 
         public List<Guid> ChildUsers { get; set; }
         public Guid UserId2 { get; set; }
+        public Guid UserId3 { get; set; }
     }
 }

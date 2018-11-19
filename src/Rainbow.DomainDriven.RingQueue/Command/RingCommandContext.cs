@@ -33,6 +33,10 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 throw new DomainException(DomainCode.AggregateExists);
             }
+            if (_contextCache.Exists(typeof(TAggregateRoot), aggregate.Id))
+            {
+                throw new DomainException(DomainCode.AggregateExists);
+            }
 
             this._unNoticeRoots.Add(aggregate);
         }
@@ -42,6 +46,12 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var aggregate = default(TAggregateRoot);
             aggregate = this._unNoticeRoots.Find(p => p.Id == id) as TAggregateRoot;
 
+            //验证是否为为无效的对象
+            if (aggregate == null && this._contextCache.VerifyInvalid(typeof(TAggregateRoot), id))
+            {
+                return null;
+            }
+
             if (aggregate == null && this._contextCache.Exists<TAggregateRoot>(id))
             {
                 aggregate = this._contextCache.Get<TAggregateRoot>(id);
@@ -50,7 +60,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             if (aggregate == null)
             {
                 aggregate = this._aggregateRootRebuilder.Rebuild<TAggregateRoot>(id);
-                this._contextCache.Set<TAggregateRoot>(id, aggregate);
+                if (aggregate != null)
+                    this._contextCache.Set<TAggregateRoot>(id, aggregate);
             }
 
             if (aggregate == null) return null;

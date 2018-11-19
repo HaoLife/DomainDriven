@@ -37,11 +37,7 @@ namespace Rainbow.DomainDriven.Command
 
             mapping.AddOrUpdate(key.Compile(), type, (a, b) => type);
         }
-
-        public void Unique<TCommand>(Expression<Func<TCommand, bool>> veri)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 
 }

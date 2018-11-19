@@ -16,7 +16,6 @@ namespace Rainbow.DomainDriven.Command
         void MapList<TCommand, TAggregateRoot>(Expression<Func<TCommand, IEnumerable<Guid>>> key)
             where TCommand : ICommand
             where TAggregateRoot : IAggregateRoot;
-
-        void Unique<TCommand>(Expression<Func<TCommand, bool>> veri);
+        
     }
 }

@@ -53,7 +53,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var eventBus = _provider.GetRequiredService<IEventBus>();
             var commandRegister = _provider.GetRequiredService<ICommandRegister>();
 
-            IContextCache contextCache = new RingContextCache();
+            IContextCache contextCache = _provider.GetRequiredService<IContextCache>();
 
             var size = _options.CommandQueueSize;
 

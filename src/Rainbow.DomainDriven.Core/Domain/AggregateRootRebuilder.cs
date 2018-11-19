@@ -77,7 +77,9 @@ namespace Rainbow.DomainDriven.Domain
 
             foreach (Guid id in ids)
             {
-                results.Add(Rebuild(roots.FirstOrDefault(a => a.Id == id), type, id));
+                var root = Rebuild(roots.FirstOrDefault(a => a.Id == id), type, id);
+                if (root != null)
+                    results.Add(root);
             }
 
             return results;
@@ -91,6 +93,8 @@ namespace Rainbow.DomainDriven.Domain
                 version = root.Version;
             }
             var evs = _eventStore.GetAggregateRootEvents(id, type.Name, version).OrderBy(a => a.Version).ToList();
+
+            if (evs == null || !evs.Any()) return root;
 
             if (root == null)
             {

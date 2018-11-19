@@ -27,6 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<ICommandBus, RingCommandBus>()
                 .AddSingleton<IEventBus, RingEventBus>()
+                .AddSingleton<IContextCache, RingContextMemoryCache>()
                 );
             //IEventBus
 

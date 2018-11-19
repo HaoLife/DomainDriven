@@ -70,8 +70,10 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 //获取无法找到的key
                 var rebuilderKeys = aggregateRoots.Select(a => a.Id).ToArray();
                 var invalids = reads.Where(a => !rebuilderKeys.Contains(a)).ToList();
+                //foreach (var invalid in invalids)
+                //    this._contextCache.Set(rootType, invalid, null);
                 foreach (var invalid in invalids)
-                    this._contextCache.Set(rootType, invalid, null);
+                    this._contextCache.SetInvalid(rootType, invalid);
             }
             catch (Exception ex)
             {

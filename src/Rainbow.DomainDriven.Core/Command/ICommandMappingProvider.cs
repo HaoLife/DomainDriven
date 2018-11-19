@@ -6,7 +6,7 @@ namespace Rainbow.DomainDriven.Command
 {
     public interface ICommandMappingProvider
     {
-        IEnumerable<KeyValuePair<Guid, Type>> Find(ICommand cmd);
+        Dictionary<Guid, Type> Find(ICommand cmd);
 
     }
 }

@@ -11,6 +11,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Rainbow.DomainDriven.RingConsole
 {
@@ -63,8 +64,9 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var logger = loggerFactory.CreateLogger<Program>();
 
-            var size = 10000;
+            var size = 1;
 
+            //var key = new Guid("{191cf76c-9bf4-46df-ab76-a52c52d4d47a}");
             do
             {
                 Task[] tasks = new Task[size];
@@ -74,21 +76,40 @@ namespace Rainbow.DomainDriven.RingConsole
                 logger.LogDebug("开始执行");
                 for (var i = 0; i < size; i++, seq++)
                 {
+                    var temp = Guid.NewGuid();
                     var createCommand = new CreateUserCommand()
                     {
                         UserId = Guid.NewGuid(),
                         Name = $"nihao 1-{seq}",
-                        Sex = 1
+                        Sex = 1,
+                        UserId2 = temp,
+                        UserId3 = temp,
 
                     };
 
                     var task = commandBus.Publish(createCommand);
+
+                    //var updateCommand = new ModifyUserNameCommand()
+                    //{
+                    //    UserId = key,
+                    //    Name = "你好"
+                    //};
+                    //var task = commandBus.Publish(updateCommand);
                     tasks[i] = task;
                     //tasks[i] = Task.FromResult(true);
                 }
-                Task.WaitAll(tasks);
+                try
+                {
+                    Task.WaitAll(tasks);
+                }
+                catch (Exception ex)
+                {
+
+                }
+
                 var errCount = tasks.Where(a => a.Exception != null).Count();
                 logger.LogDebug($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
+                //Thread.Sleep(5000);
                 //} while (Console.ReadLine() != "c");
             } while (true);
 

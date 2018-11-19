@@ -38,11 +38,11 @@ namespace Rainbow.DomainDriven.Command
 
         }
 
-        public IEnumerable<KeyValuePair<Guid, Type>> Find(ICommand cmd)
+        public Dictionary<Guid, Type> Find(ICommand cmd)
         {
             ConcurrentDictionary<Delegate, Type> maps;
             _mappings.TryGetValue(cmd.GetType(), out maps);
-            if (maps == null) return Enumerable.Empty<KeyValuePair<Guid, Type>>();
+            if (maps == null) return new Dictionary<Guid, Type>();
 
             Dictionary<Guid, Type> dicts = new Dictionary<Guid, Type>();
 

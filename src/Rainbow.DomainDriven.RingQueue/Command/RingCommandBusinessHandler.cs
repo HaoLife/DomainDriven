@@ -55,39 +55,33 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         public override void Handle(CommandMessage[] messages, long endSequence)
         {
-            List<IEvent> evs = new List<IEvent>();
-            //回复消息
-            ReplyMessage[] replys = new ReplyMessage[messages.Length];
-            var seq = endSequence - messages.Length + 1;
-            CommandBusinessContext businessContext = new CommandBusinessContext();
+            CommandBusinessContext[] businessContexts = new CommandBusinessContext[messages.Length];
+
             for (int i = 0; i < messages.Length; i++)
             {
-                businessContext.Clear();
+                CommandBusinessContext businessContext = new CommandBusinessContext();
+                businessContext.Message = messages[i];
+                businessContexts[i] = businessContext;
 
-                HandleMessage(businessContext, messages[i]);
-
-                replys[i] = businessContext.Reply;
-                if (businessContext.UncommittedEvents != null && businessContext.UncommittedEvents.Any())
-                {
-                    evs.AddRange(businessContext.UncommittedEvents);
-                }
+                HandleMessage(businessContext);
             }
             //存储事件
             //发送消息到消息总线
             //通知回复消息
 
-            SaveEvent(evs, replys);
-            SendEvent(evs, replys);
+            SaveEvent(businessContexts);
+            SendEvent(businessContexts);
 
-            NoticeEvent(messages, replys);
+            NoticeEvent(businessContexts);
 
 
 
 
         }
 
-        private void SaveEvent(List<IEvent> evs, ReplyMessage[] replys)
+        private void SaveEvent(CommandBusinessContext[] contexts)
         {
+            var evs = contexts.SelectMany(a => a.UncommittedEvents ?? Enumerable.Empty<IEvent>()).ToList();
             if (evs == null || !evs.Any()) return;
 
 
@@ -97,10 +91,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             }
             catch (Exception ex)
             {
-                foreach (var item in replys)
+
+                foreach (var item in contexts)
                 {
-                    item.Exception = ex;
-                    item.IsSuccess = false;
+                    item.Reply.Exception = ex;
+                    item.Reply.IsSuccess = false;
                 }
 
                 _logger.LogError(ex, $"存储事件失败，错误消息：{ex.Message}");
@@ -109,10 +104,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         }
 
-        private void SendEvent(List<IEvent> evs, ReplyMessage[] replys)
+        private void SendEvent(CommandBusinessContext[] contexts)
         {
-
+            var evs = contexts.SelectMany(a => a.UncommittedEvents ?? Enumerable.Empty<IEvent>()).ToList();
             if (evs == null || !evs.Any()) return;
+
             try
             {
                 _eventBus.Publish(evs.ToArray());
@@ -120,24 +116,24 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             }
             catch (Exception ex)
             {
-                foreach (var item in replys)
+                foreach (var item in contexts)
                 {
-                    item.Exception = ex;
-                    item.IsSuccess = false;
+                    item.Reply.Exception = ex;
+                    item.Reply.IsSuccess = false;
                 }
                 _logger.LogError(ex, $"推送事件失败，错误消息：{ex.Message}");
             }
         }
 
-        private void NoticeEvent(CommandMessage[] messages, ReplyMessage[] replys)
+        private void NoticeEvent(CommandBusinessContext[] contexts)
         {
 
             try
             {
-                for (int i = 0; i < messages.Length; i++)
+                foreach (var item in contexts)
                 {
-                    messages[i].Reply = replys[i];
-                    messages[i].Notice.Set();
+                    item.Message.Reply = item.Reply;
+                    item.Message.Notice.Set();
                 }
             }
             catch (Exception ex)
@@ -149,10 +145,10 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         }
 
-        private void HandleMessage(CommandBusinessContext businessContext, CommandMessage commandMessage)
+        private void HandleMessage(CommandBusinessContext businessContext)
         {
 
-            var message = commandMessage.Cmd;
+            var message = businessContext.Message.Cmd;
             try
             {
                 var call = _cache.GetOrAdd(
@@ -162,10 +158,13 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 call(context, message);
 
                 var unEvts = context.TrackedAggregateRoots.SelectMany(p => p.UncommittedEvents);
-                businessContext.UncommittedEvents = unEvts;
+                businessContext.UncommittedEvents = unEvts.ToList();
                 businessContext.Reply = new ReplyMessage(message.Id) { LastEventUTCTimestamp = unEvts?.Select(a => a.UTCTimestamp).LastOrDefault() ?? 0 };
 
-
+                foreach (var root in context.TrackedAggregateRoots)
+                {
+                    _contextCache.Set(root);
+                }
             }
             catch (Exception ex)
             {
@@ -173,9 +172,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
                 //清空上下文，移除缓存
                 businessContext.Reply = new ReplyMessage(message.Id, ex);
 
-                //如果聚合根中包含有创建的事件，则该聚合根可直接删除。
-                var emptyRoots = context.TrackedAggregateRoots.Where(a => a.UncommittedEvents.Count() == 0);
-                var clearRoots = context.TrackedAggregateRoots.Except(emptyRoots);
+                //上下文的聚合根中有事件的则说明被执行过，需要删除进行重建
+                var clearRoots = context.TrackedAggregateRoots.Where(a => a.UncommittedEvents.Any());
 
                 foreach (var root in clearRoots)
                 {
