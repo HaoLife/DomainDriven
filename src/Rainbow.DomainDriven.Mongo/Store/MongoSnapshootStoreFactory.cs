@@ -67,8 +67,8 @@ namespace Rainbow.DomainDriven.Mongo.Store
         {
             if (aggregateRootType == typeof(IAggregateRoot)) throw new Exception("聚合根的类型不能为接口");
 
-            var rootTypes = TypeHelper.GetGenericInterfaceTypes(aggregateRootType, typeof(IAggregateRoot));
-            if(!rootTypes.Any()) throw new Exception("类型不是一个聚合根");
+            var isAggr = aggregateRootType.GetTypeInfo().GetInterfaces().Where(a => a == typeof(IAggregateRoot)).Any();
+            if (!isAggr) throw new Exception("类型不是一个聚合根");
 
             var call = _cacheHandle.GetOrAdd(
                 key: aggregateRootType,
