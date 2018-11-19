@@ -23,7 +23,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         private string CacheKey(Type aggregateType, Guid id)
         {
-            return $"{aggregateType.Name}:{id.ToString("N")}";
+            return $"ct:{aggregateType.Name}:{id.ToString("N")}";
         }
 
         public bool Exists(Type aggregateType, Guid id)
