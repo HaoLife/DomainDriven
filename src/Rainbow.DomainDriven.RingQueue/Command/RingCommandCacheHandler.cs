@@ -37,46 +37,62 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             return source;
         }
 
+        private void HandleMessageMapping(ConcurrentDictionary<Type, List<Guid>> data, ICommand cmd)
+        {
+            try
+            {
+                var mapValue = this._commandMappingProvider.Find(cmd);
+                foreach (var item in mapValue)
+                    data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"执行缓存映射错误，无法正确进行缓存，类型：{cmd?.GetType().Name}");
+
+            }
+        }
+
+        private void HandleCache(Type rootType, IEnumerable<Guid> keys)
+        {
+            try
+            {
+
+                //获取本地缓存存在的数据
+                var caches = keys.Where(a => _contextCache.Exists(rootType, a)).ToArray();
+
+                //获取需要读取的数据
+                var reads = keys.Where(a => !caches.Contains(a)).ToArray();
+                //重建聚合根（这里需要使用重建，而不能使用快照，快照可能存在数据未更新即使的问题）
+                var aggregateRoots = this._aggregateRootRebuilder.Rebuild(rootType, reads);
+                foreach (var aggr in aggregateRoots)
+                    this._contextCache.Set(aggr);
+                //获取无法找到的key
+                var rebuilderKeys = aggregateRoots.Select(a => a.Id).ToArray();
+                var invalids = reads.Where(a => !rebuilderKeys.Contains(a)).ToList();
+                foreach (var invalid in invalids)
+                    this._contextCache.Set(rootType, invalid, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"读取缓存失败：{rootType.Name} - keys:{string.Join(",", keys)}");
+            }
+
+
+        }
+
         public override void Handle(CommandMessage[] messages, long endSequence)
         {
             ConcurrentDictionary<Type, List<Guid>> data = new ConcurrentDictionary<Type, List<Guid>>();
 
-            try
+            foreach (var message in messages)
             {
-
-                foreach (var message in messages)
-                {
-                    var mapValue = this._commandMappingProvider.Find(message.Cmd);
-                    foreach (var item in mapValue)
-                        data.AddOrUpdate(item.Value, AddValue(new List<Guid>(), item.Key), (a, b) => AddValue(b, item.Key));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"执行缓存失败: {endSequence - messages.Length + 1} - {endSequence} 错误内容：{ex.Message}", ex);
+                HandleMessageMapping(data, message.Cmd);
             }
 
-            try
+            foreach (var item in data)
             {
-
-                foreach (var item in data)
-                {
-                    var caches = item.Value.Where(a => _contextCache.Exists(item.Key, a)).ToArray();
-
-                    var reads = item.Value.Where(a => !_contextCache.Exists(item.Key, a)).ToArray();
-                    var aggregateRoots = this._aggregateRootRebuilder.Rebuild(item.Key, reads);
-                    foreach (var aggr in aggregateRoots)
-                        this._contextCache.Set(aggr);
-
-                    var keys = aggregateRoots.Select(a => a.Id).ToArray();
-                    var invalids = reads.Where(a => !keys.Contains(a)).ToList();
-                    foreach (var invalid in invalids)
-                        this._contextCache.Set(item.Key, invalid, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"存储缓存失败: {endSequence - messages.Length + 1} - {endSequence} 错误内容：{ex.Message}", ex);
+                HandleCache(item.Key, item.Value);
             }
         }
 

@@ -97,7 +97,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"执行事件类型[{a.FullName}]异常,事件id:{evt.Id}", ex);
+                    _logger.LogError(ex, $"执行事件类型[{a.FullName}]异常,事件id:{evt.Id}");
                 }
             }
         }
