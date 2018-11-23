@@ -15,7 +15,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IDomainBuilder AddDomainService(this IDomainBuilder builder)
         {
-            builder.Services.TryAddSingleton<IDomainServiceProvider, IDomainServiceProvider>();
+            var domainServiceBuilder = new DomainServiceBuilder(builder.Services);
+            domainServiceBuilder.Build();
             return builder;
         }
 
