@@ -18,12 +18,12 @@ namespace Rainbow.DomainDriven.Mongo.Framework
         private List<Type> events = new List<Type>();
         private List<Type> roots = new List<Type>();
 
-        private AssemblyProvider _assemblyProvider;
+        private IAssemblyProvider _assemblyProvider;
 
 
-        public MongoDatabaseInitializer()
+        public MongoDatabaseInitializer(IAssemblyProvider assemblyProvider)
         {
-            _assemblyProvider = new AssemblyProvider();
+            _assemblyProvider = assemblyProvider;
 
         }
 
