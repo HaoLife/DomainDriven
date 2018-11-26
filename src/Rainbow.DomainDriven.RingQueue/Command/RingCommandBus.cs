@@ -13,6 +13,7 @@ using System.Linq;
 using Rainbow.DomainDriven.Store;
 using Rainbow.DomainDriven.Event;
 using System.Threading;
+using Rainbow.DomainDriven.RingQueue.Event;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
@@ -24,6 +25,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private List<IRingBufferConsumer> consumers = new List<IRingBufferConsumer>();
         private RingBuffer<CommandMessage> _handleQueue;
         private ILogger _logger;
+
+        private IEventHandleSubject _eventHandleSubject;
+        private IEventHandleObserver _snapshootEventHandleObserver;
 
 
         public RingCommandBus(IOptionsMonitor<RingOptions> options, IServiceProvider provider)
@@ -45,6 +49,8 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         {
             consumers.ForEach(a => a.Halt());
             consumers.Clear();
+
+            InitializeSubject();
 
             var rootRebuilder = _provider.GetRequiredService<IAggregateRootRebuilder>();
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
@@ -106,6 +112,14 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             _handleQueue = queue;
         }
 
+        private void InitializeSubject()
+        {
+            _eventHandleSubject = _provider.GetRequiredService<IEventHandleSubject>();
+            _eventHandleSubject.Remove(Constant.SnapshootSubscribeId);
+            _snapshootEventHandleObserver = new EventHandleObserver(Constant.SnapshootSubscribeId);
+            _eventHandleSubject.Add(_snapshootEventHandleObserver);
+        }
+
 
         public Task Publish(ICommand command)
         {
@@ -113,17 +127,33 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var index = _handleQueue.Next();
             _handleQueue[index].Value = msg;
             _handleQueue.Publish(index);
+            _logger.LogDebug($"开始发送事件:{index} - {command.Id}");
 
-            return Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(() => HandleWait(command, msg, index));
+        }
+
+        private void HandleWait(ICommand command, CommandMessage msg, long index)
+        {
+            if (command.Wait == WaitLevel.NotWait) return;
+
+            msg.Notice.WaitOne();
+            _logger.LogDebug($"完成事件处理:{index} - {command.Id}");
+            ReplyMessage message = msg.Reply;
+            if (message.CommandId == command.Id)
             {
-                msg.Notice.WaitOne();
-                _logger.LogDebug($"等待完成:{index} - {command.Id}");
-                ReplyMessage message = msg.Reply;
-                if (message.CommandId == command.Id)
-                {
-                    if (!message.IsSuccess) throw message.Exception;
-                }
-            });
+                if (!message.IsSuccess) throw message.Exception;
+            }
+
+            if (command.Wait == WaitLevel.Handle) return;
+
+            var timestamp = _snapshootEventHandleObserver.SubscribeEvent?.UTCTimestamp ?? 0;
+            while (timestamp < message.LastEventUTCTimestamp)
+            {
+                Thread.Sleep(50);
+                timestamp = _snapshootEventHandleObserver.SubscribeEvent?.UTCTimestamp ?? 0;
+            }
+            _logger.LogDebug($"完成事件快照:{index} - {command.Id}");
+
         }
     }
 }

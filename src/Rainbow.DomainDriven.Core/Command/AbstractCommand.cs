@@ -7,17 +7,21 @@ namespace Rainbow.DomainDriven.Command
     public abstract class AbstractCommand : ICommand
     {
         public AbstractCommand()
+            :this(Guid.NewGuid())
         {
-            Id = Guid.NewGuid();
+
         }
-        public AbstractCommand(Guid id, int priority = 0)
+        public AbstractCommand(Guid id, PriorityLevel priority = PriorityLevel.Normal, WaitLevel wait = WaitLevel.Handle)
         {
             this.Id = id;
             this.Priority = priority;
+            this.Wait = wait;
         }
 
         public Guid Id { get; private set; }
 
-        public int Priority { get; private set; }
+        public PriorityLevel Priority { get; set; }
+
+        public WaitLevel Wait { get; set; }
     }
 }

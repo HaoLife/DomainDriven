@@ -29,6 +29,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddSingleton<IEventBus, RingEventBus>()
                 .AddSingleton<IContextCache, RingContextMemoryCache>()
                 .AddSingleton<ISnapshootCache, SnapshootMemoryCache>()
+                .AddSingleton<IEventHandleSubject, EventHandleSubject>()
                 );
             //IEventBus
 

@@ -6,7 +6,9 @@ namespace Rainbow.DomainDriven.Command
 {
     public interface ICommand
     {
-        Guid Id { get;}
-        int Priority { get; }
+        Guid Id { get; }
+        PriorityLevel Priority { get; }
+
+        WaitLevel Wait { get; }
     }
 }

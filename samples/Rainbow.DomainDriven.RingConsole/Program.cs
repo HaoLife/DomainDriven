@@ -84,7 +84,7 @@ namespace Rainbow.DomainDriven.RingConsole
                         Sex = 1,
                         UserId2 = temp,
                         UserId3 = temp,
-
+                        Wait = WaitLevel.Snapshot
                     };
 
                     var task = commandBus.Publish(createCommand);
