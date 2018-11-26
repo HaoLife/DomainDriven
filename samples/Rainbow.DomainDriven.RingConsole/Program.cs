@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.RingConsole
 {
@@ -56,8 +57,8 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var provider = new AutofacServiceProvider(container.Build());
 
-            var eventRebuildInitializer = provider.GetRequiredService<IEventRebuildInitializer>();
-            eventRebuildInitializer.Initialize();
+            var launcher = provider.GetRequiredService<IDomainLauncher>();
+            launcher.Start();
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
