@@ -45,7 +45,12 @@ namespace Rainbow.DomainDriven.RingConsole
                 builder
                     .AddRing(configuration.GetSection("ring"))
                     .AddMongo(configuration.GetSection("mongo"))
-                    .AddMapping<CommandMappingProvider>()
+                    .AddMixedMapping(mapbuilder =>
+                    {
+                        mapbuilder
+                            .AddMapping<CommandMappingProvider>()
+                            .AddAutoMapping();
+                    })
                     .AddDomainService();
             });
 

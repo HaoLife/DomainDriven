@@ -31,8 +31,12 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddSingleton<ISnapshootCache, SnapshootMemoryCache>()
                 .AddSingleton<IEventHandleSubject, EventHandleSubject>()
                 .AddSingleton<IRingBufferProcess, RingBufferProcess>()
+                );
+
+            builder.Services.Add(new ServiceCollection()
                 .AddSingleton<IDomainLauncher, RingQueueDomainLauncher>()
                 );
+
             //IEventBus
 
 

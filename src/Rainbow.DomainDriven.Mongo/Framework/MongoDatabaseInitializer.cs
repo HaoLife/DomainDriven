@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Rainbow.DomainDriven.Domain;
-using Rainbow.DomainDriven.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Text;

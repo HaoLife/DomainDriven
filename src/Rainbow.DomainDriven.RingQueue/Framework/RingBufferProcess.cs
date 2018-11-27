@@ -13,7 +13,7 @@ using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Store;
 using System.Threading.Tasks;
 using Rainbow.DomainDriven.RingQueue.Event;
-using Rainbow.DomainDriven.Infrastructure;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Framework
 {

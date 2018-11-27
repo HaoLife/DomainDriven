@@ -10,21 +10,24 @@ namespace Rainbow.DomainDriven.Framework
 
         private IDatabaseInitializer _databaseInitializer;
         private IEventRebuildInitializer _eventRebuildInitializer;
-        private IAggregateRootValidator _aggregateRootValidator;
+        private IEnumerable<IAggregateRootValidator> _aggregateRootValidators;
 
         public DefaultDomainLauncher(
             IDatabaseInitializer databaseInitializer
             , IEventRebuildInitializer eventRebuildInitializer
-            , IAggregateRootValidator aggregateRootValidator)
+            , IEnumerable<IAggregateRootValidator> aggregateRootValidators)
         {
             this._databaseInitializer = databaseInitializer;
             this._eventRebuildInitializer = eventRebuildInitializer;
-            this._aggregateRootValidator = aggregateRootValidator;
+            this._aggregateRootValidators = aggregateRootValidators;
         }
 
         public void Start()
         {
-            _aggregateRootValidator.Validate();
+            foreach (var validator in _aggregateRootValidators)
+            {
+                validator.Validate();
+            }
             if (!_databaseInitializer.IsRun)
             {
                 _databaseInitializer.Initialize();

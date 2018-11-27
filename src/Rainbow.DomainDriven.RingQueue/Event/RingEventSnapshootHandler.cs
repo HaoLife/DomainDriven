@@ -9,10 +9,10 @@ using System.Linq;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Linq.Expressions;
-using Rainbow.DomainDriven.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Rainbow.DomainDriven.RingQueue.Framework;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {

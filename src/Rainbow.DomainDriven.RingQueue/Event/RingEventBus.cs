@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 using Rainbow.DomainDriven.Store;
-using Rainbow.DomainDriven.Infrastructure;
 using System.Threading.Tasks;
 using Rainbow.DomainDriven.Domain;
 using System.Linq;
