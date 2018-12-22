@@ -134,7 +134,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             //重建
             foreach (var item in messages)
             {
-                IAggregateRoot root = aggregateRoots.FirstOrDefault(a => a.Id == item.AggregateRootId);
+                IAggregateRoot root = aggregateRoots.FirstOrDefault(a => a.Id == item.AggregateRootId && a.GetType().Name.Equals(item.AggregateRootTypeName));
 
                 if (item.Operation == EventOperation.Created)
                 {
