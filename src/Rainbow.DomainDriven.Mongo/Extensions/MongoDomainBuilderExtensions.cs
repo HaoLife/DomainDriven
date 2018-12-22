@@ -19,14 +19,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.AddMongoOptions(configuration);
 
-            IDatabaseInitializer initializer = new MongoDatabaseInitializer();
-            initializer.Initialize();
-
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<IEventStore, MongoEventStore>()
                 .AddSingleton<ISubscribeEventStore, MongoSubscribeEventStore>()
                 .AddSingleton<ISnapshootQueryFactory, MongoSnapshootQueryFactory>()
                 .AddSingleton<ISnapshootStoreFactory, MongoSnapshootStoreFactory>()
+                .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
                 );
 
 

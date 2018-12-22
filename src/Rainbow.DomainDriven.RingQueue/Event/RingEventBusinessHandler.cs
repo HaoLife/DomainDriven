@@ -10,6 +10,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Store;
 using Microsoft.Extensions.Caching.Memory;
+using Rainbow.DomainDriven.RingQueue.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -18,12 +19,13 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private readonly ConcurrentDictionary<Type, Action<IEvent>> _cache = new ConcurrentDictionary<Type, Action<IEvent>>();
         private static readonly MethodInfo _handleMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000002");
+        private static Guid _defaultSubscribeId = Constant.BusinessSubscribeId;
 
         private IEventRegister _eventRegister;
         private IEventHandlerFactory _eventHandlerFactory;
         private ILogger<RingEventBusinessHandler> _logger;
         private ISubscribeEventStore _subscribeEventStore;
+        private IEventHandleSubject _eventHandleSubject;
 
         private SubscribeEvent _subscribeEvent = new SubscribeEvent() { Id = _defaultSubscribeId, UTCTimestamp = 0 };
 
@@ -31,13 +33,15 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             IEventRegister eventRegister
             , IEventHandlerFactory eventHandlerFactory
             , ISubscribeEventStore subscribeEventStore
-            , ILoggerFactory loggerFactory)
+            , ILoggerFactory loggerFactory
+            , IEventHandleSubject eventHandleSubject)
         {
 
             _eventRegister = eventRegister;
             _eventHandlerFactory = eventHandlerFactory;
             _subscribeEventStore = subscribeEventStore;
             _logger = loggerFactory.CreateLogger<RingEventBusinessHandler>();
+            _eventHandleSubject = eventHandleSubject;
 
 
             var subscribeEvent = _subscribeEventStore.Get(_defaultSubscribeId);
@@ -80,6 +84,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 _subscribeEvent.EventId = evt.Id;
                 _subscribeEvent.UTCTimestamp = evt.UTCTimestamp;
                 _subscribeEventStore.Save(_subscribeEvent);
+
+                _eventHandleSubject.Update(_subscribeEvent);
             }
         }
 

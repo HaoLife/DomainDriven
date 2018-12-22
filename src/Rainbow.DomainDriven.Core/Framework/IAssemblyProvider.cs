@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.Framework
 {
     public interface IAssemblyProvider
     {

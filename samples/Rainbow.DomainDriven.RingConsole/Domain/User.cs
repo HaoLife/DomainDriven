@@ -12,7 +12,7 @@ namespace Rainbow.DomainDriven.RingConsole.Domain
         , IEventHandler<CreatedEvent>
         , IEventHandler<ModifyNamedEvent>
     {
-        public User()
+        private User()
         {
 
         }

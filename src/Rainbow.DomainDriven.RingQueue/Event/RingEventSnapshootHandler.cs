@@ -9,9 +9,10 @@ using System.Linq;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Linq.Expressions;
-using Rainbow.DomainDriven.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
+using Rainbow.DomainDriven.RingQueue.Framework;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -25,9 +26,10 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private ILogger<RingEventSnapshootHandler> _logger;
         private ISubscribeEventStore _subscribeEventStore;
         private ISnapshootCache _snapshootCache;
+        private IEventHandleSubject _eventHandleSubject;
 
 
-        private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000001");
+        private static Guid _defaultSubscribeId = Constant.SnapshootSubscribeId;
         private SubscribeEvent _subscribeEvent = new SubscribeEvent() { Id = _defaultSubscribeId, UTCTimestamp = 0 };
 
 
@@ -37,7 +39,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             , IEventRebuildHandler eventRebuildHandler
             , ISubscribeEventStore subscribeEventStore
             , ISnapshootCache snapshootCache
-            , ILoggerFactory loggerFactory)
+            , ILoggerFactory loggerFactory
+            , IEventHandleSubject eventHandleSubject)
         {
             this._assemblyProvider = assemblyProvider;
             _snapshootStoreFactory = snapshootStoreFactory;
@@ -45,6 +48,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             _subscribeEventStore = subscribeEventStore;
             _snapshootCache = snapshootCache;
             _logger = loggerFactory.CreateLogger<RingEventSnapshootHandler>();
+            _eventHandleSubject = eventHandleSubject;
 
 
             this.Initialize(assemblyProvider.Assemblys);
@@ -192,6 +196,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 _subscribeEvent.EventId = evt.Id;
                 _subscribeEvent.UTCTimestamp = evt.UTCTimestamp;
                 _subscribeEventStore.Save(_subscribeEvent);
+
+                _eventHandleSubject.Update(_subscribeEvent);
             }
         }
 

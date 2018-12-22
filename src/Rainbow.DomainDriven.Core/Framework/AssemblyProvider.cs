@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Linq;
 
-namespace Rainbow.DomainDriven.Infrastructure
+namespace Rainbow.DomainDriven.Framework
 {
     public class AssemblyProvider : IAssemblyProvider
     {

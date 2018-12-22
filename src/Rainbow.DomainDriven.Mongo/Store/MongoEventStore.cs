@@ -26,8 +26,10 @@ namespace Rainbow.DomainDriven.Mongo.Store
         private void ReloadOptions(MongoOptions options)
         {
             Options = options;
-            var client = new MongoClient(Options.SnapshootConnection);
-            var database = client.GetDatabase(Options.EventDbName);
+
+            var url = new MongoUrl(Options.EventConnection);
+            var client = new MongoClient(url);
+            var database = client.GetDatabase(url.DatabaseName);
             _collection = database.GetCollection<IEvent>(options.EventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
 
             var indk = Builders<IEvent>.IndexKeys;

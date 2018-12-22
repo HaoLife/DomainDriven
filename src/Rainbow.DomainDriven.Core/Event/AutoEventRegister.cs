@@ -1,5 +1,4 @@
-﻿using Rainbow.DomainDriven.Infrastructure;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -7,6 +6,7 @@ using System.Linq;
 using Rainbow.DomainDriven.Utilities;
 using Rainbow.DomainDriven.Domain;
 using System.Collections.Concurrent;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.Event
 {
