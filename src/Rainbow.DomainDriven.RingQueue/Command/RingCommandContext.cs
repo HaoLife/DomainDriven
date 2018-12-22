@@ -29,7 +29,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         void ICommandContext.Add<TAggregateRoot>(TAggregateRoot aggregate)
         {
-            if (this._unNoticeRoots.Exists(p => p.Id == aggregate.Id))
+            if (this._unNoticeRoots.Exists(p => p.Id == aggregate.Id && p.GetType().Equals(aggregate.GetType())))
             {
                 throw new DomainException(DomainCode.AggregateExists);
             }
