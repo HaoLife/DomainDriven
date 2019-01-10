@@ -9,6 +9,10 @@
     <Company>Rainbow</Company>
     <Authors>haozi</Authors>
     <Version>2.0.0</Version>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/HaoLife/DomainDriven</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HaoLife/DomainDriven</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
