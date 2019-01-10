@@ -12,8 +12,8 @@ namespace Rainbow.DomainDriven.RingConsole.Command
         public string Name { get; set; }
         public int Sex { get; set; }
 
-        public List<Guid> ChildUsers { get; set; }
-        public Guid UserId2 { get; set; }
-        public Guid UserId3 { get; set; }
+        //public List<Guid> ChildUsers { get; set; }
+        //public Guid UserId2 { get; set; }
+        //public Guid UserId3 { get; set; }
     }
 }

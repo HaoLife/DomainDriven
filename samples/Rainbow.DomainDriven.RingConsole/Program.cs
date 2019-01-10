@@ -72,7 +72,7 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var size = 1;
 
-            //var key = new Guid("{191cf76c-9bf4-46df-ab76-a52c52d4d47a}");
+            var key = new Guid("{191cf76c-9bf4-46df-ab76-a52c52d4d47c}");
             do
             {
                 Task[] tasks = new Task[size];
@@ -88,8 +88,8 @@ namespace Rainbow.DomainDriven.RingConsole
                         UserId = Guid.NewGuid(),
                         Name = $"nihao 1-{seq}",
                         Sex = 1,
-                        UserId2 = temp,
-                        UserId3 = temp,
+                        //UserId2 = temp,
+                        //UserId3 = temp,
                         Wait = WaitLevel.Snapshot
                     };
 
