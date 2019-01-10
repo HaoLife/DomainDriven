@@ -203,7 +203,24 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private void HandleCommand<TCommand>(RingCommandContext context, ICommand command) where TCommand : ICommand
         {
             var handlerType = _commandRegister.FindHandlerType<TCommand>();
-            var handler = _commandHandlerFactory.Create<TCommand>(handlerType);
+            if (handlerType == null)
+            {
+                var message = $"命令[{command.GetType().Name}]的命令执行器没有找到";
+                _logger.LogInformation(message);
+                throw new DomainException(DomainCode.CommandHandlerNotExists, message);
+            }
+            ICommandHandler<TCommand> handler;
+            try
+            {
+                handler = _commandHandlerFactory.Create<TCommand>(handlerType);
+            }
+            catch (Exception ex)
+            {
+                var message = $"命令[{command.GetType().Name}]的命令执行器无法创建，原因:{ex.Message}";
+                _logger.LogInformation(message);
+                throw new DomainException(DomainCode.CommandHandlerCannotCreate, message);
+            }
+
 
             handler.Handle(context, (TCommand)command);
         }
