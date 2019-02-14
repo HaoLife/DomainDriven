@@ -28,8 +28,11 @@ namespace Rainbow.DomainDriven.Mongo.Store
             Options = options;
 
             var url = new MongoUrl(Options.EventConnection);
+            
             var client = new MongoClient(url);
-            var database = client.GetDatabase(url.DatabaseName);
+            var database = client.GetDatabase(options.EventDbName);
+
+
             _collection = database.GetCollection<IEvent>(options.EventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
 
             var indk = Builders<IEvent>.IndexKeys;
@@ -62,7 +65,7 @@ namespace Rainbow.DomainDriven.Mongo.Store
             var filter = Builders<IEvent>.Filter;
             var query = filter.And(
                 filter.Eq(nameof(IEvent.AggregateRootId), aggregateRootId)
-                ,filter.Eq(nameof(IEvent.AggregateRootTypeName), aggregateRootTypeName)
+                , filter.Eq(nameof(IEvent.AggregateRootTypeName), aggregateRootTypeName)
                 , filter.Gt(nameof(IEvent.Version), version)
                 );
 

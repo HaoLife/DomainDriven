@@ -39,7 +39,7 @@ namespace Rainbow.DomainDriven.Mongo.Store
 
             var url = new MongoUrl(Options.SnapshootConnection);
             var client = new MongoClient(url);
-            var database = client.GetDatabase(url.DatabaseName);
+            var database = client.GetDatabase(options.SnapshootDbName);
             MongoDatabase = database;
 
             foreach (var item in _cache.Values)

@@ -27,7 +27,7 @@ namespace Rainbow.DomainDriven.Mongo.Store
 
             var url = new MongoUrl(Options.EventConnection);
             var client = new MongoClient(url);
-            var database = client.GetDatabase(url.DatabaseName);
+            var database = client.GetDatabase(options.EventDbName);
             _collection = database.GetCollection<SubscribeEvent>(options.SubscribeEventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
 
         }
