@@ -2,7 +2,6 @@ using System;
 using Rainbow.DomainDriven.RingConsole.Domain;
 using Rainbow.DomainDriven.RingConsole.Event.UserEvent;
 using Rainbow.DomainDriven.Event;
-using Dapper;
 using System.Data;
 using Rainbow.DomainDriven.Store;
 using System.Linq;

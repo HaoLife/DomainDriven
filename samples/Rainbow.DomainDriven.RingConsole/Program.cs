@@ -1,6 +1,4 @@
-﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Event;
@@ -13,57 +11,69 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using Rainbow.DomainDriven.Framework;
+using Microsoft.Extensions.Hosting;
+using AutoMapper.Attributes;
 
 namespace Rainbow.DomainDriven.RingConsole
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
 
-            IConfiguration configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            var host = new HostBuilder()
+             .ConfigureAppConfiguration(config =>
+             {
+                 config.AddEnvironmentVariables();
+                 config.AddJsonFile("appsettings.json", optional: true);
+                 config.AddCommandLine(args);
 
-            IServiceCollection serviceCollection = new ServiceCollection();
+             })
+             .ConfigureLogging((context, builder) =>
+             {
+                 builder.AddConfiguration(context.Configuration.GetSection("Logging"))
+                         .AddFile(opts => context.Configuration.GetSection("FileLoggingOptions").Bind(opts))
+                         .AddConsole();
+             })
+             .ConfigureServices((context, services) =>
+             {
+                 services.AddDomain(builder =>
+                 {
+                     builder
+                         .AddRing(context.Configuration.GetSection("ring"))
+                         .AddMongo(context.Configuration.GetSection("mongo"))
+                         .AddMixedMapping(mapbuilder =>
+                         {
+                             mapbuilder
+                                 .AddMapping<CommandMappingProvider>()
+                                 .AddAutoMapping();
+                         })
+                         .AddDomainService();
+                 });
 
-            serviceCollection.AddOptions();
+             })
+             .Build();
 
-            serviceCollection.AddLogging(builder =>
-                builder
-                    .AddConfiguration(configuration.GetSection("Logging"))
-                    .AddFile(opts => configuration.GetSection("FileLoggingOptions").Bind(opts))
-                    .AddConsole()
-
-            );
-
-
-
-            serviceCollection.AddDomain(builder =>
+            AutoMapper.Mapper.Initialize(config =>
             {
-                builder
-                    .AddRing(configuration.GetSection("ring"))
-                    .AddMongo(configuration.GetSection("mongo"))
-                    .AddMixedMapping(mapbuilder =>
-                    {
-                        mapbuilder
-                            .AddMapping<CommandMappingProvider>()
-                            .AddAutoMapping();
-                    })
-                    .AddDomainService();
+                typeof(Program).Assembly.MapTypes(config);
             });
 
 
-            var container = new ContainerBuilder();
-            container.Populate(serviceCollection);
+            using (host)
+            {
+                await host.StartAsync();
+
+                Task.Run(() => WriteCommand(host.Services));
+
+                await host.WaitForShutdownAsync();
+            }
+
+        }
 
 
-
-            var provider = new AutofacServiceProvider(container.Build());
-
-            var launcher = provider.GetRequiredService<IDomainLauncher>();
-            launcher.Start();
+        private static void WriteCommand(IServiceProvider provider)
+        {
 
             var commandBus = provider.GetRequiredService<ICommandBus>();
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
@@ -71,7 +81,6 @@ namespace Rainbow.DomainDriven.RingConsole
             var logger = loggerFactory.CreateLogger<Program>();
 
             var size = 1;
-
             //var key = new Guid("{191cf76c-9bf4-46df-ab76-a52c52d4d47a}");
             do
             {
@@ -115,12 +124,9 @@ namespace Rainbow.DomainDriven.RingConsole
 
                 var errCount = tasks.Where(a => a.Exception != null).Count();
                 logger.LogDebug($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
-                //Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 //} while (Console.ReadLine() != "c");
             } while (true);
-
-            Console.WriteLine("Hello World!");
-            Console.Read();
         }
     }
 }

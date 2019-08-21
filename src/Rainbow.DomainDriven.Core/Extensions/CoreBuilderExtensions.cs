@@ -26,7 +26,6 @@ namespace Rainbow.DomainDriven.Extensions
                 .AddSingleton<IAggregateRootRebuilder, AggregateRootRebuilder>()
                 .AddSingleton<IEventRebuildInitializer, EventRebuildInitializer>()
                 .AddSingleton<IAggregateRootValidator, AggregateRootValidator>()
-                .AddSingleton<IDomainLauncher, DefaultDomainLauncher>()
                 );
 
             return builder;

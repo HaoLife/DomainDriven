@@ -12,6 +12,7 @@ using Rainbow.DomainDriven.Extensions;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.RingQueue.Event;
 using Rainbow.DomainDriven.Event;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -34,7 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 );
 
             builder.Services.Add(new ServiceCollection()
-                .AddSingleton<IDomainLauncher, RingQueueDomainLauncher>()
+                .AddTransient<IHostedService, RingBufferServerHostedService>()
                 );
 
             //IEventBus
