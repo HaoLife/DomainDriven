@@ -11,11 +11,6 @@ namespace Rainbow.DomainDriven.RingConsole.CommandExecutor
         ICommandHandler<ModifyUserSexCommand>,
         ICommandHandler<RemoveUserCommand>
     {
-        public UserHandler(User uer)
-        {
-
-        }
-
 
         // private readonly UserService _userService;
         // public UserHandler(UserService userService)

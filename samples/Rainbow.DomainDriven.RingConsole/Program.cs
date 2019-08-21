@@ -97,8 +97,8 @@ namespace Rainbow.DomainDriven.RingConsole
                         UserId = Guid.NewGuid(),
                         Name = $"nihao 1-{seq}",
                         Sex = 1,
-                        UserId2 = temp,
-                        UserId3 = temp,
+                        //UserId2 = temp,
+                        //UserId3 = temp,
                         Wait = WaitLevel.Snapshot
                     };
 
