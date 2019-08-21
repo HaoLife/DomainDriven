@@ -24,6 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddSingleton<ISubscribeEventStore, MongoSubscribeEventStore>()
                 .AddSingleton<ISnapshootQueryFactory, MongoSnapshootQueryFactory>()
                 .AddSingleton<ISnapshootStoreFactory, MongoSnapshootStoreFactory>()
+                .AddSingleton<IDatabaseInitializer, MongoDatabaseInitializer>()
                 );
 
 

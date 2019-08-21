@@ -39,6 +39,9 @@ namespace Rainbow.DomainDriven.RingConsole.CommandExecutor
 
         public void Handle(ICommandContext context, CreateUserCommand cmd)
         {
+            var r2 = context.Get<User>(cmd.UserId2);
+            var r3 = context.Get<User>(cmd.UserId3);
+
             //throw new DomainDriven.Domain.DomainException(100,"故意出错");
             var user = new User(cmd.UserId, cmd.Name, cmd.Sex);
             //_userService.RegisterUser(user);

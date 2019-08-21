@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Command;
-using Rainbow.DomainDriven.Infrastructure;
 using Rainbow.DomainDriven.Domain;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -15,7 +14,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IDomainBuilder AddDomainService(this IDomainBuilder builder)
         {
-            builder.Services.TryAddSingleton<IDomainServiceProvider, IDomainServiceProvider>();
+            var domainServiceBuilder = new DomainServiceBuilder(builder.Services);
+            domainServiceBuilder.Build();
             return builder;
         }
 
@@ -25,5 +25,23 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder;
         }
 
+
+        public static IDomainBuilder AddMixedMapping(this IDomainBuilder builder, Action<MixedCommandMappingProviderBuilder> action)
+        {
+            var mappingBuilder = new MixedCommandMappingProviderBuilder();
+            action(mappingBuilder);
+            builder.Services.TryAddSingleton<ICommandMappingProvider>(mappingBuilder.Build);
+
+            return builder;
+        }
+
+        public static IDomainBuilder AddMixedMapping(this IDomainBuilder builder)
+        {
+            var mappingBuilder = new MixedCommandMappingProviderBuilder();
+            mappingBuilder.AddAutoMapping();
+            builder.Services.TryAddSingleton<ICommandMappingProvider>(mappingBuilder.Build);
+
+            return builder;
+        }
     }
 }

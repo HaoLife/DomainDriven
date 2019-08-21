@@ -1,13 +1,14 @@
 ﻿using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Rainbow.DomainDriven.Domain;
-using Rainbow.DomainDriven.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using Rainbow.DomainDriven.Event;
 using System.Linq;
+using MongoDB.Bson.Serialization.Conventions;
+using Rainbow.DomainDriven.Framework;
 
 namespace Rainbow.DomainDriven.Mongo.Framework
 {
@@ -16,12 +17,12 @@ namespace Rainbow.DomainDriven.Mongo.Framework
         private List<Type> events = new List<Type>();
         private List<Type> roots = new List<Type>();
 
-        private AssemblyProvider _assemblyProvider;
+        private IAssemblyProvider _assemblyProvider;
 
 
-        public MongoDatabaseInitializer()
+        public MongoDatabaseInitializer(IAssemblyProvider assemblyProvider)
         {
-            _assemblyProvider = new AssemblyProvider();
+            _assemblyProvider = assemblyProvider;
 
         }
 
@@ -33,6 +34,7 @@ namespace Rainbow.DomainDriven.Mongo.Framework
 
             BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
 
+
             this.Register(_assemblyProvider.Assemblys.SelectMany(p => p.GetTypes()));
 
             Type[] types = events.Union(roots).ToArray();
@@ -43,6 +45,7 @@ namespace Rainbow.DomainDriven.Mongo.Framework
                 {
                     var classmap = new BsonClassMap(item);
                     classmap.AutoMap();
+                    classmap.SetIgnoreExtraElements(true);
                     BsonClassMap.RegisterClassMap(classmap);
                 }
             }

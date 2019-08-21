@@ -10,20 +10,22 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Store;
 using Microsoft.Extensions.Caching.Memory;
+using Rainbow.DomainDriven.RingQueue.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
-    public class RingEventBusinessHandler : IMessageHandler<IEvent>
+    public class RingEventBusinessHandler : AbstractBatchMessageHandler<IEvent>
     {
         private readonly ConcurrentDictionary<Type, Action<IEvent>> _cache = new ConcurrentDictionary<Type, Action<IEvent>>();
         private static readonly MethodInfo _handleMethod = typeof(RingEventBusinessHandler).GetMethod(nameof(HandleEvent), BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static Guid _defaultSubscribeId = new Guid("00000000-0000-0000-0000-000000000002");
+        private static Guid _defaultSubscribeId = Constant.BusinessSubscribeId;
 
         private IEventRegister _eventRegister;
         private IEventHandlerFactory _eventHandlerFactory;
         private ILogger<RingEventBusinessHandler> _logger;
         private ISubscribeEventStore _subscribeEventStore;
+        private IEventHandleSubject _eventHandleSubject;
 
         private SubscribeEvent _subscribeEvent = new SubscribeEvent() { Id = _defaultSubscribeId, UTCTimestamp = 0 };
 
@@ -31,13 +33,15 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             IEventRegister eventRegister
             , IEventHandlerFactory eventHandlerFactory
             , ISubscribeEventStore subscribeEventStore
-            , ILoggerFactory loggerFactory)
+            , ILoggerFactory loggerFactory
+            , IEventHandleSubject eventHandleSubject)
         {
 
             _eventRegister = eventRegister;
             _eventHandlerFactory = eventHandlerFactory;
             _subscribeEventStore = subscribeEventStore;
             _logger = loggerFactory.CreateLogger<RingEventBusinessHandler>();
+            _eventHandleSubject = eventHandleSubject;
 
 
             var subscribeEvent = _subscribeEventStore.Get(_defaultSubscribeId);
@@ -45,8 +49,10 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         }
 
 
-        public void Handle(IEvent[] messages)
+        public override void Handle(IEvent[] messages, long endSequence)
         {
+            _logger.LogInformation($"执行事件:{messages.Length}");
+
             messages = messages.Where(a => a.UTCTimestamp > _subscribeEvent.UTCTimestamp).ToArray();
             if (!messages.Any()) return;
 
@@ -78,6 +84,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 _subscribeEvent.EventId = evt.Id;
                 _subscribeEvent.UTCTimestamp = evt.UTCTimestamp;
                 _subscribeEventStore.Save(_subscribeEvent);
+
+                _eventHandleSubject.Update(_subscribeEvent);
             }
         }
 
@@ -86,7 +94,8 @@ namespace Rainbow.DomainDriven.RingQueue.Event
         private void HandleEvent<TEvent>(IEvent evt) where TEvent : IEvent
         {
             var types = _eventRegister.FindHandlerType<TEvent>();
-            types.AsParallel().ForAll(a =>
+            //去除并行线程，使用并行线程在task使用量大的情况下会出现死锁
+            foreach (var a in types)
             {
                 try
                 {
@@ -94,9 +103,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"执行事件类型[{a.FullName}]异常,事件id:{evt.Id}", ex);
+                    _logger.LogError(ex, $"执行事件类型[{a.FullName}]异常,事件id:{evt.Id}");
                 }
-            });
+            }
         }
     }
 }

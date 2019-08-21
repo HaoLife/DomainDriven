@@ -5,47 +5,69 @@ using System.Linq.Expressions;
 using System.Text;
 using Rainbow.DomainDriven.Domain;
 using System.Linq;
+using System.Collections;
 
 namespace Rainbow.DomainDriven.Command
 {
     public abstract class MemoryCommandMappingProvider : ICommandMappingProvider
     {
+        //private ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>> _mappings = new ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>>();
+        //private ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>> _mappingLists = new ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>>();
 
         private ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>> _mappings = new ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>>();
 
+        internal ConcurrentDictionary<Type, ConcurrentDictionary<Delegate, Type>> Mappings => _mappings;
 
-        private class MemoryCommandMapping : ICommandMapper
-        {
-            private MemoryCommandMappingProvider _provider;
-            public MemoryCommandMapping(MemoryCommandMappingProvider provider)
-            {
-                _provider = provider;
-            }
 
-            public void Map<TCommand, TAggregateRoot>(Expression<Func<TCommand, Guid>> key)
-                where TCommand : ICommand
-                where TAggregateRoot : IAggregateRoot
-            {
-                var type = typeof(TAggregateRoot);
-                var mapping = _provider._mappings.GetOrAdd(typeof(TCommand), new ConcurrentDictionary<Delegate, Type>());
-                mapping.AddOrUpdate(key.Compile(), type, (a, b) => type);
-            }
-        }
+        private MemoryCommandMapping _mapping;
 
         public MemoryCommandMappingProvider()
         {
-            OnConfiguring(new MemoryCommandMapping(this));
+            _mapping = new MemoryCommandMapping(this);
+            OnConfiguring(_mapping);
         }
 
         public abstract void OnConfiguring(ICommandMapper mapper);
 
+
+        private void TryAdd(Dictionary<Guid, Type> dicts, Guid key, Type type)
+        {
+            if (key == Guid.Empty) return;
+            if (dicts.ContainsKey(key)) return;
+            dicts.Add(key, type);
+
+        }
+
         public Dictionary<Guid, Type> Find(ICommand cmd)
         {
             ConcurrentDictionary<Delegate, Type> maps;
-            if (!_mappings.TryGetValue(cmd.GetType(), out maps))
-                return new Dictionary<Guid, Type>();
+            _mappings.TryGetValue(cmd.GetType(), out maps);
+            if (maps == null) return new Dictionary<Guid, Type>();
 
-            return maps.ToDictionary(p => (Guid)p.Key.DynamicInvoke(cmd), p => p.Value);
+            Dictionary<Guid, Type> dicts = new Dictionary<Guid, Type>();
+
+            foreach (var item in maps)
+            {
+                var keyOrKeyList = item.Key.DynamicInvoke(cmd);
+
+                if (keyOrKeyList is IEnumerable<Guid> list)
+                {
+                    foreach (var key in list)
+                    {
+                        TryAdd(dicts, key, item.Value);
+                    }
+                }
+
+                if (keyOrKeyList is Guid g)
+                {
+                    TryAdd(dicts, g, item.Value);
+
+                }
+
+
+            }
+
+            return dicts;
         }
     }
 }

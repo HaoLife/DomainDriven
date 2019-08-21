@@ -12,6 +12,7 @@ using Rainbow.DomainDriven.Extensions;
 using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.RingQueue.Event;
 using Rainbow.DomainDriven.Event;
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -19,7 +20,6 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IDomainBuilder AddRing(this IDomainBuilder builder, IConfiguration configuration)
         {
-            builder.Services.AddLogging();
             builder.Services.AddMemoryCache();
 
             builder.AddDomainCore();
@@ -28,7 +28,16 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAdd(new ServiceCollection()
                 .AddSingleton<ICommandBus, RingCommandBus>()
                 .AddSingleton<IEventBus, RingEventBus>()
+                .AddSingleton<IContextCache, RingContextMemoryCache>()
+                .AddSingleton<ISnapshootCache, SnapshootMemoryCache>()
+                .AddSingleton<IEventHandleSubject, EventHandleSubject>()
+                .AddSingleton<IRingBufferProcess, RingBufferProcess>()
                 );
+
+            builder.Services.Add(new ServiceCollection()
+                .AddTransient<IHostedService, RingBufferServerHostedService>()
+                );
+
             //IEventBus
 
 

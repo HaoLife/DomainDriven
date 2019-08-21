@@ -19,5 +19,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         IAggregateRoot Remove(IAggregateRoot aggregate);
         bool Exists(Type aggregateType, Guid id);
         bool Exists(IAggregateRoot aggregate);
+
+        void SetInvalid(Type aggregateType, Guid id);
+        bool VerifyInvalid(Type aggregateType, Guid id);
+
     }
 }

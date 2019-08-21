@@ -25,13 +25,9 @@ namespace Rainbow.DomainDriven.Mongo.Store
         {
             Options = options;
 
-            if (!options.DatabaseInitializer.IsRun)
-            {
-                options.DatabaseInitializer.Initialize();
-            }
-
-            var client = new MongoClient(Options.SnapshootConnection);
-            var database = client.GetDatabase(Options.EventDbName);
+            var url = new MongoUrl(Options.EventConnection);
+            var client = new MongoClient(url);
+            var database = client.GetDatabase(options.EventDbName);
             _collection = database.GetCollection<SubscribeEvent>(options.SubscribeEventName, new MongoCollectionSettings() { AssignIdOnInsert = false });
 
         }

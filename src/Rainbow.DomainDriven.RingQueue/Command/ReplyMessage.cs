@@ -23,7 +23,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         }
 
         public Guid CommandId { get; private set; }
-        public Exception Exception { get; private set; }
-        public bool IsSuccess { get; private set; }
+        public Exception Exception { get; set; }
+        public bool IsSuccess { get; set; }
+
+        public long LastEventUTCTimestamp { get; set; }
     }
 }

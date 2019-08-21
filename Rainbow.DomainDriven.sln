@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3EE6B986-C6F3-4965-BCCD-F2EDCF4BE465}"
 EndProject
@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.RingQu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.Core", "src\Rainbow.DomainDriven.Core\Rainbow.DomainDriven.Core.csproj", "{CF148F8E-4297-4EE0-A30F-4348A801F9ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rainbow.DomainDriven.RingConsole", "samples\Rainbow.DomainDriven.RingConsole\Rainbow.DomainDriven.RingConsole.csproj", "{A931CE26-D210-4B7A-9FC9-25B6D3FFC732}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rainbow.DomainDriven.RingConsole", "samples\Rainbow.DomainDriven.RingConsole\Rainbow.DomainDriven.RingConsole.csproj", "{A931CE26-D210-4B7A-9FC9-25B6D3FFC732}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

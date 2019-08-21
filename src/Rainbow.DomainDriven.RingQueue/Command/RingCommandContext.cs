@@ -29,7 +29,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
 
         void ICommandContext.Add<TAggregateRoot>(TAggregateRoot aggregate)
         {
-            if (this._unNoticeRoots.Exists(p => p.Id == aggregate.Id))
+            if (this._unNoticeRoots.Exists(p => p.Id == aggregate.Id && p.GetType().Equals(aggregate.GetType())))
+            {
+                throw new DomainException(DomainCode.AggregateExists);
+            }
+            if (_contextCache.Exists(typeof(TAggregateRoot), aggregate.Id))
             {
                 throw new DomainException(DomainCode.AggregateExists);
             }
@@ -42,17 +46,22 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             var aggregate = default(TAggregateRoot);
             aggregate = this._unNoticeRoots.Find(p => p.Id == id) as TAggregateRoot;
 
-            if (aggregate == null)
+            //验证是否为为无效的对象
+            if (aggregate == null && this._contextCache.VerifyInvalid(typeof(TAggregateRoot), id))
             {
-                if (this._contextCache.Exists<TAggregateRoot>(id)) return aggregate;
+                return null;
+            }
 
+            if (aggregate == null && this._contextCache.Exists<TAggregateRoot>(id))
+            {
                 aggregate = this._contextCache.Get<TAggregateRoot>(id);
             }
 
             if (aggregate == null)
             {
                 aggregate = this._aggregateRootRebuilder.Rebuild<TAggregateRoot>(id);
-                this._contextCache.Set<TAggregateRoot>(id, aggregate);
+                if (aggregate != null)
+                    this._contextCache.Set<TAggregateRoot>(id, aggregate);
             }
 
             if (aggregate == null) return null;
