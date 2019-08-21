@@ -11,9 +11,11 @@ namespace Rainbow.DomainDriven.RingConsole.Mapping
             //mapper.Map<CreateUserCommand, User>(k => k.UserId);
 
             mapper.Map<ModifyUserNameCommand, User>(k => k.UserId);
-            mapper.MapList<CreateUserCommand, User>(k => k.ChildUsers);
-            mapper.Map<CreateUserCommand, User>(k => k.UserId2);
-            mapper.Map<CreateUserCommand, User>(k => k.UserId3);
+            //mapper.MapList<CreateUserCommand, User>(k => k.ChildUsers);
+            //mapper.Map<CreateUserCommand, User>(k => k.UserId2);
+            //mapper.Map<CreateUserCommand, User>(k => k.UserId3);
+
+            mapper.Map<CreateUserCommand, User>(k => k.UserId);
         }
     }
 }

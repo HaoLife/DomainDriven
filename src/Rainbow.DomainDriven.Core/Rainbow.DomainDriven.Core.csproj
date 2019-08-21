@@ -8,6 +8,10 @@
     <Description>CQRS+DDD+EDA</Description>
     <Authors>haozi</Authors>
     <Company>Rainbow</Company>
+    <RepositoryUrl>https://github.com/HaoLife/DomainDriven</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/HaoLife/DomainDriven</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

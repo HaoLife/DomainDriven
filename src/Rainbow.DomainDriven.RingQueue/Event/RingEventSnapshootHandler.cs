@@ -134,6 +134,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             //重建
             foreach (var item in messages)
             {
+                _logger.LogDebug($"执行快照事件：{item.Id} - {item.Operation} - {item.AggregateRootTypeName} - {item.AggregateRootId}");
                 IAggregateRoot root = aggregateRoots.FirstOrDefault(a => a.Id == item.AggregateRootId && a.GetType().Name.Equals(item.AggregateRootTypeName));
 
                 if (item.Operation == EventOperation.Created)
@@ -141,7 +142,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                     Type entityType;
                     if (!_cacheEntitys.TryGetValue(item.AggregateRootTypeName, out entityType))
                     {
-                        throw new Exception($"无法找到类型{item.AggregateRootTypeName}的聚合根");
+                        //throw new Exception($"无法找到类型{item.AggregateRootTypeName}的聚合根");
+                        _logger.LogError($"无法找到类型{item.AggregateRootTypeName}的聚合根");
+                        continue;
                     }
 
                     root = Activator.CreateInstance(entityType, true) as IAggregateRoot;
@@ -155,7 +158,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
                 if (root == null)
                 {
-                    _logger.LogInformation($"回溯快照的时候没有找到聚合根：[{item.AggregateRootId} - {item.AggregateRootTypeName}]");
+                    _logger.LogError($"回溯快照的时候没有找到聚合根：[{item.Id}] - [{item.AggregateRootId} - {item.AggregateRootTypeName}]");
                     continue;
                 }
                 _eventRebuildHandler.Handle(root, item);

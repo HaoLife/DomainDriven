@@ -74,7 +74,11 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             ReplyMessage message = msg.Reply;
             if (message.CommandId == command.Id)
             {
-                if (!message.IsSuccess) throw message.Exception;
+                if (!message.IsSuccess)
+                {
+                    _logger.LogDebug($"执行命令错误,原因：{message.Exception.Message}");
+                    throw message.Exception;
+                }
             }
 
             if (command.Wait == WaitLevel.Handle) return;
