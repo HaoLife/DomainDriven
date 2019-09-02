@@ -65,7 +65,7 @@ namespace Rainbow.DomainDriven.RingConsole
             {
                 await host.StartAsync();
 
-                //Task.Run(() => WriteCommand(host.Services));
+                Task.Run(() => WriteCommand(host.Services));
                 Task.Run(() => ReadView(host.Services));
 
                 await host.WaitForShutdownAsync();
@@ -127,8 +127,8 @@ namespace Rainbow.DomainDriven.RingConsole
                 var errCount = tasks.Where(a => a.Exception != null).Count();
                 logger.LogDebug($"执行：{size} 条 ms：{sw.ElapsedMilliseconds} 错误数：{errCount}");
                 Thread.Sleep(1000);
-                //} while (Console.ReadLine() != "c");
-            } while (true);
+            } while (Console.ReadLine() != "c");
+            //} while (true);
         }
 
         private static void ReadView(IServiceProvider provider)
@@ -149,13 +149,18 @@ namespace Rainbow.DomainDriven.RingConsole
 
             var colls2 = database.GetCollection<Domain.User>(nameof(Domain.User));
 
-            var ls = colls.AsQueryable().Take(1).ToList();
-            var ls2 = colls2.AsQueryable().Take(1).ToList();
-
-
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<Program>();
-            logger.LogDebug($"获取userview 和 user");
+
+            do
+            {
+                var ls = colls.AsQueryable().Take(1).ToList();
+                var ls2 = colls2.AsQueryable().Take(1).ToList();
+                logger.LogInformation($"获取userview {Newtonsoft.Json.JsonConvert.SerializeObject(ls)}");
+                logger.LogInformation($"user {Newtonsoft.Json.JsonConvert.SerializeObject(ls2)}");
+                Thread.Sleep(3000);
+            } while (true);
+
         }
     }
 }
