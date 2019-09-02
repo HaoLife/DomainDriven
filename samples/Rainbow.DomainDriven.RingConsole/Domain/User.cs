@@ -26,6 +26,7 @@ namespace Rainbow.DomainDriven.RingConsole.Domain
         public DateTime CreateTime { get; protected set; }
         public DateTime LastUpdateTime { get; protected set; }
 
+        public List<UserRole> Roles { get; protected set; }
 
         public void ModifyName(string name)
         {
@@ -43,6 +44,7 @@ namespace Rainbow.DomainDriven.RingConsole.Domain
             this.Sex = evt.Sex;
             this.CreateTime = new DateTime(evt.UTCTimestamp).ToLocalTime();
             this.LastUpdateTime = new DateTime(evt.UTCTimestamp).ToLocalTime();
+            this.Roles = new List<UserRole>();
         }
 
         public void Handle(ModifyNamedEvent evt)

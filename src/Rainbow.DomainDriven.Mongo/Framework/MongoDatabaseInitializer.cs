@@ -9,6 +9,7 @@ using Rainbow.DomainDriven.Event;
 using System.Linq;
 using MongoDB.Bson.Serialization.Conventions;
 using Rainbow.DomainDriven.Framework;
+using MongoDB.Bson;
 
 namespace Rainbow.DomainDriven.Mongo.Framework
 {
@@ -30,68 +31,25 @@ namespace Rainbow.DomainDriven.Mongo.Framework
 
         public void Initialize()
         {
-            var serializer = new DateTimeSerializer(DateTimeKind.Local);
 
-            BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
-
-
-            this.Register(_assemblyProvider.Assemblys.SelectMany(p => p.GetTypes()));
-
-            Type[] types = events.Union(roots).ToArray();
-
-            foreach (var item in types)
+            if (!BsonSerializer.IsTypeDiscriminated(typeof(DateTime)))
             {
-                if (!BsonClassMap.IsClassMapRegistered(item))
-                {
-                    var classmap = new BsonClassMap(item);
-                    classmap.AutoMap();
-                    classmap.SetIgnoreExtraElements(true);
-                    BsonClassMap.RegisterClassMap(classmap);
-                }
+                var serializer = new DateTimeSerializer(DateTimeKind.Local);
+                BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
             }
+
+            if (!BsonSerializer.IsTypeDiscriminated(typeof(decimal)))
+            {
+                var serializer = new DecimalSerializer(BsonType.Decimal128, new MongoDB.Bson.Serialization.Options.RepresentationConverter(true, true));
+                BsonSerializer.RegisterSerializer(typeof(decimal), serializer);
+
+            }
+
+            ConventionRegistry.Register("IgnoreExtraElements", new ConventionPack { new IgnoreExtraElementsConvention(true) }, type => true);
+
             IsRun = true;
         }
 
 
-
-
-        protected virtual bool IsAggregateRoot(Type type)
-        {
-            if (!typeof(IAggregateRoot).IsAssignableFrom(type) || !type.IsClass) return false;
-            var typeinfo = type.GetTypeInfo();
-            return typeinfo.IsClass && !typeinfo.IsAbstract;
-
-        }
-
-
-
-        protected virtual bool IsEvent(Type type)
-        {
-            if (!typeof(IEvent).IsAssignableFrom(type) || !type.IsClass) return false;
-            var typeinfo = type.GetTypeInfo();
-            return typeinfo.IsClass && !typeinfo.IsAbstract;
-        }
-
-        private void Register(Type type)
-        {
-            if (IsEvent(type))
-            {
-                events.Add(type);
-            }
-            if (IsAggregateRoot(type))
-            {
-                roots.Add(type);
-            }
-        }
-
-
-
-        private void Register(IEnumerable<Type> types)
-        {
-            foreach (var type in types)
-            {
-                this.Register(type);
-            }
-        }
     }
 }

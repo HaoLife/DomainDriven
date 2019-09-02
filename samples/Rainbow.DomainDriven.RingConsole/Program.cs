@@ -13,6 +13,7 @@ using System.Threading;
 using Rainbow.DomainDriven.Framework;
 using Microsoft.Extensions.Hosting;
 using AutoMapper.Attributes;
+using MongoDB.Driver;
 
 namespace Rainbow.DomainDriven.RingConsole
 {
@@ -64,7 +65,8 @@ namespace Rainbow.DomainDriven.RingConsole
             {
                 await host.StartAsync();
 
-                Task.Run(() => WriteCommand(host.Services));
+                //Task.Run(() => WriteCommand(host.Services));
+                Task.Run(() => ReadView(host.Services));
 
                 await host.WaitForShutdownAsync();
             }
@@ -127,6 +129,33 @@ namespace Rainbow.DomainDriven.RingConsole
                 Thread.Sleep(1000);
                 //} while (Console.ReadLine() != "c");
             } while (true);
+        }
+
+        private static void ReadView(IServiceProvider provider)
+        {
+
+            //MongoDB.Bson.Serialization.Conventions.ConventionRegistry.Register("IgnoreExtraElements",
+            //    new MongoDB.Bson.Serialization.Conventions.ConventionPack { new MongoDB.Bson.Serialization.Conventions.IgnoreExtraElementsConvention(true) }, type => true);
+
+            var configuration = provider.GetRequiredService<IConfiguration>();
+
+            var connectionString = configuration.GetValue<string>("mongo:SnapshootConnection");
+            var connectionDbName = configuration.GetValue<string>("mongo:SnapshootDbName");
+
+            var url = new MongoDB.Driver.MongoUrl(connectionString);
+            var client = new MongoDB.Driver.MongoClient(url);
+            var database = client.GetDatabase(connectionDbName);
+            var colls = database.GetCollection<Dto.View.UserView>(nameof(Dto.View.UserView).Replace("View", ""));
+
+            var colls2 = database.GetCollection<Domain.User>(nameof(Domain.User));
+
+            var ls = colls.AsQueryable().Take(1).ToList();
+            var ls2 = colls2.AsQueryable().Take(1).ToList();
+
+
+            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<Program>();
+            logger.LogDebug($"获取userview 和 user");
         }
     }
 }
