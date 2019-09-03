@@ -1,7 +1,6 @@
 ﻿using Rainbow.DomainDriven.Domain;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.Store;
-using Rainbow.MessageQueue.Ring;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,7 +39,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             , ISubscribeEventStore subscribeEventStore
             , ISnapshootCache snapshootCache
             , ILoggerFactory loggerFactory
-            , IEventHandleSubject eventHandleSubject)
+            , IEventHandleSubject eventHandleSubject
+            , int maxHandleCount)
+            : base(maxHandleCount)
         {
             this._assemblyProvider = assemblyProvider;
             _snapshootStoreFactory = snapshootStoreFactory;
@@ -80,6 +81,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 this.RegisterHandler(type);
             }
         }
+
 
 
         public override void Handle(IEvent[] messages, long endSequence)

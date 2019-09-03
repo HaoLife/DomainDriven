@@ -9,5 +9,11 @@ namespace Rainbow.DomainDriven.RingConsole.Event.UserEvent
     public class ModifyNamedEvent : DomainEvent
     {
         public string Name { get; set; }
+
+
+        public override string ToString()
+        {
+            return $"{this.AggregateRootId}- {this.Name}";
+        }
     }
 }

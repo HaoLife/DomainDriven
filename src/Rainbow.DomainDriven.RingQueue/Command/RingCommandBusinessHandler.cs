@@ -1,6 +1,5 @@
 ﻿using Rainbow.DomainDriven.Command;
 using Rainbow.DomainDriven.Event;
-using Rainbow.MessageQueue.Ring;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using System.Linq;
 using Rainbow.DomainDriven.Store;
 using Rainbow.DomainDriven.Domain;
 using Microsoft.Extensions.Logging;
+using Rainbow.DomainDriven.RingQueue.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
@@ -38,8 +38,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             , IEventBus eventBus
             , ICommandRegister commandRegister
             , IAggregateRootRebuilder aggregateRootRebuilder
-            , ILoggerFactory loggerFactory)
-            : base(1000)
+            , ILoggerFactory loggerFactory
+            , int maxHandleCount)
+            : base(maxHandleCount)
         {
             this.context = new RingCommandContext(contextCache, aggregateRootRebuilder);
             this._contextCache = contextCache;
@@ -73,11 +74,9 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             SendEvent(businessContexts);
 
             NoticeEvent(businessContexts);
-
-
-
-
         }
+
+
 
         private void SaveEvent(CommandBusinessContext[] contexts)
         {

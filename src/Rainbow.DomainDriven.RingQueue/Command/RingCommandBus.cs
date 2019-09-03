@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Rainbow.MessageQueue.Ring;
 using Rainbow.DomainDriven.Domain;
 using Microsoft.Extensions.Logging;
 using System.Linq;
@@ -76,7 +75,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 if (!message.IsSuccess)
                 {
-                    _logger.LogDebug($"执行命令错误,原因：{message.Exception.Message}");
+                    _logger.LogError(message.Exception, $"执行命令错误,原因：{message.Exception.Message}");
                     throw message.Exception;
                 }
             }

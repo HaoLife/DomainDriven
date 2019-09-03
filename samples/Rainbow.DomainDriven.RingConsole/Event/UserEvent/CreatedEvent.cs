@@ -15,5 +15,11 @@ namespace Rainbow.DomainDriven.RingConsole.Event.UserEvent
         }
         public string Name { get; set; }
         public int Sex { get; set; }
+
+
+        public override string ToString()
+        {
+            return $"{this.AggregateRootId}- {this.Name}";
+        }
     }
 }

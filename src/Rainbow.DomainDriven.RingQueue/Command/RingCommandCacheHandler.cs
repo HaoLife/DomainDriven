@@ -1,5 +1,4 @@
 ﻿using Rainbow.DomainDriven.Command;
-using Rainbow.MessageQueue.Ring;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,6 +6,8 @@ using System.Text;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Rainbow.DomainDriven.Domain;
+using Disruptor;
+using Rainbow.DomainDriven.RingQueue.Framework;
 
 namespace Rainbow.DomainDriven.RingQueue.Command
 {
@@ -18,11 +19,12 @@ namespace Rainbow.DomainDriven.RingQueue.Command
         private readonly ILogger _logger;
 
         public RingCommandCacheHandler(
-            ICommandMappingProvider commandMappingProvider,
-            IAggregateRootRebuilder aggregateRootRebuilder,
-            IContextCache contextCache,
-            ILoggerFactory loggerFactory
-        ) : base(1000)
+            ICommandMappingProvider commandMappingProvider
+            , IAggregateRootRebuilder aggregateRootRebuilder
+            , IContextCache contextCache
+            , ILoggerFactory loggerFactory
+            , int maxHandleCount)
+            : base(maxHandleCount)
         {
             this._aggregateRootRebuilder = aggregateRootRebuilder;
             this._contextCache = contextCache;
@@ -96,7 +98,7 @@ namespace Rainbow.DomainDriven.RingQueue.Command
             {
                 HandleCache(item.Key, item.Value);
             }
-        }
 
+        }
     }
 }

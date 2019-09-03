@@ -26,7 +26,7 @@ namespace Rainbow.DomainDriven.RingConsole
              .ConfigureAppConfiguration(config =>
              {
                  config.AddEnvironmentVariables();
-                 config.AddJsonFile("appsettings.json", optional: true);
+                 config.AddJsonFile("appsettings.json", optional: true, true);
                  config.AddCommandLine(args);
 
              })
@@ -156,8 +156,8 @@ namespace Rainbow.DomainDriven.RingConsole
             {
                 var ls = colls.AsQueryable().Take(1).ToList();
                 var ls2 = colls2.AsQueryable().Take(1).ToList();
-                logger.LogInformation($"获取userview {Newtonsoft.Json.JsonConvert.SerializeObject(ls)}");
-                logger.LogInformation($"user {Newtonsoft.Json.JsonConvert.SerializeObject(ls2)}");
+                logger.LogDebug($"获取userview {Newtonsoft.Json.JsonConvert.SerializeObject(ls)}");
+                logger.LogDebug($"user {Newtonsoft.Json.JsonConvert.SerializeObject(ls2)}");
                 Thread.Sleep(3000);
             } while (true);
 

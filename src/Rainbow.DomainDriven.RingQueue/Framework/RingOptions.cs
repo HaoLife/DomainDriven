@@ -8,5 +8,8 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
     {
         public int CommandQueueSize { get; set; }
         public int EventQueueSize { get; set; }
+
+        public int CommandMaxHandleCount { get; set; } = 1000;
+        public int EventMaxHandleCount { get; set; } = 1000;
     }
 }

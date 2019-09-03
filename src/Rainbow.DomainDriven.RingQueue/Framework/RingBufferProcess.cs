@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.RingQueue.Command;
 using Rainbow.DomainDriven.RingQueue.Framework;
-using Rainbow.MessageQueue.Ring;
 using Microsoft.Extensions.DependencyInjection;
 using Rainbow.DomainDriven.Domain;
 using Microsoft.Extensions.Logging;
@@ -14,6 +13,7 @@ using Rainbow.DomainDriven.Store;
 using System.Threading.Tasks;
 using Rainbow.DomainDriven.RingQueue.Event;
 using Rainbow.DomainDriven.Framework;
+using Disruptor;
 
 namespace Rainbow.DomainDriven.RingQueue.Framework
 {
@@ -22,23 +22,16 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
         private IServiceProvider _provider;
         private RingOptions _options;
         private IDisposable _optionsReloadToken;
-        private List<IRingBufferConsumer> consumers = new List<IRingBufferConsumer>();
+        private List<IEventProcessor> consumers = new List<IEventProcessor>();
 
-        private RingBuffer<CommandMessage> _commandQueue;
-        private RingBuffer<IEvent> _eventQueue;
+        private RingBuffer<WrapMessage<CommandMessage>> _commandQueue;
+        private RingBuffer<WrapMessage<IEvent>> _eventQueue;
 
-        public RingBufferProcess(IServiceProvider provider, IOptionsMonitor<RingOptions> options)
+        public RingBufferProcess(IServiceProvider provider, IOptions<RingOptions> options)
         {
             _provider = provider;
-            _optionsReloadToken = options.OnChange(ReloadOptions);
-            ReloadOptions(options.CurrentValue);
+            _options = options.Value;
 
-        }
-
-
-        private void ReloadOptions(RingOptions options)
-        {
-            _options = options;
         }
 
 
@@ -54,11 +47,9 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
             IContextCache contextCache = _provider.GetRequiredService<IContextCache>();
 
             var size = _options.CommandQueueSize;
+            var waitStrategy = new SpinWaitWaitStrategy();
 
-
-            IWaitStrategy wait = new SpinWaitStrategy();
-            MultiSequencer sequencer = new MultiSequencer(size, wait);
-            RingBuffer<CommandMessage> queue = new RingBuffer<CommandMessage>(sequencer);
+            var queue = RingBuffer<WrapMessage<CommandMessage>>.CreateMultiProducer(() => new WrapMessage<CommandMessage>(), size, waitStrategy);
             var barrier = queue.NewBarrier();
 
             var commandMappingProvider = _provider.GetService<ICommandMappingProvider>();
@@ -68,11 +59,11 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
                     commandMappingProvider
                     , rootRebuilder
                     , contextCache
-                    , loggerFactory);
-                IRingBufferConsumer cacheConsumer = new RingBufferConsumer<CommandMessage>(
-                    queue,
-                    barrier,
-                    cacheHandler);
+                    , loggerFactory
+                    , _options.CommandMaxHandleCount);
+
+
+                var cacheConsumer = BatchEventProcessorFactory.Create<WrapMessage<CommandMessage>>(queue, barrier, cacheHandler);
 
                 barrier = queue.NewBarrier(cacheConsumer.Sequence);
                 consumers.Add(cacheConsumer);
@@ -87,19 +78,14 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
                 , commandRegister
                 , rootRebuilder
                 , loggerFactory
+                , _options.CommandMaxHandleCount
                 );
-            IRingBufferConsumer executorConsumer = new RingBufferConsumer<CommandMessage>(
-                queue,
-                barrier,
-                executorHandler);
+
+            var executorConsumer = BatchEventProcessorFactory.Create<WrapMessage<CommandMessage>>(queue, barrier, executorHandler);
 
             consumers.Add(executorConsumer);
 
             queue.AddGatingSequences(executorConsumer.Sequence);
-
-            //consumers.ForEach(a => Task.Factory.StartNew(a.Run, TaskCreationOptions.LongRunning));
-
-
 
             _commandQueue = queue;
         }
@@ -110,7 +96,6 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
             var snapshootStoreFactory = _provider.GetRequiredService<ISnapshootStoreFactory>();
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
             var eventHandlerFactory = _provider.GetRequiredService<IEventHandlerFactory>();
-            //var memoryCache = _provider.GetRequiredService<IMemoryCache>();
             var snapshootCache = _provider.GetRequiredService<ISnapshootCache>();
             var eventRegister = _provider.GetRequiredService<IEventRegister>();
             var assemblyProvider = _provider.GetRequiredService<IAssemblyProvider>();
@@ -119,12 +104,10 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
             var eventHandleSubject = _provider.GetRequiredService<IEventHandleSubject>();
 
             var size = _options.EventQueueSize;
+            var waitStrategy = new SpinWaitWaitStrategy();
 
+            var queue = RingBuffer<WrapMessage<IEvent>>.CreateMultiProducer(() => new WrapMessage<IEvent>(), size, waitStrategy);
 
-
-            IWaitStrategy wait = new SpinWaitStrategy();
-            MultiSequencer sequencer = new MultiSequencer(size, wait);
-            RingBuffer<IEvent> queue = new RingBuffer<IEvent>(sequencer);
             var barrier = queue.NewBarrier();
 
             var snapshootHandler = new RingEventSnapshootHandler(
@@ -134,11 +117,10 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
                 , subscribeEventStore
                 , snapshootCache
                 , loggerFactory
-                , eventHandleSubject);
-            IRingBufferConsumer snapshootConsumer = new RingBufferConsumer<IEvent>(
-                queue,
-                barrier,
-                snapshootHandler);
+                , eventHandleSubject
+                , _options.EventMaxHandleCount);
+
+            var snapshootConsumer = BatchEventProcessorFactory.Create<WrapMessage<IEvent>>(queue, barrier, snapshootHandler);
 
             barrier = queue.NewBarrier(snapshootConsumer.Sequence);
             consumers.Add(snapshootConsumer);
@@ -149,17 +131,15 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
                 , eventHandlerFactory
                 , subscribeEventStore
                 , loggerFactory
-                , eventHandleSubject);
-            IRingBufferConsumer executorConsumer = new RingBufferConsumer<IEvent>(
-                queue,
-                barrier,
-                executorHandler);
+                , eventHandleSubject
+                , _options.EventMaxHandleCount);
+
+            var executorConsumer = BatchEventProcessorFactory.Create<WrapMessage<IEvent>>(queue, barrier, executorHandler);
+
 
             consumers.Add(executorConsumer);
 
             queue.AddGatingSequences(executorConsumer.Sequence);
-
-            //consumers.ForEach(a => Task.Factory.StartNew(a.Run, TaskCreationOptions.LongRunning));
 
             _eventQueue = queue;
         }
@@ -167,12 +147,12 @@ namespace Rainbow.DomainDriven.RingQueue.Framework
 
         public bool IsStart { get; private set; }
 
-        public RingBuffer<CommandMessage> GetCommand()
+        public RingBuffer<WrapMessage<CommandMessage>> GetCommand()
         {
             return _commandQueue;
         }
 
-        public RingBuffer<IEvent> GetEvent()
+        public RingBuffer<WrapMessage<IEvent>> GetEvent()
         {
             return _eventQueue;
         }

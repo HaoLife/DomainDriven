@@ -1,5 +1,4 @@
 ﻿using Rainbow.DomainDriven.Event;
-using Rainbow.MessageQueue.Ring;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -34,7 +33,9 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             , IEventHandlerFactory eventHandlerFactory
             , ISubscribeEventStore subscribeEventStore
             , ILoggerFactory loggerFactory
-            , IEventHandleSubject eventHandleSubject)
+            , IEventHandleSubject eventHandleSubject
+            , int maxHandleCount)
+            : base(maxHandleCount)
         {
 
             _eventRegister = eventRegister;
@@ -47,6 +48,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var subscribeEvent = _subscribeEventStore.Get(_defaultSubscribeId);
             if (subscribeEvent != null) _subscribeEvent = subscribeEvent;
         }
+
 
 
         public override void Handle(IEvent[] messages, long endSequence)
@@ -109,5 +111,6 @@ namespace Rainbow.DomainDriven.RingQueue.Event
                 }
             }
         }
+
     }
 }

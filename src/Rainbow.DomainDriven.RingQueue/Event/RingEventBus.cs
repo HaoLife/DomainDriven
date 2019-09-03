@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Rainbow.DomainDriven.Event;
 using Rainbow.DomainDriven.RingQueue.Framework;
-using Rainbow.MessageQueue.Ring;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,6 +12,7 @@ using System.Threading.Tasks;
 using Rainbow.DomainDriven.Domain;
 using System.Linq;
 using System.Threading;
+using Disruptor;
 
 namespace Rainbow.DomainDriven.RingQueue.Event
 {
@@ -39,7 +39,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             var queue = _ringBufferProcess.GetEvent();
 
             _logger.LogDebug($"发送事件:{events.Length}");
-            if (events.Length > queue.Size)
+            if (events.Length > queue.BufferSize)
             {
                 SplitPublish(queue, events);
                 return;
@@ -48,7 +48,7 @@ namespace Rainbow.DomainDriven.RingQueue.Event
 
         }
 
-        private void AllPublish(RingBuffer<IEvent> queue, IEvent[] events)
+        private void AllPublish(RingBuffer<WrapMessage<IEvent>> queue, IEvent[] events)
         {
             var seq = queue.Next(events.Length);
             var index = seq - events.Length + 1;
@@ -61,10 +61,10 @@ namespace Rainbow.DomainDriven.RingQueue.Event
             }
         }
 
-        private void SplitPublish(RingBuffer<IEvent> queue, IEvent[] events)
+        private void SplitPublish(RingBuffer<WrapMessage<IEvent>> queue, IEvent[] events)
         {
             int skip = 0;
-            int take = queue.Size / 2;
+            int take = queue.BufferSize / 2;
             IEvent[] evs = events.Skip(skip).Take(take).ToArray();
             do
             {
