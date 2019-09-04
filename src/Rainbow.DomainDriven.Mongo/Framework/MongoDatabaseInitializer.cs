@@ -10,6 +10,8 @@ using System.Linq;
 using MongoDB.Bson.Serialization.Conventions;
 using Rainbow.DomainDriven.Framework;
 using MongoDB.Bson;
+using System.Collections.Concurrent;
+using MongoDB.Bson.Serialization.Options;
 
 namespace Rainbow.DomainDriven.Mongo.Framework
 {
@@ -32,24 +34,32 @@ namespace Rainbow.DomainDriven.Mongo.Framework
         public void Initialize()
         {
 
-            if (!BsonSerializer.IsTypeDiscriminated(typeof(DateTime)))
-            {
-                var serializer = new DateTimeSerializer(DateTimeKind.Local);
-                BsonSerializer.RegisterSerializer(typeof(DateTime), serializer);
-            }
-
-            if (!BsonSerializer.IsTypeDiscriminated(typeof(decimal)))
-            {
-                var serializer = new DecimalSerializer(BsonType.Decimal128, new MongoDB.Bson.Serialization.Options.RepresentationConverter(true, true));
-                BsonSerializer.RegisterSerializer(typeof(decimal), serializer);
-
-            }
+            this.AddOrUpdate(typeof(decimal), new DecimalSerializer(BsonType.Decimal128, new RepresentationConverter(true, true)));
+            this.AddOrUpdate(typeof(DateTime), new DateTimeSerializer(DateTimeKind.Local));
 
             ConventionRegistry.Register("IgnoreExtraElements", new ConventionPack { new IgnoreExtraElementsConvention(true) }, type => true);
 
             IsRun = true;
         }
 
+        private void AddOrUpdate(Type type, IBsonSerializer serializer)
+        {
+            var currentSerializer = BsonSerializer.LookupSerializer(type);
+            if (currentSerializer != null)
+            {
+                // remove exist
+                var cacheFieldInfo = typeof(BsonSerializerRegistry).
+                    GetField("_cache", BindingFlags.NonPublic |BindingFlags.Instance);
 
+                var _cacheTemp = cacheFieldInfo.GetValue(BsonSerializer.SerializerRegistry);
+                var _cache = _cacheTemp as ConcurrentDictionary<Type, IBsonSerializer>;
+                IBsonSerializer removeed;
+                _cache.TryRemove(type, out removeed);
+
+                // add my owner
+            }
+            BsonSerializer.RegisterSerializer(type, serializer);
+
+        }
     }
 }
